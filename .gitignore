@@ -1,0 +1,9 @@
+.env
+/.history/
+/node_modules/
+yarn-error.log
+yarn.lock
+/build/
+src/streamers-live-channel.json
+streamers-command.json
+twitch-id.json
