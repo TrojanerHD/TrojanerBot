@@ -2,7 +2,7 @@ import STATICTWITCH from './STATICTWITCH';
 import CreateEmbed from './CreateEmbed';
 import twitchId from '../../twitch-id.json';
 import streamers from '../streamers-live-channel.json';
-import fetch from 'node-fetch';
+import fetch, { Response } from 'node-fetch';
 
 interface Game {
   name: string;
@@ -58,8 +58,9 @@ export default class LiveChannel {
         Authorization: `Bearer ${this._accessToken}`,
       },
     })
-      .then((res) => res.json())
-      .then((data) => this.streamerFetch(data))
+      .then((res: Response) => res.json())
+      .catch(console.error)
+      .then((data: any) => this.streamerFetch(data))
       .catch(console.error);
   }
 
@@ -78,8 +79,10 @@ export default class LiveChannel {
       'Client-ID': twitchId,
       Authorization: `Bearer ${this._accessToken}`
     }})
-      .then((res) => res.json())
-      .then(this.gameIdResult.bind(this));
+      .then((res: Response) => res.json())
+      .catch(console.error)
+      .then(this.gameIdResult.bind(this))
+      .catch(console.error);
   }
 
   /**
@@ -129,8 +132,9 @@ export default class LiveChannel {
       `https://id.twitch.tv/oauth2/token?client_id=${twitchId}&client_secret=${process.env.TWITCH_TOKEN}&grant_type=client_credentials`,
       { method: 'POST' }
     )
-      .then((res) => res.json())
-      .then((data) => {
+      .then((res: Response) => res.json())
+      .catch(console.error)
+      .then((data: any) => {
         this._accessToken = data.access_token;
         callback();
       });

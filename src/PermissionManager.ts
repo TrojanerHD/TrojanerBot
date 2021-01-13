@@ -7,9 +7,9 @@ export default class PermissionManager {
     channel: TextChannel,
     message: Message
   ): boolean {
-    const permission: boolean = /*roles ? !!roles.find(
+    const permission: boolean = roles ? !!roles.find(
       (role: Role) => role.name === 'Moderator' || role.name === 'Owner'
-    ) : */ false;
+    ) : false;
     if (!permission) {
       const messageDeletion: MessageDeletion = new MessageDeletion(message);
       const errorMessage: MessageEmbed = new MessageEmbed()
