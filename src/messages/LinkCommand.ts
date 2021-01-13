@@ -82,6 +82,6 @@ export default class LinkCommand extends Command {
     this._embed!.setDescription(
       this._embed!.description?.replace(/(To.*$)/m, `[$1](${message.url})`)
     );
-    this._oldMessage!.edit(this._embed);
+    this._oldMessage!.edit(this._embed!);
   }
 }
