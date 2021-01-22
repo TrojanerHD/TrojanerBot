@@ -2,34 +2,35 @@
 This is a [Discord](https://discord.com) bot currently only running on my [Discord server](https://discord.gg/NdsmmwV). There is no official way of adding this bot to your own Discord server.
 
 ## Deployment and contribution
-### Prerequisites
+### Requirements
 + Git
 + Node.js
 + Yarn (or npm)
++ Basic knowledge of TypeScript types and JSON
 
 ### Deployment
 ```sh
 git clone https://github.com/TrojanerHD/TrojanerBot&& \
 cd TrojanerBot && yarn
 ```
-The next step is to create several files:
-+ `./.env` with the content
+Next up you want to create a file: `./.env` with the content
 ```
 DISCORD_TOKEN=<DISCORD_TOKEN>
-TWITCH_TOKEN=<TWITCH_TOKEN>
+TWITCH_TOKEN=<TWITCH_TOKEN> (optional)
 ```
-Where `<DISCORD_TOKEN>` is the Discord token of your bot account at the [Discord Developer Portal](https://discord.com/developers/applications) and `<TWITCH_TOKEN>` is your client secret generated after you create an application in the [Twitch Developer Console](https://dev.twitch.tv/console/apps)
-+ `./streamers-command.json` with the content `[]`
-+ `./twitch-id.json` with the content `"<TWITCH_ID>"` which you can also get from the Twitch Dev Console
-+ `src/streamers-live-channel.json` with the content
-```json
-[
-    "name",
-    "name2",
-    "…"
-]
-```
-where you can add names of live streamers on Twitch that will be shown in a `#live` channel in Discord if the Discord has this channel. If you do not want to use this feature just insert `[]`.
+Where you replace `<DISCORD_TOKEN>` with the Discord token of your bot account at the [Discord Developer Portal](https://discord.com/developers/applications) and `<TWITCH_TOKEN> (optional)` with your client secret generated after you create an application in the [Twitch Developer Console](https://dev.twitch.tv/console/apps) which is only required if you want to use the Twitch features of this bot.
+
+Execute the bot as described in [Execution](https://github.com/TrojanerHD/TrojanerBot/#Execution). It will generate a `settings.json` file in the bot directory and will already work. You can, however, modify the content of `settings.json` (you need to restart the bot if you added a Twitch ID or roles):
+#### Settings
+In this step I will go over all properties of the `settings.json` file:
+
+Key | Type | Description | Default
+--- | --- | --- | ---
+`prefix` | string | Specifies the prefix the bot will use for commands | `"!"`
+`twitch-id` | string | The ID of your Twitch application found in the [Twitch Developer Console](https://dev.twitch.tv/console/apps). If you do not want to use the Twitch features of this bot, set the value to `""` | `""`
+`roles` | {name: string; emoji: string}[] | Added roles will be displayed in a `#roles` channel in Discord if the Discord has this channel. The emoji id will be used as reaction emoji so when a user reacts with the certain emoji they will get the role respectively. If you do not want to use this feature, set the value to `[]` | `[]`
+`streamers` | string[] | The bot will show whenever the here specified channels are live in a `#live` channel in Discord if the Discord has this channel. If you do not want to use this feature, set the value to `[]` | `[]`
+`streamer-subscriptions` | {streamer: string; subscribers: string[]} | The bot will store all subscriptions to Twitch streamers when somebody uses `!streamer` to subscribe to a streamer. Usually you want to leave it as it is | `[]`
 
 ### Execution
 ```sh

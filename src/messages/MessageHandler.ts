@@ -8,7 +8,7 @@ import StreamerCommand from './StreamerCommand';
 import MessageDeletion from './MessageDeletion';
 import LinkResolve from './LinkResolve';
 import Command from './Command';
-import * as SETTINGS from '../SETTINGS';
+import Settings from '../settings';
 
 export interface CommandHandler {
   command: string | string[];
@@ -33,7 +33,7 @@ export default class MessageHandler {
     if (message.content.match(/https:\/\/discordapp.com\/channels/)) {
       new LinkResolve().handleCommand([], message.channel, message);
     }
-    if (!message.content.startsWith(SETTINGS.prefix)) return;
+    if (!message.content.startsWith(Settings.getSettings().prefix)) return;
     const args: string[] = message.content.split(' ');
     let userCommand: string | undefined = args.shift();
     if (!userCommand) return;
