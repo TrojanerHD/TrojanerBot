@@ -3,6 +3,7 @@ import MessageHandler from './messages/MessageHandler';
 import LiveChannel from './twitch/LiveChannel';
 import TalkingChannel from './TalkingChannel';
 import RoleChannelManager from './roles/RoleChannelManager';
+import Settings from './settings';
 
 export class DiscordClient {
   static _client: Client = new Client();
@@ -23,13 +24,17 @@ export class DiscordClient {
       .login(process.env.DISCORD_TOKEN)
       .catch(console.error)
       .then(() => {
-        this.startTwitch();
+        if (Settings.getSettings()['twitch-id'] !== '') this.startTwitch();
+        else
+          console.log(
+            'Twitch module not loaded. Add a twitch id to the settings.json'
+          ); //TODO: Rewrite message and create a warning system that reports what features are enabled/disabled
       });
   }
 
   onReady(): void {
     new TalkingChannel();
-    new RoleChannelManager();
+    if (Settings.getSettings().roles.length !== 0) new RoleChannelManager(); //TODO Warning system (see TODO in line 31)
   }
 
   /**

@@ -1,8 +1,8 @@
 import Command from './Command';
 import { TextChannel, Message } from 'discord.js';
-import fs from 'fs';
+import Settings from '../settings';
 
-interface Channel {
+export interface Channel {
   streamer: string;
   subscribers: string[];
 }
@@ -16,18 +16,7 @@ export default class StreamerCommand extends Command {
 
   constructor() {
     super();
-    const streamersFile: string = './streamers-command.json';
-    if (
-      !fs.existsSync(streamersFile) ||
-      !StreamerCommand.IsJsonString(fs.readFileSync(streamersFile).toString())
-    ) {
-      StreamerCommand._streamers = [];
-      fs.writeFileSync(streamersFile, '[]', 'utf8');
-      return;
-    }
-    StreamerCommand._streamers = JSON.parse(
-      fs.readFileSync(streamersFile, 'utf8')
-    );
+    StreamerCommand._streamers = Settings.getSettings()['streamer-subscriptions'];
   }
 
   handleCommand(args: string[], channel: TextChannel, message: Message): void {
@@ -47,7 +36,7 @@ export default class StreamerCommand extends Command {
         }
 
         if (streamChannel.subscribers.includes(message.author.id)) {
-          channel.send('You have already subscribed to that channel');
+          channel.send('You have already subscribed to that channel').catch(console.error);
           return;
         }
         streamChannel.subscribers.push(message.author.id);
@@ -62,7 +51,7 @@ export default class StreamerCommand extends Command {
           !streamChannel ||
           !streamChannel.subscribers.includes(message.author.id)
         ) {
-          channel.send('You have not subscribed to that channel!');
+          channel.send('You have not subscribed to that channel!').catch(console.error);
           return;
         }
 
@@ -84,23 +73,8 @@ export default class StreamerCommand extends Command {
     }
   }
 
-  static IsJsonString(str: string): boolean {
-    try {
-      JSON.parse(str);
-    } catch (e) {
-      return false;
-    }
-    return true;
-  }
-
   private saveStreamers() {
-    fs.writeFile(
-      './streamers-command.json',
-      JSON.stringify(StreamerCommand._streamers),
-      'utf8',
-      (err: NodeJS.ErrnoException | null) => {
-        if (err) console.error(err);
-      }
-    );
+    Settings.getSettings()['streamer-subscriptions'] = StreamerCommand._streamers;
+    Settings.saveSettings();
   }
 }

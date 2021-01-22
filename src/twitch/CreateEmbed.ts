@@ -7,7 +7,7 @@ import {
   Collection,
 } from 'discord.js';
 import { DiscordClient } from '../DiscordClient';
-import streamers from '../streamers-live-channel.json';
+import Settings from '../settings';
 
 interface StreamInformation {
   name: string;
@@ -93,7 +93,7 @@ export default class CreateEmbed {
       .setTimestamp(new Date());
 
     this._embed.sort((a: Field[], b: Field[]) => {
-      for (const streamer of streamers) {
+      for (const streamer of Settings.getSettings().streamers) {
         if (a[0].value.split('[')[1].split(']')[0] === streamer) return -1;
         if (b[0].value.split('[')[1].split(']')[0] === streamer) return 1;
       }

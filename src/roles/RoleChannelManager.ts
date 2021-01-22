@@ -8,7 +8,7 @@ import {
   Snowflake,
   TextChannel,
 } from 'discord.js';
-import roles from './roles.json';
+import Settings from '../settings';
 import { DiscordClient } from '../DiscordClient';
 
 interface Role {
@@ -47,7 +47,7 @@ export default class RoleManager {
         usedEmoji: [],
       };
 
-      while (embed.processed !== roles.length) {
+      while (embed.processed !== Settings.getSettings().roles.length) {
         embed = this.generateEmbed(embed.processed, embed.number);
         this._newEmbeds.push({
           embed: embed.embed,
@@ -106,10 +106,10 @@ export default class RoleManager {
 
     for (
       let i = processed;
-      processed < roles.length || i - processed === 4;
+      processed < Settings.getSettings().roles.length || i - processed === 4;
       i++
     ) {
-      const role: Role = roles[i];
+      const role: Role = Settings.getSettings().roles[i];
       usedEmoji.push(role.emoji);
       embed.addField(
         role.name,
