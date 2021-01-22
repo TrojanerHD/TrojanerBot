@@ -33,6 +33,7 @@ export default class CreateEmbed {
    * @param streamInformation The information to be inserted into the embed field
    */
   addField(streamInformation: StreamInformation): void {
+    if (streamInformation.title === ' ') streamInformation.title = '\u200b';
     const size =
       streamInformation.viewer_count <= 50
         ? 'Small'
