@@ -24,7 +24,7 @@ export default class PermissionManager {
 
       channel
         .send(errorMessage)
-        .then(messageDeletion.commandNotExistsCallback.bind(messageDeletion))
+        .then(messageDeletion.checkDeletion.bind(messageDeletion))
         .catch(console.error);
     }
     return permission;

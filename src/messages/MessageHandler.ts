@@ -37,7 +37,7 @@ export default class MessageHandler {
     const args: string[] = message.content.split(' ');
     let userCommand: string | undefined = args.shift();
     if (!userCommand) return;
-    userCommand = userCommand.substr(1, userCommand.length);
+    userCommand = userCommand.substr(1, userCommand.length)
     for (const command of MessageHandler._commands) {
       if (
         typeof command.command === 'string' ||
@@ -55,16 +55,10 @@ export default class MessageHandler {
           }
     }
 
+    const messageDeletion: MessageDeletion = new MessageDeletion(message);
     message.channel
       .send('This command does not exist')
-      .then(this.checkDeleteMessage.bind(this))
+      .then(messageDeletion.checkDeletion.bind(messageDeletion))
       .catch(console.error);
-  }
-
-  private checkDeleteMessage(message: Message) {
-    if (Settings.getSettings()['delete-messages-on-error']) {
-      const messageDeletion: MessageDeletion = new MessageDeletion(message);
-      messageDeletion.commandNotExistsCallback(message);
-    }
   }
 }
