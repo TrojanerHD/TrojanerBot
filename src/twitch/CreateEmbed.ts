@@ -7,7 +7,7 @@ import {
   Collection,
 } from 'discord.js';
 import { DiscordClient } from '../DiscordClient';
-import Settings from '../settings';
+import Settings from '../Settings';
 
 interface StreamInformation {
   name: string;
