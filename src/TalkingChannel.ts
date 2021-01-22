@@ -22,13 +22,6 @@ export default class TalkingChannel {
       'voiceStateUpdate',
       this.onVoiceStateUpdate.bind(this)
     );
-    DiscordClient._client.on('ready', this.onReady);
-  }
-
-  /**
-   * Callback for when the client is ready
-   */
-  private onReady(): void {
     for (const guild of DiscordClient._client.guilds.cache.array())
       for (const channel of guild.channels.cache.array())
         if (channel.name.startsWith('Talking ')) channel.delete();

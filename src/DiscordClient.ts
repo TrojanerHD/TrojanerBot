@@ -2,6 +2,7 @@ import { Client } from 'discord.js';
 import MessageHandler from './messages/MessageHandler';
 import LiveChannel from './twitch/LiveChannel';
 import TalkingChannel from './TalkingChannel';
+import RoleChannelManager from './roles/RoleChannelManager';
 
 export class DiscordClient {
   static _client: Client = new Client();
@@ -11,6 +12,7 @@ export class DiscordClient {
    */
   constructor() {
     new MessageHandler();
+    DiscordClient._client.on('ready', this.onReady);
   }
 
   /**
@@ -22,8 +24,12 @@ export class DiscordClient {
       .catch(console.error)
       .then(() => {
         this.startTwitch();
-        new TalkingChannel();
       });
+  }
+
+  onReady(): void {
+    new TalkingChannel();
+    new RoleChannelManager();
   }
 
   /**
