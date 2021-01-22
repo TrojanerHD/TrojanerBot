@@ -25,7 +25,7 @@ export default class Settings {
     if (!fs.existsSync(Settings._settingsFile)) {
       Settings.saveSettings();
     } else {
-      let settingsFileContent: string = fs.readFileSync(
+      const settingsFileContent: string = fs.readFileSync(
         Settings._settingsFile,
         'utf8'
       );
