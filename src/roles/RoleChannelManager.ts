@@ -8,7 +8,7 @@ import {
   Snowflake,
   TextChannel,
 } from 'discord.js';
-import Settings from '../settings';
+import Settings from '../Settings';
 import { DiscordClient } from '../DiscordClient';
 
 interface Role {

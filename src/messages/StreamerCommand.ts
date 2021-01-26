@@ -1,6 +1,6 @@
 import Command from './Command';
 import { TextChannel, Message } from 'discord.js';
-import Settings from '../settings';
+import Settings from '../Settings';
 
 export interface Channel {
   streamer: string;

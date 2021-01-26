@@ -3,6 +3,7 @@ import fs from 'fs';
 
 export interface SettingsJSON {
   prefix: string;
+  'delete-messages-on-error': boolean;
   'twitch-id': string;
   roles: { name: string; emoji: string }[];
   streamers: string[];
@@ -13,6 +14,7 @@ export default class Settings {
   private static _settingsFile: string = './settings.json';
   private static _settings: SettingsJSON = {
     prefix: '!',
+    'delete-messages-on-error': true,
     'twitch-id': '',
     roles: [],
     streamers: [],
@@ -23,7 +25,7 @@ export default class Settings {
     if (!fs.existsSync(Settings._settingsFile)) {
       Settings.saveSettings();
     } else {
-      let settingsFileContent: string = fs.readFileSync(
+      const settingsFileContent: string = fs.readFileSync(
         Settings._settingsFile,
         'utf8'
       );

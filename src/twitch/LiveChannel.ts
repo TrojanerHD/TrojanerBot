@@ -1,6 +1,6 @@
 import STATICTWITCH from './STATICTWITCH';
 import CreateEmbed from './CreateEmbed';
-import Settings from '../settings';
+import Settings from '../Settings';
 import fetch, { Response } from 'node-fetch';
 
 interface Game {

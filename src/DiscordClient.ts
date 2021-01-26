@@ -3,7 +3,7 @@ import MessageHandler from './messages/MessageHandler';
 import LiveChannel from './twitch/LiveChannel';
 import TalkingChannel from './TalkingChannel';
 import RoleChannelManager from './roles/RoleChannelManager';
-import Settings from './settings';
+import Settings from './Settings';
 
 export class DiscordClient {
   static _client: Client = new Client();

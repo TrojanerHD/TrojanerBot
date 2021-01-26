@@ -8,7 +8,7 @@ import StreamerCommand from './StreamerCommand';
 import MessageDeletion from './MessageDeletion';
 import LinkResolve from './LinkResolve';
 import Command from './Command';
-import Settings from '../settings';
+import Settings from '../Settings';
 
 export interface CommandHandler {
   command: string | string[];
@@ -58,7 +58,7 @@ export default class MessageHandler {
     const messageDeletion: MessageDeletion = new MessageDeletion(message);
     message.channel
       .send('This command does not exist')
-      .then(messageDeletion.commandNotExistsCallback.bind(messageDeletion))
+      .then(messageDeletion.checkDeletion.bind(messageDeletion))
       .catch(console.error);
   }
 }
