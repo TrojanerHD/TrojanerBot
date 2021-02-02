@@ -5,7 +5,7 @@ import { DiscordClient } from '../DiscordClient';
 
 export default class ByeCommand extends Command {
   helpInfo: { name: string; value: string } = {
-    name: '!bye|stop',
+    name: 'bye|stop',
     value: 'Shuts the bot down',
   };
 

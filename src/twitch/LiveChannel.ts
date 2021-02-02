@@ -40,7 +40,11 @@ export default class LiveChannel {
    * Fetches the current state of streams and updates the embed in #live if there is an update
    */
   private update(): void {
-    this._streamers = this.generateUrl('streams', 'user_login', Settings.getSettings().streamers);
+    this._streamers = this.generateUrl(
+      'streams',
+      'user_login',
+      Settings.getSettings().streamers
+    );
     if (this._accessToken === undefined)
       this.accessTokenRequest(this.channelRequest.bind(this));
     else this.channelRequest();
@@ -70,7 +74,9 @@ export default class LiveChannel {
    */
   private streamerFetch(body: { data: Stream[] }): void {
     if ('error' in body) {
-      console.error(`Error in LiveChannel.ts on line 74:\n${JSON.stringify(body, null, 2)}`);
+      console.error(
+        `Error in LiveChannel.ts on line 74:\n${JSON.stringify(body, null, 2)}`
+      );
       return;
     }
     this._streams = body.data;
@@ -78,10 +84,12 @@ export default class LiveChannel {
     for (const stream of body.data) games.add(stream.game_id);
 
     const gameUrl: string = this.generateUrl('games', 'id', games);
-    fetch(gameUrl, {headers: {
-      'Client-ID': Settings.getSettings()['twitch-id'],
-      Authorization: `Bearer ${this._accessToken}`
-    }})
+    fetch(gameUrl, {
+      headers: {
+        'Client-ID': Settings.getSettings()['twitch-id'],
+        Authorization: `Bearer ${this._accessToken}`,
+      },
+    })
       .then((res: Response) => res.json())
       .catch(console.error)
       .then(this.gameIdResult.bind(this))
@@ -98,7 +106,7 @@ export default class LiveChannel {
       let game: string | undefined = body.data.find(
         (game: Game) => game.id === stream.game_id
       )?.name;
-      
+
       createEmbed.addField({
         game,
         name: stream.user_name,
@@ -132,7 +140,11 @@ export default class LiveChannel {
    */
   private accessTokenRequest(callback: () => void): void {
     fetch(
-      `https://id.twitch.tv/oauth2/token?client_id=${Settings.getSettings()['twitch-id']}&client_secret=${process.env.TWITCH_TOKEN}&grant_type=client_credentials`,
+      `https://id.twitch.tv/oauth2/token?client_id=${
+        Settings.getSettings()['twitch-id']
+      }&client_secret=${
+        process.env.TWITCH_TOKEN
+      }&grant_type=client_credentials`,
       { method: 'POST' }
     )
       .then((res: Response) => res.json())

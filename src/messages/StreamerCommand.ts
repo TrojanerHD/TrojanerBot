@@ -9,14 +9,17 @@ export interface Channel {
 
 export default class StreamerCommand extends Command {
   helpInfo: { name: string; value: string } = {
-    name: '!streamer add|remove <streamer name>',
-    value: 'Lets you subscribe to Twitch streamers and get a DM whenever they go live',
+    name: 'streamer add|remove <streamer name>',
+    value:
+      'Lets you subscribe to Twitch streamers and get a DM whenever they go live',
   };
   static _streamers: Channel[];
 
   constructor() {
     super();
-    StreamerCommand._streamers = Settings.getSettings()['streamer-subscriptions'];
+    StreamerCommand._streamers = Settings.getSettings()[
+      'streamer-subscriptions'
+    ];
   }
 
   handleCommand(args: string[], channel: TextChannel, message: Message): void {
@@ -36,7 +39,9 @@ export default class StreamerCommand extends Command {
         }
 
         if (streamChannel.subscribers.includes(message.author.id)) {
-          channel.send('You have already subscribed to that channel').catch(console.error);
+          channel
+            .send('You have already subscribed to that channel')
+            .catch(console.error);
           return;
         }
         streamChannel.subscribers.push(message.author.id);
@@ -51,7 +56,9 @@ export default class StreamerCommand extends Command {
           !streamChannel ||
           !streamChannel.subscribers.includes(message.author.id)
         ) {
-          channel.send('You have not subscribed to that channel!').catch(console.error);
+          channel
+            .send('You have not subscribed to that channel!')
+            .catch(console.error);
           return;
         }
 
@@ -74,7 +81,8 @@ export default class StreamerCommand extends Command {
   }
 
   private saveStreamers() {
-    Settings.getSettings()['streamer-subscriptions'] = StreamerCommand._streamers;
+    Settings.getSettings()['streamer-subscriptions'] =
+      StreamerCommand._streamers;
     Settings.saveSettings();
   }
 }

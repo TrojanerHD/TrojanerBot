@@ -37,7 +37,7 @@ export default class MessageHandler {
     const args: string[] = message.content.split(' ');
     let userCommand: string | undefined = args.shift();
     if (!userCommand) return;
-    userCommand = userCommand.substr(1, userCommand.length)
+    userCommand = userCommand.substr(1, userCommand.length);
     for (const command of MessageHandler._commands) {
       if (
         typeof command.command === 'string' ||
