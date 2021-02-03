@@ -29,7 +29,7 @@ export default class MessageHandler {
   }
 
   onMessage(message: Message) {
-    if (message.channel.type !== 'text' || message.author.bot) return;
+    if (message.channel.type !== 'text' || message.author.bot || message.content.match(/@(everyone|here)/g)) return;
     if (message.content.match(/https:\/\/discordapp.com\/channels/)) {
       new LinkResolve().handleCommand([], message.channel, message);
     }
