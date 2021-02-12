@@ -60,7 +60,7 @@ export default class GuildRolesManager {
             .filter(
               (reaction: MessageReaction) =>
                 !Settings.getSettings().roles.find(
-                  (role: CustomRole) => role.name === reaction.emoji.name
+                  (role: CustomRole) => role.emoji === reaction.emoji.id
                 )
             )
             .array();
@@ -87,7 +87,6 @@ export default class GuildRolesManager {
   }
 
   private messageListener(reaction: MessageReaction): void {
-    //const filter = (reaction: MessageReaction) => reaction.emoji.name === '👌';
     const collector = reaction.message.createReactionCollector(() => true, {
       dispose: true,
     });
