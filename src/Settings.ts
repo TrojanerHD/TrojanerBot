@@ -5,6 +5,7 @@ export interface SettingsJSON {
   prefix: string;
   'delete-messages-on-error': boolean;
   'twitch-id': string;
+  'permission-roles': string[];
   roles: { name: string; emoji: string }[];
   streamers: string[];
   'streamer-subscriptions': Channel[];
@@ -16,6 +17,7 @@ export default class Settings {
     prefix: '!',
     'delete-messages-on-error': true,
     'twitch-id': '',
+    'permission-roles': [],
     roles: [],
     streamers: [],
     'streamer-subscriptions': [],
@@ -45,6 +47,10 @@ export default class Settings {
   }
 
   static saveSettings(): void {
-    fs.writeFileSync(Settings._settingsFile, JSON.stringify(Settings._settings, null, 2), 'utf8');
+    fs.writeFileSync(
+      Settings._settingsFile,
+      JSON.stringify(Settings._settings, null, 2),
+      'utf8'
+    );
   }
 }

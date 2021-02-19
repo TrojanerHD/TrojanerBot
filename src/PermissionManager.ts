@@ -1,5 +1,6 @@
 import { Role, TextChannel, Message, MessageEmbed } from 'discord.js';
 import MessageDeletion from './messages/MessageDeletion';
+import Settings from './Settings';
 
 export default class PermissionManager {
   static hasPermission(
@@ -7,9 +8,11 @@ export default class PermissionManager {
     channel: TextChannel,
     message: Message
   ): boolean {
-    const permission: boolean = roles ? !!roles.find(
-      (role: Role) => role.name === 'Moderator' || role.name === 'Owner'
-    ) : false;
+    const permission: boolean = roles
+      ? !!roles.find((role: Role) =>
+          Settings.getSettings()['permission-roles'].includes(role.name)
+        )
+      : false;
     if (!permission) {
       const messageDeletion: MessageDeletion = new MessageDeletion(message);
       const errorMessage: MessageEmbed = new MessageEmbed()

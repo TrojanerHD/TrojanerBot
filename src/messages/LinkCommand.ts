@@ -3,7 +3,7 @@ import { TextChannel, Message, GuildChannel, MessageEmbed } from 'discord.js';
 
 export default class LinkCommand extends Command {
   helpInfo: { name: string; value: string } = {
-    name: '!link|!to <channel>',
+    name: 'link|to <channel>',
     value:
       'Sends a message that the current conversation should be moved to the specified channel',
   };

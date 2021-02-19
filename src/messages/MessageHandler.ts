@@ -29,7 +29,7 @@ export default class MessageHandler {
   }
 
   onMessage(message: Message) {
-    if (message.channel.type !== 'text') return;
+    if (message.channel.type !== 'text' || message.author.bot || message.content.match(/@(everyone|here)/g)) return;
     if (message.content.match(/https:\/\/discordapp.com\/channels/)) {
       new LinkResolve().handleCommand([], message.channel, message);
     }
@@ -37,7 +37,7 @@ export default class MessageHandler {
     const args: string[] = message.content.split(' ');
     let userCommand: string | undefined = args.shift();
     if (!userCommand) return;
-    userCommand = userCommand.substr(1, userCommand.length)
+    userCommand = userCommand.substr(1, userCommand.length);
     for (const command of MessageHandler._commands) {
       if (
         typeof command.command === 'string' ||

@@ -3,7 +3,7 @@ import { TextChannel, MessageEmbed, Message } from 'discord.js';
 
 export default class PingCommand extends Command {
   helpInfo: { name: string; value: string } = {
-    name: '!ping',
+    name: 'ping',
     value: 'Shows the current ping of the bot',
   };
   handleCommand(args: string[], channel: TextChannel, message: Message): void {

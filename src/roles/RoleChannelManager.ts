@@ -1,39 +1,38 @@
 import {
-  Collection,
   Emoji,
   Guild,
   GuildChannel,
-  Message,
   MessageEmbed,
-  Snowflake,
   TextChannel,
 } from 'discord.js';
 import Settings from '../Settings';
 import { DiscordClient } from '../DiscordClient';
+import GuildRolesManager from './GuildRolesManager';
 
-interface Role {
+export interface CustomRole {
   name: string;
   emoji: string;
 }
 
+export interface EmojiEmbed {
+embed: MessageEmbed; usedEmoji: string[] 
+}
+
 export default class RoleManager {
-  private _newEmbeds: { embed: MessageEmbed; usedEmoji: string[] }[] = [];
-  private _rolesChannel: undefined | TextChannel;
   private _guild: undefined | Guild;
-  private _newEmbed: { embed: MessageEmbed; usedEmoji: string[] } | undefined;
 
   constructor() {
     for (const guild of DiscordClient._client.guilds.cache.array()) {
       this._guild = guild;
-      this._rolesChannel = <TextChannel>(
-        guild.channels.cache
-          .array()
-          .find(
-            (channel: GuildChannel) =>
-              channel.name === 'roles' && channel.type === 'text'
-          )
-      );
-      if (!this._rolesChannel) continue;
+      const rolesChannel:
+        | TextChannel
+        | undefined = guild.channels.cache
+        .array()
+        .find(
+          (channel: GuildChannel) =>
+            channel.name === 'roles' && channel.type === 'text'
+        ) as TextChannel | undefined;
+      if (!rolesChannel) continue;
 
       let embed: {
         embed: MessageEmbed;
@@ -47,45 +46,17 @@ export default class RoleManager {
         usedEmoji: [],
       };
 
+      const newEmbeds: EmojiEmbed[] = [];
       while (embed.processed !== Settings.getSettings().roles.length) {
         embed = this.generateEmbed(embed.processed, embed.number);
-        this._newEmbeds.push({
+        newEmbeds.push({
           embed: embed.embed,
           usedEmoji: embed.usedEmoji,
         });
       }
 
-      this._rolesChannel.messages
-        .fetch({ limit: 10 })
-        .then(this.messagesFetched.bind(this))
-        .catch(console.error);
-    }
-  }
+      new GuildRolesManager(guild).checkRolesChannel(rolesChannel, newEmbeds);
 
-  private messagesFetched(messages: Collection<Snowflake, Message>): void {
-    const rolesMessages = messages.array();
-    for (let i = 0; i < this._newEmbeds.length; i++) {
-      this._newEmbed = this._newEmbeds[i];
-      if (!rolesMessages[i]) {
-        this._rolesChannel!.send(this._newEmbed!.embed)
-          .catch(console.error)
-          .then(this.reactToMessage.bind(this));
-        continue;
-      }
-      rolesMessages[i]
-        .edit(this._newEmbed!.embed)
-        .catch(console.error)
-        .then((message: void | Message) => {
-          if (!(message instanceof Message)) return;
-          message.reactions.removeAll().then(this.reactToMessage.bind(this)).catch(console.error);
-        });
-    }
-  }
-
-  reactToMessage(message: void | Message): void {
-    if (!(message instanceof Message)) return;
-    for (const emoji of this._newEmbed!.usedEmoji) {
-      message.react(this._guild!.emojis.cache.get(emoji)!).catch(console.error);
     }
   }
 
@@ -109,7 +80,7 @@ export default class RoleManager {
       processed < Settings.getSettings().roles.length || i - processed === 4;
       i++
     ) {
-      const role: Role = Settings.getSettings().roles[i];
+      const role: CustomRole = Settings.getSettings().roles[i];
       usedEmoji.push(role.emoji);
       embed.addField(
         role.name,

@@ -1,10 +1,11 @@
 import { TextChannel, Message, MessageEmbed } from 'discord.js';
+import Settings from '../Settings';
 import Command from './Command';
 import MessageHandler, { CommandHandler } from './MessageHandler';
 
 export default class HelpCommand extends Command {
   helpInfo: { name: string; value: string } = {
-    name: '!help [command]',
+    name: 'help [command]',
     value:
       'Displays help info for the specified command if there was a command specified. Otherwise it will display help for all commands',
   };
@@ -17,7 +18,7 @@ export default class HelpCommand extends Command {
     if (args.length === 0) {
       for (const command of MessageHandler._commands)
         embed.addField(
-          command.handler.helpInfo.name,
+          `${Settings.getSettings().prefix}${command.handler.helpInfo.name}`,
           command.handler.helpInfo.value,
           false
         );
@@ -25,16 +26,19 @@ export default class HelpCommand extends Command {
       return;
     }
     let requestedCommand = args[0];
-    if (requestedCommand.startsWith('!')) requestedCommand = requestedCommand.substr(1, requestedCommand.length);
+    if (requestedCommand.startsWith('!'))
+      requestedCommand = requestedCommand.substr(1, requestedCommand.length);
     const command: CommandHandler | undefined = MessageHandler._commands.find(
-      (value: CommandHandler) => value.command === requestedCommand || value.command.includes(requestedCommand)
+      (value: CommandHandler) =>
+        value.command === requestedCommand ||
+        value.command.includes(requestedCommand)
     );
     if (!command) {
       channel.send('This command does not exist');
       return;
     }
     embed.addField(
-      command.handler.helpInfo.name,
+      `${Settings.getSettings().prefix}${command.handler.helpInfo.name}`,
       command.handler.helpInfo.value,
       false
     );
