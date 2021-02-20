@@ -102,8 +102,7 @@ export default class CreateEmbed {
         message.delete().catch(console.error);
         continue;
       }
-      message.edit('').catch(console.error);
-      message.edit(embed).catch(console.error);
+      message.edit('', embed).catch(console.error);
     }
   }
 }
