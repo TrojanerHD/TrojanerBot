@@ -60,7 +60,7 @@ export default class GuildRolesManager {
             .filter(
               (reaction: MessageReaction) =>
                 !Settings.getSettings().roles.find(
-                  (role: CustomRole) => role.emoji === reaction.emoji.id
+                  (role: CustomRole) => role.emoji === reaction.emoji.id || role.emoji === reaction.emoji.name
                 )
             )
             .array();
@@ -80,7 +80,7 @@ export default class GuildRolesManager {
     for (const emoji of this.#newEmbed!.usedEmoji) {
       if (this.#guild!.emojis.cache.array().length === 0) return;
       message
-        .react(this.#guild!.emojis.cache.get(emoji)!)
+        .react(emoji)
         .then(this.messageListener.bind(this))
         .catch(console.error);
     }
@@ -109,7 +109,7 @@ export default class GuildRolesManager {
   private rolesFetched(roles: RoleManager): void {
     if (this.#block) return;
     const roleName: string | undefined = Settings.getSettings().roles.find(
-      (role: CustomRole) => role.emoji === this.#reaction!.emoji.id
+      (role: CustomRole) => role.emoji === this.#reaction!.emoji.id || role.emoji === this.#reaction!.emoji.name
     )?.name;
     let role: Role | undefined = roles.cache
       .array()
