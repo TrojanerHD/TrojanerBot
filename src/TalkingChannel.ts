@@ -11,9 +11,9 @@ import {
 
 export default class TalkingChannel {
   /** Number of created channels */
-  private _talkingChannelCount: number = 0;
+  #talkingChannelCount: number = 0;
   /** The state after the voice state update */
-  private _newState: VoiceState | undefined;
+  #newState?: VoiceState;
   /**
    * Creates talking channels that users can join onto. Always ensures that there is one free voice channel where someone can join
    */
@@ -33,7 +33,7 @@ export default class TalkingChannel {
    * @param newState The state after the voice state update
    */
   private onVoiceStateUpdate(oldState: VoiceState, newState: VoiceState): void {
-    this._newState = newState;
+    this.#newState = newState;
 
     const channel: GuildChannel | null = oldState.channel;
     if (!channel || !channel.name.startsWith('Talking ')) {
@@ -43,7 +43,7 @@ export default class TalkingChannel {
 
     if (channel.members.array().length === 0) {
       channel.delete().then(() => {
-        this._talkingChannelCount--;
+        this.#talkingChannelCount--;
         this.renameNextChannels(channel);
       });
       return;
@@ -121,20 +121,20 @@ export default class TalkingChannel {
    * Checks whether a new channel has to be created and creates it if so
    */
   private createChannelIfRequired(): void {
-    if (!this._newState!.channel) return;
-    const guild: Guild = this._newState!.guild;
+    if (!this.#newState!.channel) return;
+    const guild: Guild = this.#newState!.guild;
     const channel: GuildChannel = this.getChannelById(
       guild,
-      this._newState!.channel.id
+      this.#newState!.channel.id
     );
     const channelNumber: number | undefined = this.channelNameParser(channel);
     if (
       channelNumber === undefined ||
-      channelNumber !== this._talkingChannelCount
+      channelNumber !== this.#talkingChannelCount
     )
       return;
     guild.channels
-      .create(`Talking ${++this._talkingChannelCount}`, {
+      .create(`Talking ${++this.#talkingChannelCount}`, {
         parent: <Channel>channel.parent,
         type: 'voice',
       })
@@ -158,7 +158,7 @@ export default class TalkingChannel {
         ?.members.array().length === 0
     ) {
       channel.delete();
-      this._talkingChannelCount--;
+      this.#talkingChannelCount--;
       return;
     }
     this.renamePreviousChannel(channel);

@@ -12,9 +12,9 @@ export default class ByeCommand extends Command {
   handleCommand(args: string[], channel: TextChannel, message: Message): void {
     if (
       !PermissionManager.hasPermission(
-        message.member?.roles.cache.array(),
         channel,
-        message
+        message,
+        message.member?.roles.cache.array()
       )
     )
       return;

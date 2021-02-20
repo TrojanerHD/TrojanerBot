@@ -21,10 +21,10 @@ interface StreamData {
 
 export default class LiveChannel {
   /** URL for fetching all added streamers via Twitch api */
-  private _streamers: string | undefined;
+  #streamers?: string;
   /** The access token for the Twitch api */
-  private _accessToken: string | undefined;
-  private _streams: Stream[] = [];
+  #accessToken?: string;
+  #streams: Stream[] = [];
 
   /**
    * Handles the #live channel
@@ -44,11 +44,11 @@ export default class LiveChannel {
    * Fetches the current state of streams and updates the embed in #live if there is an update
    */
   private update(): void {
-    this._streamers = this.generateUrl(
+    this.#streamers = this.generateUrl(
       'streams',
       Settings.getSettings().streamers
     );
-    if (this._accessToken === undefined)
+    if (this.#accessToken === undefined)
       this.accessTokenRequest(this.channelRequest.bind(this));
     else this.channelRequest();
     this.timeout();
@@ -58,10 +58,10 @@ export default class LiveChannel {
    * Creates a request for fetching updates from streamers from Twitch
    */
   private channelRequest(): void {
-    fetch(this._streamers!, {
+    fetch(this.#streamers!, {
       headers: {
         'Client-ID': Settings.getSettings()['twitch-id'],
-        Authorization: `Bearer ${this._accessToken}`,
+        Authorization: `Bearer ${this.#accessToken}`,
       },
     })
       .then((res: Response) => res.json())
@@ -82,8 +82,8 @@ export default class LiveChannel {
       );
       return;
     }
-    this._streams = body.data;
-    this._streams.sort((a: Stream, b: Stream) => {
+    this.#streams = body.data;
+    this.#streams.sort((a: Stream, b: Stream) => {
       for (const streamer of Settings.getSettings().streamers) {
         if (a.user_name === streamer) return -1;
         if (b.user_name === streamer) return 1;
@@ -91,15 +91,15 @@ export default class LiveChannel {
       return 0;
     });
 
-    this._streams = this._streams.splice(0, 5);
+    this.#streams = this.#streams.splice(0, 5);
     let games: Set<string> = new Set();
-    for (const stream of this._streams) games.add(stream.game_id);
+    for (const stream of this.#streams) games.add(stream.game_id);
 
     const gameUrl: string = this.generateUrl('games', games);
     fetch(gameUrl, {
       headers: {
         'Client-ID': Settings.getSettings()['twitch-id'],
-        Authorization: `Bearer ${this._accessToken}`,
+        Authorization: `Bearer ${this.#accessToken}`,
       },
     })
       .then((res: Response) => res.json())
@@ -114,7 +114,7 @@ export default class LiveChannel {
    */
   private gameIdResult(body: { data: Game[] }): void {
     const createEmbed = new CreateEmbed();
-    for (const stream of this._streams) {
+    for (const stream of this.#streams) {
       let game: string | undefined = body.data.find(
         (game: Game) => game.id === stream.game_id
       )?.name;
@@ -161,7 +161,7 @@ export default class LiveChannel {
       .then((res: Response) => res.json())
       .catch(console.error)
       .then((data: any) => {
-        this._accessToken = data.access_token;
+        this.#accessToken = data.access_token;
         callback();
       });
   }

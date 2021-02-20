@@ -26,7 +26,7 @@ interface Field {
  * Creates the embed for #live
  */
 export default class CreateEmbed {
-  private _embed: Field[][] = [];
+  #embed: Field[][] = [];
 
   /**
    * Adds a formatted field to the embed containing information about a stream
@@ -58,7 +58,7 @@ export default class CreateEmbed {
         value: streamInformation.game,
         inline: true,
       });
-    this._embed.push(fieldArray);
+    this.#embed.push(fieldArray);
   }
 
   /**
@@ -92,7 +92,7 @@ export default class CreateEmbed {
       .setTitle('Twitch')
       .setTimestamp(new Date());
 
-    for (const fieldArray of this._embed) {
+    for (const fieldArray of this.#embed) {
       if (embed.fields.length !== 0) embed.addField('\u200b', '\u200b', false);
       for (const field of fieldArray)
         embed.addField(field.name, field.value, field.inline);

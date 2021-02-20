@@ -3,6 +3,7 @@ import { TextChannel, Message, GuildChannel, MessageEmbed } from 'discord.js';
 
 export default class LinkResolve extends Command {
   helpInfo: {name: string, value: string} = {name: '', value: 'Resolves message links and embeds them as Discord should have done it'};
+
   handleCommand(args: string[], channel: TextChannel, message: Message): void {
     const splitMessage: string = message.content.split(
       /https:\/\/discordapp.com\/channels\//

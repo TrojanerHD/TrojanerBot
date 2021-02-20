@@ -4,9 +4,9 @@ import Settings from './Settings';
 
 export default class PermissionManager {
   static hasPermission(
-    roles: Role[] | undefined,
     channel: TextChannel,
-    message: Message
+    message: Message,
+    roles?: Role[],
   ): boolean {
     const permission: boolean = roles
       ? !!roles.find((role: Role) =>

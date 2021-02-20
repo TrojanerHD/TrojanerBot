@@ -6,6 +6,7 @@ export default class PingCommand extends Command {
     name: 'ping',
     value: 'Shows the current ping of the bot',
   };
+
   handleCommand(args: string[], channel: TextChannel, message: Message): void {
     channel
       .send(

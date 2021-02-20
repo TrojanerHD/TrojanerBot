@@ -19,11 +19,11 @@ embed: MessageEmbed; usedEmoji: string[]
 }
 
 export default class RoleManager {
-  private _guild: undefined | Guild;
+  #guild?: Guild;
 
   constructor() {
     for (const guild of DiscordClient._client.guilds.cache.array()) {
-      this._guild = guild;
+      this.#guild = guild;
       const rolesChannel:
         | TextChannel
         | undefined = guild.channels.cache
@@ -86,7 +86,7 @@ export default class RoleManager {
         role.name,
         new Emoji(
           DiscordClient._client,
-          this._guild!.emojis.cache.get(role.emoji)!
+          this.#guild!.emojis.cache.get(role.emoji)!
         ),
         true
       );
