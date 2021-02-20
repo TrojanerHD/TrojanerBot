@@ -15,6 +15,10 @@ interface Stream {
   viewer_count: number;
 }
 
+interface StreamData {
+  data: Stream[];
+}
+
 export default class LiveChannel {
   /** URL for fetching all added streamers via Twitch api */
   private _streamers: string | undefined;
@@ -42,7 +46,6 @@ export default class LiveChannel {
   private update(): void {
     this._streamers = this.generateUrl(
       'streams',
-      'user_login',
       Settings.getSettings().streamers
     );
     if (this._accessToken === undefined)
@@ -63,7 +66,7 @@ export default class LiveChannel {
     })
       .then((res: Response) => res.json())
       .catch(console.error)
-      .then((data: any) => this.streamerFetch(data))
+      .then((data: StreamData) => this.streamerFetch(data))
       .catch(console.error);
   }
 
@@ -72,18 +75,27 @@ export default class LiveChannel {
    * Creates a request to resolve the game ids of the games the streamers are playing
    * @param body Updated content
    */
-  private streamerFetch(body: { data: Stream[] }): void {
+  private streamerFetch(body: StreamData): void {
     if ('error' in body) {
       console.error(
-        `Error in LiveChannel.ts on line 74:\n${JSON.stringify(body, null, 2)}`
+        `Error in LiveChannel.ts on line 77:\n${JSON.stringify(body, null, 2)}`
       );
       return;
     }
     this._streams = body.data;
-    let games: Set<string> = new Set();
-    for (const stream of body.data) games.add(stream.game_id);
+    this._streams.sort((a: Stream, b: Stream) => {
+      for (const streamer of Settings.getSettings().streamers) {
+        if (a.user_name === streamer) return -1;
+        if (b.user_name === streamer) return 1;
+      }
+      return 0;
+    });
 
-    const gameUrl: string = this.generateUrl('games', 'id', games);
+    this._streams = this._streams.splice(0, 5);
+    let games: Set<string> = new Set();
+    for (const stream of this._streams) games.add(stream.game_id);
+
+    const gameUrl: string = this.generateUrl('games', games);
     fetch(gameUrl, {
       headers: {
         'Client-ID': Settings.getSettings()['twitch-id'],
@@ -120,17 +132,16 @@ export default class LiveChannel {
   /**
    * Creates a url for the Twitch API to fetch
    * @param endpoint The endpoint to use
-   * @param parameter
-   * @param array All games or streamers
+   * @param array All games or streamers to fetch
    * @returns The formatted url
    */
   private generateUrl(
     endpoint: 'games' | 'streams',
-    parameter: 'user_login' | 'id',
     array: string[] | Set<string>
   ): string {
+    const type: string = endpoint === 'games' ? 'id' : 'user_login';
     let url = `${STATICTWITCH.baseUrl}helix/${endpoint}?`;
-    for (const value of array) url += `${parameter}=${value}&`;
+    for (const value of array) url += `${type}=${value}&`;
     return url.replace(/&$/, '');
   }
 

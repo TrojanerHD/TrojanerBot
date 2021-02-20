@@ -92,13 +92,6 @@ export default class CreateEmbed {
       .setTitle('Twitch')
       .setTimestamp(new Date());
 
-    this._embed.sort((a: Field[], b: Field[]) => {
-      for (const streamer of Settings.getSettings().streamers) {
-        if (a[0].value.split('[')[1].split(']')[0] === streamer) return -1;
-        if (b[0].value.split('[')[1].split(']')[0] === streamer) return 1;
-      }
-      return 0;
-    });
     for (const fieldArray of this._embed) {
       if (embed.fields.length !== 0) embed.addField('\u200b', '\u200b', false);
       for (const field of fieldArray)
