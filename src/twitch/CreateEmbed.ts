@@ -12,7 +12,7 @@ import Settings from '../Settings';
 interface StreamInformation {
   name: string;
   title: string;
-  game?: string;
+  category?: string;
   viewer_count: number;
 }
 
@@ -52,10 +52,10 @@ export default class CreateEmbed {
       { name: 'Title', value: streamInformation.title, inline: true },
       { name: 'Size', value: size, inline: true },
     ];
-    if (streamInformation.game !== undefined)
+    if (streamInformation.category !== undefined)
       fieldArray.push({
-        name: 'Game',
-        value: streamInformation.game,
+        name: 'Category',
+        value: streamInformation.category,
         inline: true,
       });
     this.#embed.push(fieldArray);

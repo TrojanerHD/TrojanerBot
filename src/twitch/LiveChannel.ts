@@ -3,7 +3,7 @@ import CreateEmbed from './CreateEmbed';
 import Settings from '../Settings';
 import fetch, { Response } from 'node-fetch';
 
-interface Game {
+interface Category {
   name: string;
   id: string;
 }
@@ -72,7 +72,7 @@ export default class LiveChannel {
 
   /**
    * Callback for channelRequest.
-   * Creates a request to resolve the game ids of the games the streamers are playing
+   * Creates a request to resolve the category ids of the categories the streamers are streaming
    * @param body Updated content
    */
   private streamerFetch(body: StreamData): void {
@@ -92,11 +92,11 @@ export default class LiveChannel {
     });
 
     this.#streams = this.#streams.splice(0, 5);
-    let games: Set<string> = new Set();
-    for (const stream of this.#streams) games.add(stream.game_id);
+    let categories: Set<string> = new Set();
+    for (const stream of this.#streams) categories.add(stream.game_id);
 
-    const gameUrl: string = this.generateUrl('games', games);
-    fetch(gameUrl, {
+    const categoryUrl: string = this.generateUrl('games', categories);
+    fetch(categoryUrl, {
       headers: {
         'Client-ID': Settings.getSettings()['twitch-id'],
         Authorization: `Bearer ${this.#accessToken}`,
@@ -104,23 +104,23 @@ export default class LiveChannel {
     })
       .then((res: Response) => res.json())
       .catch(console.error)
-      .then(this.gameIdResult.bind(this))
+      .then(this.categoryIdResult.bind(this))
       .catch(console.error);
   }
 
   /**
-   * Callback for the game id resolving
-   * @param body Game properties
+   * Callback for the category id resolving
+   * @param body Category properties
    */
-  private gameIdResult(body: { data: Game[] }): void {
+  private categoryIdResult(body: { data: Category[] }): void {
     const createEmbed = new CreateEmbed();
     for (const stream of this.#streams) {
-      let game: string | undefined = body.data.find(
-        (game: Game) => game.id === stream.game_id
+      let category: string | undefined = body.data.find(
+        (category: Category) => category.id === stream.game_id
       )?.name;
 
       createEmbed.addField({
-        game,
+        category: category,
         name: stream.user_name,
         title: stream.title,
         viewer_count: stream.viewer_count,
@@ -132,7 +132,7 @@ export default class LiveChannel {
   /**
    * Creates a url for the Twitch API to fetch
    * @param endpoint The endpoint to use
-   * @param array All games or streamers to fetch
+   * @param array All categories or streamers to fetch
    * @returns The formatted url
    */
   private generateUrl(
