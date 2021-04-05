@@ -1,27 +1,22 @@
 import {
   Collection,
   Guild,
-  GuildMember,
   Message,
   MessageReaction,
-  Role,
-  RoleManager,
+  ReactionCollector,
   Snowflake,
   TextChannel,
-  User,
 } from 'discord.js';
 import { DiscordClient } from '../DiscordClient';
 import Settings from '../Settings';
 import { EmojiEmbed, CustomRole } from './RoleChannelManager';
+import RoleAssigner from './RoleAssigner';
 
 export default class GuildRolesManager {
   #guild: Guild;
   #rolesChannel?: TextChannel;
   #newEmbed?: EmojiEmbed;
   #newEmbeds?: EmojiEmbed[];
-  #reaction?: MessageReaction;
-  #members?: Collection<string, GuildMember>;
-  #block: boolean = false;
 
   constructor(guild: Guild) {
     this.#guild = guild;
@@ -60,7 +55,9 @@ export default class GuildRolesManager {
             .filter(
               (reaction: MessageReaction) =>
                 !Settings.getSettings().roles.find(
-                  (role: CustomRole) => role.emoji === reaction.emoji.id || role.emoji === reaction.emoji.name
+                  (role: CustomRole) =>
+                    role.emoji === reaction.emoji.id ||
+                    role.emoji === reaction.emoji.name
                 )
             )
             .array();
@@ -77,64 +74,28 @@ export default class GuildRolesManager {
 
   private reactToMessage(message: void | Message): void {
     if (!(message instanceof Message)) return;
+    this.messageListener(message);
     for (const emoji of this.#newEmbed!.usedEmoji) {
       if (this.#guild!.emojis.cache.array().length === 0) return;
-      message
-        .react(emoji)
-        .then(this.messageListener.bind(this))
-        .catch(console.error);
+      message.react(emoji).catch(console.error);
     }
   }
 
-  private messageListener(reaction: MessageReaction): void {
-    const collector = reaction.message.createReactionCollector(() => true, {
-      dispose: true,
-    });
+  private messageListener(message: Message): void {
+    const collector: ReactionCollector = message.createReactionCollector(
+      () => true,
+      {
+        dispose: true,
+      }
+    );
     collector.on('collect', this.checkRoles.bind(this));
-
     collector.on('remove', this.checkRoles.bind(this));
   }
 
-  private checkRoles(r: MessageReaction): void {
-    this.#reaction = r;
-
-    this.#guild!.members.fetch().then(this.membersFetched.bind(this));
-  }
-
-  private membersFetched(members: Collection<string, GuildMember>): void {
-    this.#members = members;
-    this.#guild.roles.fetch().then(this.rolesFetched.bind(this));
-  }
-
-  private rolesFetched(roles: RoleManager): void {
-    if (this.#block) return;
-    const roleName: string | undefined = Settings.getSettings().roles.find(
-      (role: CustomRole) => role.emoji === this.#reaction!.emoji.id || role.emoji === this.#reaction!.emoji.name
-    )?.name;
-    let role: Role | undefined = roles.cache
-      .array()
-      .find((role: Role) => role.name === roleName);
-    if (!role) {
-      this.#guild.roles
-        .create({
-          data: { name: roleName, mentionable: true },
-        })
-        .then(() => {
-          this.#block = false;
-          this.checkRoles(this.#reaction!);
-        })
-        .catch(console.error);
-      this.#block = true;
-      return;
-    }
-    const reactors: User[] = this.#reaction!.users.cache.array();
-    for (const member of this.#members!.array()) {
-      const user: User = member.user;
-      if (user.bot) continue;
-      if (member.roles.cache.array().includes(role) && !reactors.includes(user))
-        member.roles.remove(role);
-      if (!member.roles.cache.array().includes(role) && reactors.includes(user))
-        member.roles.add(role);
-    }
+  checkRoles(r: MessageReaction): void {
+    const roleAssigner: RoleAssigner = new RoleAssigner(r, this.#guild, this);
+    this.#guild!.members.fetch().then(
+      roleAssigner.membersFetched.bind(roleAssigner)
+    );
   }
 }
