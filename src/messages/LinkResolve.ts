@@ -6,7 +6,7 @@ export default class LinkResolve extends Command {
 
   handleCommand(args: string[], channel: TextChannel, message: Message): void {
     const splitMessage: string = message.content.split(
-      /https:\/\/discordapp.com\/channels\//
+      /https:\/\/discord(app)?\.(com|gg)\/channels\//
     )[1];
     const properties: string[] = splitMessage.split('/');
     const guild: string = properties[0];
