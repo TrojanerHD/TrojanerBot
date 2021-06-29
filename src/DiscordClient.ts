@@ -1,4 +1,13 @@
-import { Client } from 'discord.js';
+import {
+  Client,
+  DMChannel,
+  Intents,
+  Message,
+  MessageEmbed,
+  NewsChannel,
+  TextChannel,
+  ThreadChannel,
+} from 'discord.js';
 import MessageHandler from './messages/MessageHandler';
 import LiveChannel from './twitch/LiveChannel';
 import TalkingChannel from './TalkingChannel';
@@ -6,7 +15,9 @@ import RoleChannelManager from './roles/RoleChannelManager';
 import Settings from './Settings';
 
 export class DiscordClient {
-  static _client: Client = new Client();
+  static _client: Client = new Client({
+    intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS],
+  });
 
   /**
    * The discord client handler and initializer of the bot
@@ -42,5 +53,20 @@ export class DiscordClient {
    */
   private startTwitch(): void {
     new LiveChannel();
+  }
+
+  static send(
+    channel: TextChannel | DMChannel | NewsChannel | ThreadChannel | undefined,
+    message: string | MessageEmbed,
+    callback?: (message: Message) => void
+  ): void {
+    if (!channel) return;
+    const msg: Promise<Message> =
+      message instanceof MessageEmbed
+        ? channel.send({ embeds: [message] })
+        : channel.send(message);
+
+    if (callback) msg.then(callback);
+    msg.catch(console.error);
   }
 }

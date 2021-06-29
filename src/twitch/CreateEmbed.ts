@@ -27,6 +27,7 @@ interface Field {
  */
 export default class CreateEmbed {
   #embed: Field[][] = [];
+  #liveChannel?: TextChannel;
 
   /**
    * Adds a formatted field to the embed containing information about a stream
@@ -66,17 +67,15 @@ export default class CreateEmbed {
    */
   sendEmbed(): void {
     for (const guild of DiscordClient._client.guilds.cache.array()) {
-      const liveChannel:
-        | GuildChannel
-        | undefined = guild.channels.cache
+      this.#liveChannel = guild.channels.cache
         .array()
         .find(
           (channel: GuildChannel) =>
             channel.type === 'text' && channel.name === 'live'
-        );
-      if (!liveChannel) continue;
+        ) as TextChannel | undefined;
+      if (!this.#liveChannel) continue;
 
-      (<TextChannel>liveChannel).messages
+      this.#liveChannel.messages
         .fetch()
         .then(this.messagesFetched.bind(this))
         .catch(console.error);
@@ -97,12 +96,16 @@ export default class CreateEmbed {
       for (const field of fieldArray)
         embed.addField(field.name, field.value, field.inline);
     }
+    if (messages.array().length === 0) {
+      DiscordClient.send(this.#liveChannel, embed);
+      return;
+    }
     for (const message of messages.array()) {
       if (message.author.id !== DiscordClient._client.user!.id) {
         message.delete().catch(console.error);
         continue;
       }
-      message.edit('', embed).catch(console.error);
+      message.edit({ embeds: [embed] }).catch(console.error);
     }
   }
 }

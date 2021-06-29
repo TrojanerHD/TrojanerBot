@@ -18,12 +18,11 @@ export default class ByeCommand extends Command {
       )
     )
       return;
-    message.channel
-      .send(
-        '**JavaScript**\n:robot: Bleeb Bloob :robot:\n:robot: Bleeb Blooouuub...\n[Shutting down]'
-      )
-      .then(ByeCommand.destroyBot)
-      .catch(console.error);
+    DiscordClient.send(
+      message.channel,
+      '**JavaScript**\n:robot: Bleeb Bloob :robot:\n:robot: Bleeb Blooouuub...\n[Shutting down]',
+      ByeCommand.destroyBot
+    );
   }
   private static destroyBot(): void {
     DiscordClient._client.destroy();

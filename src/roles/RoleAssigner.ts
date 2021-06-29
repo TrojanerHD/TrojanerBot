@@ -30,11 +30,11 @@ export default class RoleAssigner {
     this.#guild.roles.fetch().then(this.rolesFetched.bind(this));
   }
 
-  private rolesFetched(roles: RoleManager): void {
+  private rolesFetched(roles: Collection<`${bigint}`, Role>): void {
     if (this.#block) return;
-    this.#roles = roles.cache.array();
+    this.#roles = roles.array();
 
-    this.#reaction!.users.fetch()
+    this.#reaction.users.fetch()
       .then(this.reactorsFetched.bind(this))
       .catch(console.error);
   }
@@ -42,8 +42,8 @@ export default class RoleAssigner {
   private reactorsFetched(reactors: Collection<string, User>): void {
     const roleName: string | undefined = Settings.getSettings().roles.find(
       (role: CustomRole) =>
-        role.emoji === this.#reaction!.emoji.id ||
-        role.emoji === this.#reaction!.emoji.name
+        role.emoji === this.#reaction.emoji.id ||
+        role.emoji === this.#reaction.emoji.name
     )?.name;
     let role: Role | undefined = this.#roles!.find(
       (role: Role) => role.name === roleName
@@ -51,11 +51,11 @@ export default class RoleAssigner {
     if (!role) {
       this.#guild.roles
         .create({
-          data: { name: roleName, mentionable: true },
+          name: roleName, mentionable: true
         })
         .then(() => {
           this.#block = false;
-          this.#parent.checkRoles(this.#reaction!);
+          this.#parent.checkRoles(this.#reaction);
         })
         .catch(console.error);
       this.#block = true;

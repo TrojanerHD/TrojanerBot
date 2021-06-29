@@ -1,5 +1,6 @@
 import Command from './Command';
-import { TextChannel, Message, GuildChannel, MessageEmbed } from 'discord.js';
+import { TextChannel, Message, GuildChannel, MessageEmbed, Channel } from 'discord.js';
+import { DiscordClient } from '../DiscordClient';
 
 export default class LinkCommand extends Command {
   helpInfo: { name: string; value: string } = {
@@ -20,27 +21,24 @@ export default class LinkCommand extends Command {
           channel.type === 'text' && channel.name === args[0]
       )
     );
-    const messageMentions: TextChannel[] = message.mentions.channels.array();
+    const messageMentions: TextChannel[] = message.mentions.channels.array().filter((value: Channel) => value instanceof TextChannel) as TextChannel[];
     if (
       args.length < 1 ||
       (messageMentions.length === 0 && !channelNameMatch)
     ) {
-      channel
-        .send(
-          'Please specify a channel! Syntax: `!<link|to> #<Discord Channel>`'
-        )
-        .catch(console.error);
+      DiscordClient.send(
+        channel,
+        'Please specify a channel! Syntax: `!<link|to> #<Discord Channel>`'
+      );
       return;
     }
     this.#newChannel =
       messageMentions.length !== 0 ? messageMentions[0] : channelNameMatch;
     if (
       this.#newChannel.type !== 'text' ||
-      this.#newChannel.id === channel.id ||
-      this.#newChannel.parent?.name === 'Info' ||
-      this.#newChannel.name === 'smm2'
+      this.#newChannel.id === channel.id
     ) {
-      channel.send('Please specify a different channel!').catch(console.error);
+      DiscordClient.send(channel, 'Please specify a different channel!');
       return;
     }
     this.#author = message.author.id;
@@ -53,15 +51,17 @@ export default class LinkCommand extends Command {
       .setTimestamp(new Date())
       .setColor(4176616);
 
-    channel
-      .send(this.#embed)
-      .then(this.sendMessageToNewChannel.bind(this))
-      .catch(console.error);
+    DiscordClient.send(
+      channel,
+      this.#embed,
+      this.sendMessageToNewChannel.bind(this)
+    );
   }
 
   private sendMessageToNewChannel(message: Message) {
     this.#oldMessage = message;
-    this.#newChannel!.send(
+    DiscordClient.send(
+      this.#newChannel!,
       new MessageEmbed()
         .setTitle(
           `<:portal_orange:631237087022022656> -> #${this.#newChannel!.name}`
@@ -72,16 +72,15 @@ export default class LinkCommand extends Command {
           }>`
         )
         .setTimestamp(new Date())
-        .setColor(16285727)
-    )
-      .then(this.editOldMessage.bind(this))
-      .catch(console.error);
+        .setColor(16285727),
+      this.editOldMessage.bind(this)
+    );
   }
 
   editOldMessage(message: Message) {
     this.#embed!.setDescription(
-      this.#embed!.description?.replace(/(To.*$)/m, `[$1](${message.url})`)
+      this.#embed!.description!.replace(/(To.*$)/m, `[$1](${message.url})`)
     );
-    this.#oldMessage!.edit(this.#embed!);
+    this.#oldMessage!.edit({ embeds: [this.#embed!] }).catch(console.error);
   }
 }

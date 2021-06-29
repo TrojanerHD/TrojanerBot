@@ -3,8 +3,6 @@ import {
   Guild,
   Message,
   MessageReaction,
-  ReactionCollector,
-  Snowflake,
   TextChannel,
 } from 'discord.js';
 import { DiscordClient } from '../DiscordClient';
@@ -17,6 +15,7 @@ export default class GuildRolesManager {
   #rolesChannel?: TextChannel;
   #newEmbed?: EmojiEmbed;
   #newEmbeds?: EmojiEmbed[];
+  #message?: Message;
 
   constructor(guild: Guild) {
     this.#guild = guild;
@@ -31,14 +30,16 @@ export default class GuildRolesManager {
       .catch(console.error);
   }
 
-  private messagesFetched(messages: Collection<Snowflake, Message>): void {
+  private messagesFetched(messages: Collection<`${bigint}`, Message>): void {
     const rolesMessages = messages.array();
     for (let i = 0; i < this.#newEmbeds!.length; i++) {
       this.#newEmbed = this.#newEmbeds![i];
       if (!rolesMessages[i]) {
-        this.#rolesChannel!.send(this.#newEmbed!.embed)
-          .catch(console.error)
-          .then(this.reactToMessage.bind(this));
+        DiscordClient.send(
+          this.#rolesChannel,
+          this.#newEmbed!.embed,
+          this.reactToMessage.bind(this)
+        );
         continue;
       }
       while (
@@ -47,7 +48,7 @@ export default class GuildRolesManager {
       )
         i++;
       rolesMessages[i]
-        .edit(this.#newEmbed!.embed)
+        .edit({ embeds: [this.#newEmbed!.embed] })
         .catch(console.error)
         .then((message: void | Message) => {
           if (!(message instanceof Message)) return;
@@ -82,17 +83,21 @@ export default class GuildRolesManager {
   }
 
   private messageListener(message: Message): void {
-    const collector: ReactionCollector = message.createReactionCollector(
-      () => true,
-      {
-        dispose: true,
-      }
+    this.#message = message;
+    DiscordClient._client.on('messageReactionAdd', this.checkRoles.bind(this));
+    DiscordClient._client.on(
+      'messageReactionRemove',
+      this.checkRoles.bind(this)
     );
-    collector.on('collect', this.checkRoles.bind(this));
-    collector.on('remove', this.checkRoles.bind(this));
   }
 
   checkRoles(r: MessageReaction): void {
+    if (
+      r.message.id !== this.#message!.id ||
+      r.message.author!.id !== DiscordClient._client.user!.id ||
+      r.message.guild!.id !== this.#message!.guild!.id
+    )
+      return;
     const roleAssigner: RoleAssigner = new RoleAssigner(r, this.#guild, this);
     this.#guild!.members.fetch().then(
       roleAssigner.membersFetched.bind(roleAssigner)

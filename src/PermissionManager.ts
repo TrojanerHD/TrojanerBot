@@ -1,4 +1,5 @@
 import { Role, TextChannel, Message, MessageEmbed } from 'discord.js';
+import { DiscordClient } from './DiscordClient';
 import MessageDeletion from './messages/MessageDeletion';
 import Settings from './Settings';
 
@@ -6,7 +7,7 @@ export default class PermissionManager {
   static hasPermission(
     channel: TextChannel,
     message: Message,
-    roles?: Role[],
+    roles?: Role[]
   ): boolean {
     const permission: boolean = roles
       ? !!roles.find((role: Role) =>
@@ -25,10 +26,11 @@ export default class PermissionManager {
         .setFooter(message.author.tag)
         .setColor(16711680);
 
-      channel
-        .send(errorMessage)
-        .then(messageDeletion.checkDeletion.bind(messageDeletion))
-        .catch(console.error);
+      DiscordClient.send(
+        channel,
+        errorMessage,
+        messageDeletion.checkDeletion.bind(messageDeletion)
+      );
     }
     return permission;
   }

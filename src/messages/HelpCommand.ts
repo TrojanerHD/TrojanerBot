@@ -1,4 +1,5 @@
 import { TextChannel, Message, MessageEmbed } from 'discord.js';
+import { DiscordClient } from '../DiscordClient';
 import Settings from '../Settings';
 import Command from './Command';
 import MessageHandler, { CommandHandler } from './MessageHandler';
@@ -23,7 +24,7 @@ export default class HelpCommand extends Command {
           command.handler.helpInfo.value,
           false
         );
-      channel.send(embed).catch(console.error);
+      DiscordClient.send(channel, embed);
       return;
     }
     let requestedCommand = args[0];
@@ -35,7 +36,7 @@ export default class HelpCommand extends Command {
         value.command.includes(requestedCommand)
     );
     if (!command) {
-      channel.send('This command does not exist');
+      DiscordClient.send(channel, 'This command does not exist');
       return;
     }
     embed.addField(
@@ -43,6 +44,6 @@ export default class HelpCommand extends Command {
       command.handler.helpInfo.value,
       false
     );
-    channel.send(embed).catch(console.error);
+    DiscordClient.send(channel, embed);
   }
 }

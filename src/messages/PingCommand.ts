@@ -1,5 +1,6 @@
 import Command from './Command';
 import { TextChannel, MessageEmbed, Message } from 'discord.js';
+import { DiscordClient } from '../DiscordClient';
 
 export default class PingCommand extends Command {
   helpInfo: { name: string; value: string } = {
@@ -8,19 +9,18 @@ export default class PingCommand extends Command {
   };
 
   handleCommand(args: string[], channel: TextChannel, message: Message): void {
-    channel
-      .send(
-        new MessageEmbed()
-          .setDescription('Ping')
-          .setAuthor('JavaScript')
-          .setColor('153c52')
-          .addField(
-            'My ping is',
-            `${Math.floor(new Date().getTime() - message.createdTimestamp)}ms`
-          )
-          .setFooter(`Requested by ${message.author.tag}`)
-          .setTimestamp(new Date())
-      )
-      .catch(console.error);
+    DiscordClient.send(
+      channel,
+      new MessageEmbed()
+        .setDescription('Ping')
+        .setAuthor('JavaScript')
+        .setColor('153c52')
+        .addField(
+          'My ping is',
+          `${Math.floor(new Date().getTime() - message.createdTimestamp)}ms`
+        )
+        .setFooter(`Requested by ${message.author.tag}`)
+        .setTimestamp(new Date())
+    );
   }
 }

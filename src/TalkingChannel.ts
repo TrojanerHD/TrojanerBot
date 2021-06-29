@@ -135,7 +135,7 @@ export default class TalkingChannel {
       return;
     guild.channels
       .create(`Talking ${++this.#talkingChannelCount}`, {
-        parent: <Channel>channel.parent,
+        parent: channel.parent as Channel,
         type: 'voice',
       })
       .then(this.channelCreated.bind(this));

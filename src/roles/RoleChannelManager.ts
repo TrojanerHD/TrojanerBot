@@ -83,18 +83,16 @@ export default class RoleManager {
     ) {
       const role: CustomRole = Settings.getSettings().roles[i];
       usedEmoji.push(role.emoji);
-      
-      const emoji: GuildEmoji | undefined = this.#guild!.emojis.cache.get(
-        role.emoji
+
+      const emoji:
+        | GuildEmoji
+        | undefined = this.#guild!.emojis.cache.array().find(
+        (value: GuildEmoji) => value.id == role.emoji
       );
       let emojiField: string | Emoji = '';
       if (!emoji) emojiField = role.emoji;
       else emojiField = new Emoji(DiscordClient._client, emoji);
-        embed.addField(
-          role.name,
-          emojiField,
-          true
-        );
+      embed.addField(role.name, emojiField instanceof Emoji ? emojiField.toString() : emojiField, true);
       processed++;
     }
 
