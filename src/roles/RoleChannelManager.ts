@@ -5,6 +5,7 @@ import {
   GuildEmoji,
   MessageEmbed,
   TextChannel,
+  ThreadChannel,
 } from 'discord.js';
 import Settings from '../Settings';
 import { DiscordClient } from '../DiscordClient';
@@ -31,7 +32,7 @@ export default class RoleManager {
         | undefined = guild.channels.cache
         .array()
         .find(
-          (channel: GuildChannel) =>
+          (channel: GuildChannel | ThreadChannel): boolean =>
             channel.name === 'roles' && channel.type === 'text'
         ) as TextChannel | undefined;
       if (!rolesChannel) continue;

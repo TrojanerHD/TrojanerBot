@@ -1,5 +1,5 @@
 import Command from './Command';
-import { TextChannel, Message, GuildChannel, MessageEmbed, Channel } from 'discord.js';
+import { TextChannel, Message, GuildChannel, MessageEmbed, Channel, ThreadChannel } from 'discord.js';
 import { DiscordClient } from '../DiscordClient';
 
 export default class LinkCommand extends Command {
@@ -17,7 +17,7 @@ export default class LinkCommand extends Command {
   handleCommand(args: string[], channel: TextChannel, message: Message): void {
     const channelNameMatch: TextChannel | undefined = <TextChannel>(
       message.guild?.channels.cache.find(
-        (channel: GuildChannel) =>
+        (channel: GuildChannel | ThreadChannel): boolean =>
           channel.type === 'text' && channel.name === args[0]
       )
     );

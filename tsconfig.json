@@ -6,7 +6,8 @@
     "outDir": "build",
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "moduleResolution": "node"
   },
   "exclude": ["node_modules"],
   "files": ["src/index.ts"]

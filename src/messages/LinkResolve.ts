@@ -1,5 +1,5 @@
 import Command from './Command';
-import { TextChannel, Message, GuildChannel, MessageEmbed } from 'discord.js';
+import { TextChannel, Message, GuildChannel, MessageEmbed, ThreadChannel } from 'discord.js';
 import { DiscordClient } from '../DiscordClient';
 
 export default class LinkResolve extends Command {
@@ -30,8 +30,9 @@ export default class LinkResolve extends Command {
     }
     const guildChannel:
       | GuildChannel
+      | ThreadChannel
       | undefined = channel.guild.channels.cache.find(
-      (guildChannel: GuildChannel) =>
+      (guildChannel: GuildChannel | ThreadChannel): boolean =>
         guildChannel.id === urlChannel && guildChannel.type === 'text'
     );
     if (!guildChannel) {

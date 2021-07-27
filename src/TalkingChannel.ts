@@ -7,6 +7,7 @@ import {
   Channel,
   VoiceChannel,
   TextChannel,
+  ThreadChannel,
 } from 'discord.js';
 
 export default class TalkingChannel {
@@ -58,10 +59,11 @@ export default class TalkingChannel {
   private renameNextChannels(channel: GuildChannel): void {
     const current: number = this.channelNameParser(channel)!;
     const guild: Guild = channel.guild;
-    const nextChannel: GuildChannel | undefined = guild.channels.cache.find(
-      (channel: GuildChannel) => channel.name === `Talking ${current + 1}`
+    const nextChannel: GuildChannel | ThreadChannel | undefined = guild.channels.cache.find(
+      (channel: GuildChannel | ThreadChannel): boolean =>
+        channel.name === `Talking ${current + 1}`
     );
-    if (channel.members.array().length !== 0 || !nextChannel) {
+    if (channel.members.array().length !== 0 || !nextChannel || nextChannel instanceof ThreadChannel) {
       this.createChannelIfRequired();
       return;
     }
@@ -79,8 +81,8 @@ export default class TalkingChannel {
     const current: number = this.channelNameParser(channel)!;
     if (current === 1) return;
     const guild: Guild = channel.guild;
-    const previousChannel: GuildChannel | undefined = guild.channels.cache.find(
-      (channel: GuildChannel) => channel.name === `Talking ${current - 1}`
+    const previousChannel: GuildChannel | ThreadChannel | undefined = guild.channels.cache.find(
+      (channel: GuildChannel | ThreadChannel): boolean => channel.name === `Talking ${current - 1}`
     );
     if (previousChannel) return;
     channel
@@ -96,10 +98,10 @@ export default class TalkingChannel {
    * @returns The found channel
    */
   private getChannelById(guild: Guild, id: string): GuildChannel {
-    const channel: GuildChannel | undefined = guild.channels.cache.find(
-      (channel: GuildChannel) => channel.id === id
+    const channel: GuildChannel | ThreadChannel | undefined = guild.channels.cache.find(
+      (channel: GuildChannel | ThreadChannel): boolean => channel.id === id
     );
-    if (!channel)
+    if (!channel || channel instanceof ThreadChannel)
       throw new Error(
         `Channel with id ${id} does not exist in guild with id ${guild.id}`
       );
@@ -111,7 +113,7 @@ export default class TalkingChannel {
    * @param channel The talking channel
    * @returns The number of a talking channel if there is any
    */
-  private channelNameParser(channel: GuildChannel): number | undefined {
+  private channelNameParser(channel: GuildChannel | ThreadChannel): number | undefined {
     if (!channel.name.startsWith('Talking')) return;
     if (channel.name === 'Talking') return 0;
     return +channel.name.split(' ')[1];
@@ -149,12 +151,13 @@ export default class TalkingChannel {
     channel: VoiceChannel | CategoryChannel | TextChannel
   ): void {
     if (
+      (
       channel.guild.channels.cache
         .find(
-          (channelToBeFound: GuildChannel) =>
+          (channelToBeFound: GuildChannel | ThreadChannel): boolean =>
             `Talking ${this.channelNameParser(channelToBeFound)! - 1}` ===
-            channel.name
-        )
+            channel.name && channel instanceof GuildChannel
+        ) as GuildChannel)
         ?.members.array().length === 0
     ) {
       channel.delete();

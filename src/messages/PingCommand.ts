@@ -14,7 +14,7 @@ export default class PingCommand extends Command {
       new MessageEmbed()
         .setDescription('Ping')
         .setAuthor('JavaScript')
-        .setColor('153c52')
+        .setColor(206694)
         .addField(
           'My ping is',
           `${Math.floor(new Date().getTime() - message.createdTimestamp)}ms`

@@ -5,6 +5,7 @@ import {
   Snowflake,
   Message,
   Collection,
+  ThreadChannel,
 } from 'discord.js';
 import { DiscordClient } from '../DiscordClient';
 import Settings from '../Settings';
@@ -70,7 +71,7 @@ export default class CreateEmbed {
       this.#liveChannel = guild.channels.cache
         .array()
         .find(
-          (channel: GuildChannel) =>
+          (channel: GuildChannel | ThreadChannel): boolean =>
             channel.type === 'text' && channel.name === 'live'
         ) as TextChannel | undefined;
       if (!this.#liveChannel) continue;

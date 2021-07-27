@@ -15,7 +15,7 @@ export default class HelpCommand extends Command {
     const embed: MessageEmbed = new MessageEmbed()
       .setTimestamp(new Date())
       .setTitle('Help')
-      .setColor('153c52')
+      .setColor(206694)
       .setFooter(`Requested by ${message.author.tag}`);
     if (args.length === 0) {
       for (const command of MessageHandler._commands)
