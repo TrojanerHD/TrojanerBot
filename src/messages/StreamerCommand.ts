@@ -63,16 +63,23 @@ export default class StreamerCommand extends Command {
     args: CommandInteractionOption[],
     interaction: Interaction
   ): Reply {
-    if (args[0].name === 'list')
+    if (args[0].name === 'list') {
+      const streamerList: Channel[] = StreamerCommand._streamers.filter(
+        (streamer: Channel): boolean =>
+          streamer.subscribers.includes(interaction.user.id)
+      );
+      if (!streamerList || streamerList.length === 0)
+        return {
+          reply: 'You have not subscribed to any streamer',
+          ephemeral: true,
+        };
       return {
-        reply: `You have subscribed to ${StreamerCommand._streamers
-          .filter((value: Channel): boolean =>
-            value.subscribers.includes(interaction.user.id)
-          )
+        reply: `You have subscribed to ${streamerList
           .map((value: Channel): string => value.streamer)
           .join(', ')}`,
         ephemeral: true,
       };
+    }
     const streamer: string = (
       args[0].options?.array()[0].value as string
     ).toLowerCase();
