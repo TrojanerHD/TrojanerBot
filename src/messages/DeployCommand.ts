@@ -1,10 +1,7 @@
 import {
-  ApplicationCommand,
   ApplicationCommandData,
-  ClientApplication,
   Collection,
   CommandInteractionOption,
-  GuildResolvable,
   Interaction,
   Snowflake,
 } from 'discord.js';

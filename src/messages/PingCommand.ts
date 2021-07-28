@@ -11,7 +11,7 @@ export default class PingCommand extends Command {
     description: 'Shows the current ping of the bot',
   };
   deploymentOptions: DeploymentOptions = ['dms', 'guilds'];
-  
+
   handleCommand(
     _args: CommandInteractionOption[],
     interaction: Interaction

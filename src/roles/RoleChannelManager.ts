@@ -27,9 +27,7 @@ export default class RoleManager {
   constructor() {
     for (const guild of DiscordClient._client.guilds.cache.array()) {
       this.#guild = guild;
-      const rolesChannel:
-        | TextChannel
-        | undefined = guild.channels.cache
+      const rolesChannel: TextChannel | undefined = guild.channels.cache
         .array()
         .find(
           (channel: GuildChannel | ThreadChannel): boolean =>
@@ -85,15 +83,18 @@ export default class RoleManager {
       const role: CustomRole = Settings.getSettings().roles[i];
       usedEmoji.push(role.emoji);
 
-      const emoji:
-        | GuildEmoji
-        | undefined = this.#guild!.emojis.cache.array().find(
-        (value: GuildEmoji) => value.id == role.emoji
-      );
+      const emoji: GuildEmoji | undefined =
+        this.#guild!.emojis.cache.array().find(
+          (value: GuildEmoji) => value.id == role.emoji
+        );
       let emojiField: string | Emoji = '';
       if (!emoji) emojiField = role.emoji;
       else emojiField = new Emoji(DiscordClient._client, emoji);
-      embed.addField(role.name, emojiField instanceof Emoji ? emojiField.toString() : emojiField, true);
+      embed.addField(
+        role.name,
+        emojiField instanceof Emoji ? emojiField.toString() : emojiField,
+        true
+      );
       processed++;
     }
 

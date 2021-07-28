@@ -2,8 +2,6 @@ import {
   ApplicationCommandData,
   CommandInteractionOption,
   Interaction,
-  InteractionReplyOptions,
-  MessagePayload,
 } from 'discord.js';
 
 export interface Reply {

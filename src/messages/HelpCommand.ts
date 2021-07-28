@@ -5,8 +5,6 @@ import {
   Interaction,
   ThreadChannel,
   ApplicationCommandData,
-  ApplicationCommand,
-  GuildResolvable,
   DMChannel,
   Channel,
 } from 'discord.js';

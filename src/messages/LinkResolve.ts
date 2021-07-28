@@ -1,4 +1,11 @@
-import { TextChannel, Message, GuildChannel, MessageEmbed, ThreadChannel, Snowflake } from 'discord.js';
+import {
+  TextChannel,
+  Message,
+  GuildChannel,
+  MessageEmbed,
+  ThreadChannel,
+  Snowflake,
+} from 'discord.js';
 import DiscordClient from '../DiscordClient';
 
 export default class LinkResolve {
@@ -21,13 +28,11 @@ export default class LinkResolve {
       );
       return;
     }
-    const guildChannel:
-      | GuildChannel
-      | ThreadChannel
-      | undefined = channel.guild.channels.cache.find(
-      (guildChannel: GuildChannel | ThreadChannel): boolean =>
-        guildChannel.id === urlChannel && guildChannel.type === 'text'
-    );
+    const guildChannel: GuildChannel | ThreadChannel | undefined =
+      channel.guild.channels.cache.find(
+        (guildChannel: GuildChannel | ThreadChannel): boolean =>
+          guildChannel.id === urlChannel && guildChannel.type === 'text'
+      );
     if (!guildChannel) {
       DiscordClient.send(channel, embed.setDescription('Channel not found'));
       return;

@@ -1,9 +1,4 @@
-import {
-  Role,
-  Snowflake,
-  GuildMemberRoleManager,
-  Guild,
-} from 'discord.js';
+import { Role, Snowflake, GuildMemberRoleManager, Guild } from 'discord.js';
 import Settings from './Settings';
 
 export default class PermissionManager {

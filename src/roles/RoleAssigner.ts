@@ -4,7 +4,6 @@ import {
   GuildMember,
   MessageReaction,
   Role,
-  RoleManager,
   Snowflake,
   User,
 } from 'discord.js';
@@ -20,7 +19,11 @@ export default class RoleAssigner {
   #block: boolean = false;
   #parent: GuildRolesManager;
 
-  constructor(reaction: MessageReaction, guild: Guild, parent: GuildRolesManager) {
+  constructor(
+    reaction: MessageReaction,
+    guild: Guild,
+    parent: GuildRolesManager
+  ) {
     this.#reaction = reaction;
     this.#guild = guild;
     this.#parent = parent;
@@ -35,7 +38,8 @@ export default class RoleAssigner {
     if (this.#block) return;
     this.#roles = roles.array();
 
-    this.#reaction.users.fetch()
+    this.#reaction.users
+      .fetch()
       .then(this.reactorsFetched.bind(this))
       .catch(console.error);
   }
@@ -52,7 +56,8 @@ export default class RoleAssigner {
     if (!role) {
       this.#guild.roles
         .create({
-          name: roleName, mentionable: true
+          name: roleName,
+          mentionable: true,
         })
         .then(() => {
           this.#block = false;

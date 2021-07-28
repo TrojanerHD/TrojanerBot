@@ -1,7 +1,5 @@
 import Command, { DeploymentOptions, Reply } from './Command';
 import {
-  TextChannel,
-  Message,
   ApplicationCommandData,
   CommandInteractionOption,
   Interaction,

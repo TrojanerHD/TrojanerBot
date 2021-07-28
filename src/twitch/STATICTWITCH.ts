@@ -1,3 +1,3 @@
 export default class STATICTWITCH {
-    static baseUrl = 'https://api.twitch.tv/'
+  static baseUrl = 'https://api.twitch.tv/';
 }

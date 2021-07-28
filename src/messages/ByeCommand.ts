@@ -1,12 +1,7 @@
 import Command, { DeploymentOptions, Reply } from './Command';
 import {
-  TextChannel,
-  Message,
   CommandInteractionOption,
   ApplicationCommandData,
-  InteractionReplyOptions,
-  MessagePayload,
-  MessageEmbed,
   Interaction,
 } from 'discord.js';
 import PermissionManager from '../PermissionManager';

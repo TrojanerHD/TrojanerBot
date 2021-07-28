@@ -2,7 +2,6 @@ import {
   Client,
   DMChannel,
   Intents,
-  Interaction,
   Message,
   MessageEmbed,
   NewsChannel,
@@ -14,7 +13,6 @@ import LiveChannel from './twitch/LiveChannel';
 import TalkingChannel from './TalkingChannel';
 import RoleChannelManager from './roles/RoleChannelManager';
 import Settings from './Settings';
-import DeployCommand from './messages/DeployCommand';
 
 export default class DiscordClient {
   static _client: Client = new Client({
@@ -53,7 +51,8 @@ export default class DiscordClient {
   private onReady(): void {
     new TalkingChannel();
     if (!DiscordClient._client.application?.owner)
-      DiscordClient._client.application?.fetch()
+      DiscordClient._client.application
+        ?.fetch()
         .then(MessageHandler.addCommands)
         .catch(console.error);
     else MessageHandler.addCommands();
