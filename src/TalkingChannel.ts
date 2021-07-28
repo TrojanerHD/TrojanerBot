@@ -25,7 +25,7 @@ export default class TalkingChannel {
     );
     for (const guild of DiscordClient._client.guilds.cache.array())
       for (const channel of guild.channels.cache.array())
-        if (channel.name.startsWith('Talking ')) channel.delete();
+        if (channel.name.startsWith('Talking ')) channel.delete().catch(console.error);
   }
 
   /**
@@ -150,7 +150,7 @@ export default class TalkingChannel {
         parent: channel.parent as Channel,
         type: 'voice',
       })
-      .then(this.channelCreated.bind(this));
+      .then(this.channelCreated.bind(this)).catch(console.error);
   }
 
   /**
@@ -169,7 +169,7 @@ export default class TalkingChannel {
         ) as GuildChannel
       )?.members.array().length === 0
     ) {
-      channel.delete();
+      channel.delete().catch(console.error);
       this.#talkingChannelCount--;
       return;
     }
