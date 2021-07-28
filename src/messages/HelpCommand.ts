@@ -51,11 +51,10 @@ export default class HelpCommand extends Command {
       .setTitle('Help')
       .setColor(206694)
       .setFooter(`Requested by ${interaction.user.tag}`);
-    const commands: ApplicationCommandType[] = (
-      interaction.inGuild()
-        ? interaction.guild?.commands
-        : DiscordClient._client.application?.commands
-    )!.cache.array();
+
+    const commands: ApplicationCommandData[] = MessageHandler._commands.map(
+      (command: Command): ApplicationCommandData => command.deploy
+    );
     if (args.length === 0) {
       for (const command of commands)
         this.#embed.addField(`/${command.name}`, command.description, false);
@@ -67,9 +66,10 @@ export default class HelpCommand extends Command {
       };
     }
     let requestedCommand: string = args[0].value as string;
-    const command: ApplicationCommandType | undefined = commands.find(
-      (value: ApplicationCommandType) =>
-        value.name === requestedCommand || value.name.includes(requestedCommand)
+    const command: ApplicationCommandData | undefined = commands.find(
+      (command: ApplicationCommandData): boolean =>
+        command.name === requestedCommand ||
+        command.name.includes(requestedCommand)
     );
     if (!command)
       return { reply: 'This command does not exist', ephemeral: true };
@@ -81,6 +81,7 @@ export default class HelpCommand extends Command {
       ephemeral: true,
     };
   }
+
   private afterResponse(): void {
     let channel: Channel | null = this.#interaction!.channel;
     if (!channel) {
