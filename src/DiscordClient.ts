@@ -2,6 +2,7 @@ import {
   Client,
   DMChannel,
   Intents,
+  Interaction,
   Message,
   MessageEmbed,
   NewsChannel,
@@ -13,10 +14,16 @@ import LiveChannel from './twitch/LiveChannel';
 import TalkingChannel from './TalkingChannel';
 import RoleChannelManager from './roles/RoleChannelManager';
 import Settings from './Settings';
+import DeployCommand from './messages/DeployCommand';
 
-export class DiscordClient {
+export default class DiscordClient {
   static _client: Client = new Client({
-    intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_MESSAGE_REACTIONS],
+    intents: [
+      Intents.FLAGS.GUILDS,
+      Intents.FLAGS.GUILD_MESSAGES,
+      Intents.FLAGS.GUILD_MEMBERS,
+      Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+    ],
   });
 
   /**
@@ -43,8 +50,13 @@ export class DiscordClient {
       });
   }
 
-  onReady(): void {
+  private onReady(): void {
     new TalkingChannel();
+    if (!DiscordClient._client.application?.owner)
+      DiscordClient._client.application?.fetch()
+        .then(MessageHandler.addCommands)
+        .catch(console.error);
+    else MessageHandler.addCommands();
     if (Settings.getSettings().roles.length !== 0) new RoleChannelManager(); //TODO Warning system (see TODO in line 31)
   }
 

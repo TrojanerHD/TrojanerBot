@@ -1,37 +1,45 @@
-import { Role, TextChannel, Message, MessageEmbed } from 'discord.js';
-import { DiscordClient } from './DiscordClient';
-import MessageDeletion from './messages/MessageDeletion';
+import {
+  Role,
+  Snowflake,
+  GuildMemberRoleManager,
+  Guild,
+} from 'discord.js';
 import Settings from './Settings';
 
 export default class PermissionManager {
+  static _errorMessage =
+    'You do not have the permission to perform this command';
   static hasPermission(
-    channel: TextChannel,
-    message: Message,
-    roles?: Role[]
+    guild: Guild,
+    roles?: Snowflake[] | GuildMemberRoleManager
   ): boolean {
-    const permission: boolean = roles
-      ? !!roles.find((role: Role) =>
-          Settings.getSettings()['permission-roles'].includes(role.name)
-        )
-      : false;
-    if (!permission) {
-      const messageDeletion: MessageDeletion = new MessageDeletion(message);
-      const errorMessage: MessageEmbed = new MessageEmbed()
-        .setTitle('Error')
-        .setTimestamp(new Date())
-        .setDescription(
-          `You do not have the permission to perform this command\n[Message](${message.url})`
-        )
-        .addField('Message Content', message.content, false)
-        .setFooter(message.author.tag)
-        .setColor(16711680);
-
-      DiscordClient.send(
-        channel,
-        errorMessage,
-        messageDeletion.checkDeletion.bind(messageDeletion)
+    if (!roles) return false;
+    let roleExists: Role | undefined;
+    if (roles instanceof GuildMemberRoleManager)
+      roleExists = roles.cache.find((role: Role) =>
+        Settings.getSettings()['permission-roles'].includes(role.name)
+      );
+    else {
+      const roleArray: Role[] = PermissionManager.rolesFromSnowflake(
+        guild,
+        roles
+      );
+      roleExists = roleArray.find((role: Role) =>
+        Settings.getSettings()['permission-roles'].includes(role.name)
       );
     }
-    return permission;
+    return !!roleExists;
+  }
+
+  private static rolesFromSnowflake(
+    guild: Guild,
+    snowflakes: Snowflake[]
+  ): Role[] {
+    let roles: Role[] = [];
+    for (const snowflake of snowflakes)
+      roles.push(
+        guild.roles.cache.find((role: Role) => role.id === snowflake)!
+      );
+    return roles;
   }
 }

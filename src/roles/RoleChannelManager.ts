@@ -8,7 +8,7 @@ import {
   ThreadChannel,
 } from 'discord.js';
 import Settings from '../Settings';
-import { DiscordClient } from '../DiscordClient';
+import DiscordClient from '../DiscordClient';
 import GuildRolesManager from './GuildRolesManager';
 
 export interface CustomRole {

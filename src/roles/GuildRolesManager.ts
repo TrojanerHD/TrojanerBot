@@ -3,9 +3,10 @@ import {
   Guild,
   Message,
   MessageReaction,
+  Snowflake,
   TextChannel,
 } from 'discord.js';
-import { DiscordClient } from '../DiscordClient';
+import DiscordClient from '../DiscordClient';
 import Settings from '../Settings';
 import { EmojiEmbed, CustomRole } from './RoleChannelManager';
 import RoleAssigner from './RoleAssigner';
@@ -30,7 +31,7 @@ export default class GuildRolesManager {
       .catch(console.error);
   }
 
-  private messagesFetched(messages: Collection<`${bigint}`, Message>): void {
+  private messagesFetched(messages: Collection<Snowflake, Message>): void {
     const rolesMessages = messages.array();
     for (let i = 0; i < this.#newEmbeds!.length; i++) {
       this.#newEmbed = this.#newEmbeds![i];

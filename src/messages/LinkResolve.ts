@@ -1,22 +1,15 @@
-import Command from './Command';
-import { TextChannel, Message, GuildChannel, MessageEmbed, ThreadChannel } from 'discord.js';
-import { DiscordClient } from '../DiscordClient';
+import { TextChannel, Message, GuildChannel, MessageEmbed, ThreadChannel, Snowflake } from 'discord.js';
+import DiscordClient from '../DiscordClient';
 
-export default class LinkResolve extends Command {
-  helpInfo: { name: string; value: string } = {
-    name: '',
-    value:
-      'Resolves message links and embeds them as Discord should have done it',
-  };
-
-  handleCommand(args: string[], channel: TextChannel, message: Message): void {
+export default class LinkResolve {
+  handleCommand(channel: TextChannel, message: Message): void {
     const splitMessage: string = message.content.split(
       /https:\/\/discord(app)?\.(com|gg)\/channels\//
     )[3];
     const properties: string[] = splitMessage.split('/');
     const guild: string = properties[0];
     const urlChannel: string = properties[1];
-    const urlMessageString: `${bigint}` = properties[2] as `${bigint}`;
+    const urlMessageString: Snowflake = properties[2] as Snowflake;
     const embed: MessageEmbed = new MessageEmbed()
       .setTitle('Quote')
       .setTimestamp(new Date())

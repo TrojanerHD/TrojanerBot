@@ -7,8 +7,7 @@ import {
   Collection,
   ThreadChannel,
 } from 'discord.js';
-import { DiscordClient } from '../DiscordClient';
-import Settings from '../Settings';
+import DiscordClient from '../DiscordClient';
 
 interface StreamInformation {
   name: string;

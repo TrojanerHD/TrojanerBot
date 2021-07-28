@@ -1,14 +1,20 @@
-import { DiscordClient } from '../DiscordClient';
-import { Message } from 'discord.js';
+import DiscordClient from '../DiscordClient';
+import {
+  ApplicationCommand,
+  ApplicationCommandManager,
+  GuildResolvable,
+  Interaction,
+  Message,
+} from 'discord.js';
 import PingCommand from './PingCommand';
 import ByeCommand from './ByeCommand';
 import LinkCommand from './LinkCommand';
 import HelpCommand from './HelpCommand';
 import StreamerCommand from './StreamerCommand';
-import MessageDeletion from './MessageDeletion';
+import DeployCommand from './DeployCommand';
 import LinkResolve from './LinkResolve';
-import Command from './Command';
-import Settings from '../Settings';
+import Command, { Reply } from './Command';
+import PermissionManager from '../PermissionManager';
 
 export interface CommandHandler {
   command: string | string[];
@@ -16,54 +22,107 @@ export interface CommandHandler {
 }
 
 export default class MessageHandler {
-  static _commands: CommandHandler[] = [
-    { command: 'ping', handler: new PingCommand() },
-    { command: ['bye', 'stop'], handler: new ByeCommand() },
-    { command: ['link', 'to'], handler: new LinkCommand() },
-    { command: 'streamer', handler: new StreamerCommand() },
-    { command: 'help', handler: new HelpCommand() },
+  static _commands: Command[] = [
+    new PingCommand(),
+    new ByeCommand(),
+    new LinkCommand(),
+    new StreamerCommand(),
+    new HelpCommand(),
+    new DeployCommand(),
   ];
 
   constructor() {
     DiscordClient._client.on('message', this.onMessage.bind(this));
+    DiscordClient._client.on('interaction', this.onReaction.bind(this));
+  }
+
+  public static async addCommands(): Promise<void> {
+    for (const command of MessageHandler._commands) {
+      const deploymentOptions: ('dms' | 'guilds')[] = command.deploymentOptions;
+      if (deploymentOptions.includes('dms')) {
+        if (command.deploy.name === 'help')
+          (command as HelpCommand).loadHelp('dms');
+        const commandHandler:
+          | ApplicationCommandManager<
+              ApplicationCommand<{ guild: GuildResolvable }>,
+              { guild: GuildResolvable },
+              null
+            >
+          | undefined = DiscordClient._client.application?.commands;
+        await commandHandler?.fetch();
+        const existingCommand:
+          | ApplicationCommand<{ guild: GuildResolvable }>
+          | undefined = commandHandler?.cache
+          .array()
+          .find(
+            (value: ApplicationCommand<{ guild: GuildResolvable }>) =>
+              value.name === command.deploy.name
+          );
+        if (!existingCommand)
+          commandHandler?.create(command.deploy).catch(console.error);
+        else
+          commandHandler!
+            .edit(existingCommand, command.deploy)
+            .catch(console.error);
+      }
+
+      if (deploymentOptions.includes('guilds')) {
+        if (command.deploy.name === 'help')
+          (command as HelpCommand).loadHelp('guilds');
+        for (const guild of DiscordClient._client.guilds.cache.array()) {
+          await guild.commands.fetch();
+          const existingCommand:
+            | ApplicationCommand<{ guild: GuildResolvable }>
+            | undefined = guild.commands.cache
+            .array()
+            .find(
+              (value: ApplicationCommand<{ guild: GuildResolvable }>) =>
+                value.name === command.deploy.name
+            );
+          if (!existingCommand)
+            guild.commands.create(command.deploy).catch(console.error);
+          else
+            guild.commands
+              .edit(existingCommand, command.deploy)
+              .catch(console.error);
+        }
+      }
+    }
+  }
+
+  private onReaction(interaction: Interaction): void {
+    if (!interaction.isCommand()) return;
+    for (const command of MessageHandler._commands)
+      if (command.deploy.name === interaction.commandName) {
+        const reply: Reply = command.handleCommand(
+          interaction.options.array(),
+          interaction
+        );
+        if (!reply.ephemeral) reply.ephemeral = false;
+        if (!reply.afterResponse) reply.afterResponse = (): void => {};
+        interaction
+          .reply({ content: reply.reply, ephemeral: reply.ephemeral })
+          .then(reply.afterResponse.bind(command))
+          .catch(console.error);
+      }
   }
 
   onMessage(message: Message) {
-    if (
-      message.channel.type !== 'text' ||
-      message.author.bot ||
-      message.content.match(/@(everyone|here)/g)
-    )
-      return;
+    if (message.channel.type !== 'text' || message.author.bot) return;
     if (message.content.match(/https:\/\/discord(app)?\.(com|gg)\/channels/))
-      new LinkResolve().handleCommand([], message.channel, message);
+      new LinkResolve().handleCommand(message.channel, message);
 
-    if (!message.content.startsWith(Settings.getSettings().prefix)) return;
-    const args: string[] = message.content.split(' ');
-    let userCommand: string | undefined = args.shift();
-    if (!userCommand) return;
-    userCommand = userCommand.substr(1, userCommand.length);
-    for (const command of MessageHandler._commands) {
-      if (
-        typeof command.command === 'string' ||
-        command.command instanceof String
-      ) {
-        if (command.command === userCommand) {
-          command.handler.handleCommand(args, message.channel, message);
-          return;
-        }
-      } else
-        for (const commandName of command.command)
-          if (commandName === userCommand) {
-            command.handler.handleCommand(args, message.channel, message);
-            return;
-          }
+    if (
+      PermissionManager.hasPermission(message.guild!, message.member?.roles) &&
+      message.content === '!deploy'
+    ) {
+      MessageHandler.addCommands();
+      message
+        .reply({
+          content: 'Commands deployed',
+          allowedMentions: { repliedUser: false },
+        })
+        .catch(console.error);
     }
-
-    const messageDeletion: MessageDeletion = new MessageDeletion(message);
-    message.channel
-      .send('This command does not exist')
-      .then(messageDeletion.checkDeletion.bind(messageDeletion))
-      .catch(console.error);
   }
 }

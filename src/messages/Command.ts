@@ -1,10 +1,28 @@
-import { TextChannel, Message } from 'discord.js';
+import {
+  ApplicationCommandData,
+  CommandInteractionOption,
+  Interaction,
+  InteractionReplyOptions,
+  MessagePayload,
+} from 'discord.js';
 
+export interface Reply {
+  reply: string | null | undefined;
+  ephemeral?: boolean;
+  afterResponse?: () => void;
+}
+
+export type DeploymentOptions =
+  | ['dms']
+  | ['guilds']
+  | ['dms', 'guilds']
+  | ['guilds', 'dms'];
 export default abstract class Command {
-  abstract helpInfo: {name: string, value: string};
+  abstract deploy: ApplicationCommandData;
+  abstract deploymentOptions: DeploymentOptions;
+
   abstract handleCommand(
-    args: string[],
-    channel: TextChannel,
-    message: Message
-  ): void;
+    args: CommandInteractionOption[],
+    interaction: Interaction
+  ): Reply;
 }

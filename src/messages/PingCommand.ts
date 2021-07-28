@@ -1,26 +1,25 @@
-import Command from './Command';
-import { TextChannel, MessageEmbed, Message } from 'discord.js';
-import { DiscordClient } from '../DiscordClient';
+import Command, { DeploymentOptions, Reply } from './Command';
+import {
+  CommandInteractionOption,
+  Interaction,
+  ApplicationCommandData,
+} from 'discord.js';
 
 export default class PingCommand extends Command {
-  helpInfo: { name: string; value: string } = {
+  deploy: ApplicationCommandData = {
     name: 'ping',
-    value: 'Shows the current ping of the bot',
+    description: 'Shows the current ping of the bot',
   };
-
-  handleCommand(args: string[], channel: TextChannel, message: Message): void {
-    DiscordClient.send(
-      channel,
-      new MessageEmbed()
-        .setDescription('Ping')
-        .setAuthor('JavaScript')
-        .setColor(206694)
-        .addField(
-          'My ping is',
-          `${Math.floor(new Date().getTime() - message.createdTimestamp)}ms`
-        )
-        .setFooter(`Requested by ${message.author.tag}`)
-        .setTimestamp(new Date())
-    );
+  deploymentOptions: DeploymentOptions = ['dms', 'guilds'];
+  
+  handleCommand(
+    _args: CommandInteractionOption[],
+    interaction: Interaction
+  ): Reply {
+    return {
+      reply: `My ping is ${Math.floor(
+        new Date().getTime() - interaction.createdTimestamp
+      )}ms`,
+    };
   }
 }

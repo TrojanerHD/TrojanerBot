@@ -1,50 +1,52 @@
-import Command from './Command';
-import { TextChannel, Message, GuildChannel, MessageEmbed, Channel, ThreadChannel } from 'discord.js';
-import { DiscordClient } from '../DiscordClient';
+import Command, { DeploymentOptions, Reply } from './Command';
+import {
+  TextChannel,
+  Message,
+  GuildChannel,
+  MessageEmbed,
+  ThreadChannel,
+  ApplicationCommandData,
+  CommandInteractionOption,
+  Interaction,
+} from 'discord.js';
+import DiscordClient from '../DiscordClient';
 
 export default class LinkCommand extends Command {
-  helpInfo: { name: string; value: string } = {
-    name: 'link|to <channel>',
-    value:
+  deploy: ApplicationCommandData = {
+    name: 'to',
+    description:
       'Sends a message that the current conversation should be moved to the specified channel',
+    options: [
+      {
+        type: 7,
+        name: 'channel',
+        description: 'Channel where the conversation will be linked to',
+        required: true,
+      },
+    ],
   };
-  #channel?: TextChannel;
-  #newChannel?: TextChannel;
+  deploymentOptions: DeploymentOptions = ['guilds'];
+  #channel?: TextChannel | ThreadChannel;
+  #newChannel?: TextChannel | ThreadChannel;
   #embed?: MessageEmbed;
   #oldMessage?: Message;
   #author?: string;
 
-  handleCommand(args: string[], channel: TextChannel, message: Message): void {
-    const channelNameMatch: TextChannel | undefined = <TextChannel>(
-      message.guild?.channels.cache.find(
-        (channel: GuildChannel | ThreadChannel): boolean =>
-          channel.type === 'text' && channel.name === args[0]
-      )
-    );
-    const messageMentions: TextChannel[] = message.mentions.channels.array().filter((value: Channel) => value instanceof TextChannel) as TextChannel[];
-    if (
-      args.length < 1 ||
-      (messageMentions.length === 0 && !channelNameMatch)
-    ) {
-      DiscordClient.send(
-        channel,
-        'Please specify a channel! Syntax: `!<link|to> #<Discord Channel>`'
-      );
-      return;
-    }
-    this.#newChannel =
-      messageMentions.length !== 0 ? messageMentions[0] : channelNameMatch;
-    if (
-      this.#newChannel.type !== 'text' ||
-      this.#newChannel.id === channel.id
-    ) {
-      DiscordClient.send(channel, 'Please specify a different channel!');
-      return;
-    }
-    this.#author = message.author.id;
-    this.#channel = channel;
+  handleCommand(
+    args: CommandInteractionOption[],
+    interaction: Interaction
+  ): Reply {
+    this.#newChannel = interaction.guild?.channels.cache.find(
+      (channel: GuildChannel | ThreadChannel): boolean =>
+        channel.type === 'text' && channel.id === args[0].value
+    ) as TextChannel | ThreadChannel;
+
+    this.#author = interaction.user.id;
+    this.#channel = interaction.channel! as TextChannel | ThreadChannel;
+    if (!this.#newChannel || this.#newChannel.id === this.#channel.id)
+      return { reply: 'Please specify a different channel', ephemeral: true };
     this.#embed = new MessageEmbed()
-      .setTitle(`#${channel.name} -> <:portal_blue:631237086988599317>`)
+      .setTitle(`#${this.#channel.name} -> <:portal_blue:631237086988599317>`)
       .setDescription(
         `To #${this.#newChannel.name}\nRequested by <@${this.#author}>`
       )
@@ -52,10 +54,11 @@ export default class LinkCommand extends Command {
       .setColor(4176616);
 
     DiscordClient.send(
-      channel,
+      this.#channel,
       this.#embed,
       this.sendMessageToNewChannel.bind(this)
     );
+    return { reply: 'See embed', ephemeral: true };
   }
 
   private sendMessageToNewChannel(message: Message) {

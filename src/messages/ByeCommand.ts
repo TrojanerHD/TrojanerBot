@@ -1,29 +1,42 @@
-import Command from './Command';
-import { TextChannel, Message } from 'discord.js';
+import Command, { DeploymentOptions, Reply } from './Command';
+import {
+  TextChannel,
+  Message,
+  CommandInteractionOption,
+  ApplicationCommandData,
+  InteractionReplyOptions,
+  MessagePayload,
+  MessageEmbed,
+  Interaction,
+} from 'discord.js';
 import PermissionManager from '../PermissionManager';
-import { DiscordClient } from '../DiscordClient';
+import DiscordClient from '../DiscordClient';
 
 export default class ByeCommand extends Command {
-  helpInfo: { name: string; value: string } = {
-    name: 'bye|stop',
-    value: 'Shuts the bot down',
+  deploy: ApplicationCommandData = {
+    name: 'bye',
+    description: 'Shuts the bot down',
   };
+  deploymentOptions: DeploymentOptions = ['guilds'];
 
-  handleCommand(args: string[], channel: TextChannel, message: Message): void {
+  handleCommand(
+    _args: CommandInteractionOption[],
+    interaction: Interaction
+  ): Reply {
     if (
       !PermissionManager.hasPermission(
-        channel,
-        message,
-        message.member?.roles.cache.array()
+        interaction.guild!,
+        interaction.member!.roles
       )
     )
-      return;
-    DiscordClient.send(
-      message.channel,
-      '**JavaScript**\n:robot: Bleeb Bloob :robot:\n:robot: Bleeb Blooouuub...\n[Shutting down]',
-      ByeCommand.destroyBot
-    );
+      return { reply: PermissionManager._errorMessage };
+    return {
+      reply:
+        '**JavaScript**\n:robot: Bleeb Bloob :robot:\n:robot: Bleeb Blooouuub…\n[Shutting down]',
+      afterResponse: ByeCommand.destroyBot,
+    };
   }
+
   private static destroyBot(): void {
     DiscordClient._client.destroy();
     process.exit(0);

@@ -2,7 +2,6 @@ import { Channel } from './messages/StreamerCommand';
 import fs from 'fs';
 
 export interface SettingsJSON {
-  prefix: string;
   'delete-messages-on-error': boolean;
   'twitch-id': string;
   'permission-roles': string[];
@@ -14,7 +13,6 @@ export interface SettingsJSON {
 export default class Settings {
   private static _settingsFile: string = './settings.json';
   private static _settings: SettingsJSON = {
-    prefix: '!',
     'delete-messages-on-error': true,
     'twitch-id': '',
     'permission-roles': [],

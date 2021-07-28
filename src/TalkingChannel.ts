@@ -1,4 +1,4 @@
-import { DiscordClient } from './DiscordClient';
+import DiscordClient from './DiscordClient';
 import {
   VoiceState,
   Guild,

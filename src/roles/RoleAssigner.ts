@@ -5,6 +5,7 @@ import {
   MessageReaction,
   Role,
   RoleManager,
+  Snowflake,
   User,
 } from 'discord.js';
 import Settings from '../Settings';
@@ -30,7 +31,7 @@ export default class RoleAssigner {
     this.#guild.roles.fetch().then(this.rolesFetched.bind(this));
   }
 
-  private rolesFetched(roles: Collection<`${bigint}`, Role>): void {
+  private rolesFetched(roles: Collection<Snowflake, Role>): void {
     if (this.#block) return;
     this.#roles = roles.array();
 
