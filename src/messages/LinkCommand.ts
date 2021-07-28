@@ -39,7 +39,8 @@ export default class LinkCommand extends Command {
   ): Reply {
     this.#newChannel = interaction.guild?.channels.cache.find(
       (channel: GuildChannel | ThreadChannel): boolean =>
-        channel.type === 'text' && channel.id === args[0].value
+        (channel instanceof ThreadChannel || channel instanceof TextChannel) &&
+        channel.id === args[0].value
     ) as TextChannel | ThreadChannel;
 
     this.#author = interaction.user.id;
@@ -49,7 +50,9 @@ export default class LinkCommand extends Command {
     this.#embed = new MessageEmbed()
       .setTitle(`#${this.#channel.name} -> <:portal_blue:631237086988599317>`)
       .setDescription(
-        `To #${this.#newChannel.name}\nRequested by <@${this.#author}>`
+        `To ${this.#newChannel instanceof TextChannel ? '#' : ''}${
+          this.#newChannel.name
+        }\nRequested by <@${this.#author}>`
       )
       .setTimestamp(new Date())
       .setColor(4176616);
@@ -62,7 +65,7 @@ export default class LinkCommand extends Command {
     return { reply: 'See embed', ephemeral: true };
   }
 
-  private sendMessageToNewChannel(message: Message) {
+  private sendMessageToNewChannel(message: Message): void {
     this.#oldMessage = message;
     DiscordClient.send(
       this.#newChannel!,
@@ -71,9 +74,9 @@ export default class LinkCommand extends Command {
           `<:portal_orange:631237087022022656> -> #${this.#newChannel!.name}`
         )
         .setDescription(
-          `[From #${this.#channel!.name}](${message.url})\nRequested by <@${
-            this.#author
-          }>`
+          `[From ${this.#channel! instanceof TextChannel ? '#' : ''}${
+            this.#channel!.name
+          }](${message.url})\nRequested by <@${this.#author}>`
         )
         .setTimestamp(new Date())
         .setColor(16285727),
@@ -81,7 +84,7 @@ export default class LinkCommand extends Command {
     );
   }
 
-  editOldMessage(message: Message) {
+  editOldMessage(message: Message): void {
     this.#embed!.setDescription(
       this.#embed!.description!.replace(/(To.*$)/m, `[$1](${message.url})`)
     );

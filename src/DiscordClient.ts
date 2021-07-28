@@ -1,12 +1,14 @@
 import {
   Client,
   DMChannel,
+  GuildChannel,
   Intents,
   Message,
   MessageEmbed,
   NewsChannel,
   TextChannel,
   ThreadChannel,
+  ThreadMember,
 } from 'discord.js';
 import MessageHandler from './messages/MessageHandler';
 import LiveChannel from './twitch/LiveChannel';
@@ -30,6 +32,7 @@ export default class DiscordClient {
   constructor() {
     new MessageHandler();
     DiscordClient._client.on('ready', this.onReady);
+    DiscordClient._client.on('threadCreate', this.onThreadCreate);
   }
 
   /**
@@ -48,7 +51,25 @@ export default class DiscordClient {
       });
   }
 
-  private onReady(): void {
+  private onReady(): Awaited<void> {
+    for (const guild of DiscordClient._client.guilds.cache.array())
+      for (const threadChannel of (
+        guild.channels.cache
+          .array()
+          .filter(
+            (channel: GuildChannel | ThreadChannel) =>
+              channel instanceof ThreadChannel
+          ) as ThreadChannel[]
+      ).filter(
+        (channel: ThreadChannel) =>
+          !channel.members.cache
+            .array()
+            .find(
+              (member: ThreadMember) =>
+                member.user!.id === DiscordClient._client.user!.id
+            )
+      ))
+        threadChannel.join().catch(console.error);
     new TalkingChannel();
     if (!DiscordClient._client.application?.owner)
       DiscordClient._client.application
@@ -64,6 +85,10 @@ export default class DiscordClient {
    */
   private startTwitch(): void {
     new LiveChannel();
+  }
+
+  private onThreadCreate(thread: ThreadChannel): Awaited<void> {
+    thread.join().catch(console.error);
   }
 
   static send(
