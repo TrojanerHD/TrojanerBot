@@ -7,9 +7,10 @@ import {
   ApplicationCommandData,
   DMChannel,
   Channel,
+  ApplicationCommandOptionChoice,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
-import Command, { DeploymentOptions, Reply } from './Command';
+import Command, { Reply } from './Command';
 import MessageHandler, { ApplicationCommandType } from './MessageHandler';
 
 export default class HelpCommand extends Command {
@@ -27,20 +28,17 @@ export default class HelpCommand extends Command {
       },
     ],
   };
-  deploymentOptions: DeploymentOptions = ['guilds', 'dms'];
 
   #embed?: MessageEmbed;
   #interaction?: Interaction;
 
-  loadHelp(context: 'dms' | 'guilds'): void {
-    this.deploy.options![0].choices = [];
-    for (const command of MessageHandler._commands.filter((command: Command) =>
-      (command.deploymentOptions as ('dms' | 'guilds')[]).includes(context)
-    ))
-      this.deploy.options![0].choices?.push({
+  loadHelp(): void {
+    this.deploy.options![0].choices = MessageHandler._commands.map(
+      (command: Command): ApplicationCommandOptionChoice => ({
         name: command.deploy.name,
         value: command.deploy.name,
-      });
+      })
+    );
   }
 
   handleCommand(

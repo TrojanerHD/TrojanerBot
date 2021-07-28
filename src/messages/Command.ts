@@ -10,14 +10,9 @@ export interface Reply {
   afterResponse?: () => void;
 }
 
-export type DeploymentOptions =
-  | ['dms']
-  | ['guilds']
-  | ['dms', 'guilds']
-  | ['guilds', 'dms'];
 export default abstract class Command {
   abstract deploy: ApplicationCommandData;
-  abstract deploymentOptions: DeploymentOptions;
+  guildOnly: boolean = false;
 
   abstract handleCommand(
     args: CommandInteractionOption[],

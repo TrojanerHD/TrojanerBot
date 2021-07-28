@@ -56,7 +56,7 @@ export default class DiscordClient {
         .then(MessageHandler.addCommands)
         .catch(console.error);
     else MessageHandler.addCommands();
-    if (Settings.getSettings().roles.length !== 0) new RoleChannelManager(); //TODO Warning system (see TODO in line 31)
+    if (Settings.getSettings().roles.length !== 0) new RoleChannelManager(); //TODO Warning system (see TODO in line 47)
   }
 
   /**
@@ -68,14 +68,11 @@ export default class DiscordClient {
 
   static send(
     channel: TextChannel | DMChannel | NewsChannel | ThreadChannel | undefined,
-    message: string | MessageEmbed,
+    message: MessageEmbed,
     callback?: (message: Message) => void
   ): void {
     if (!channel) return;
-    const msg: Promise<Message> =
-      message instanceof MessageEmbed
-        ? channel.send({ embeds: [message] })
-        : channel.send(message);
+    const msg: Promise<Message> = channel.send({ embeds: [message] });
 
     if (callback) msg.then(callback);
     msg.catch(console.error);

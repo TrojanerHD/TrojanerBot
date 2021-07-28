@@ -2,12 +2,10 @@ import {
   ApplicationCommandData,
   Collection,
   CommandInteractionOption,
-  Interaction,
   Snowflake,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
-import PermissionManager from '../PermissionManager';
-import Command, { DeploymentOptions, Reply } from './Command';
+import Command, { Reply } from './Command';
 import MessageHandler, { ApplicationCommandType } from './MessageHandler';
 
 export default class DeployCommand extends Command {
@@ -28,21 +26,12 @@ export default class DeployCommand extends Command {
         options: [],
       },
     ],
+    defaultPermission: false,
   };
 
-  deploymentOptions: DeploymentOptions = ['guilds'];
+  guildOnly: boolean = true;
 
-  handleCommand(
-    args: CommandInteractionOption[],
-    interaction: Interaction
-  ): Reply {
-    if (
-      !PermissionManager.hasPermission(
-        interaction.guild!,
-        interaction.member?.roles
-      )
-    )
-      return { reply: PermissionManager._errorMessage, ephemeral: true };
+  handleCommand(args: CommandInteractionOption[]): Reply {
     switch (args[0].name) {
       case 'all':
         MessageHandler.addCommands();
@@ -63,9 +52,7 @@ export default class DeployCommand extends Command {
   private commandsFetched(
     commands: Collection<Snowflake, ApplicationCommandType>
   ) {
-    for (const command of commands
-      .array()
-      .filter((command) => command.name !== 'deploy'))
+    for (const command of commands.array())
       command.delete().catch(console.error);
   }
 }

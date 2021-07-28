@@ -1,30 +1,16 @@
-import Command, { DeploymentOptions, Reply } from './Command';
-import {
-  CommandInteractionOption,
-  ApplicationCommandData,
-  Interaction,
-} from 'discord.js';
-import PermissionManager from '../PermissionManager';
+import Command, { Reply } from './Command';
+import { ApplicationCommandData } from 'discord.js';
 import DiscordClient from '../DiscordClient';
 
 export default class ByeCommand extends Command {
   deploy: ApplicationCommandData = {
     name: 'bye',
     description: 'Shuts the bot down',
+    defaultPermission: false,
   };
-  deploymentOptions: DeploymentOptions = ['guilds'];
+  guildOnly: boolean = true;
 
-  handleCommand(
-    _args: CommandInteractionOption[],
-    interaction: Interaction
-  ): Reply {
-    if (
-      !PermissionManager.hasPermission(
-        interaction.guild!,
-        interaction.member!.roles
-      )
-    )
-      return { reply: PermissionManager._errorMessage, ephemeral: true };
+  handleCommand(): Reply {
     return {
       reply:
         '**JavaScript**\n:robot: Bleeb Bloob :robot:\n:robot: Bleeb Blooouuub…\n[Shutting down]',

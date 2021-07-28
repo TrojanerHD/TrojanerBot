@@ -1,4 +1,4 @@
-import Command, { DeploymentOptions, Reply } from './Command';
+import Command, { Reply } from './Command';
 import {
   TextChannel,
   Message,
@@ -25,7 +25,8 @@ export default class LinkCommand extends Command {
       },
     ],
   };
-  deploymentOptions: DeploymentOptions = ['guilds'];
+  guildOnly = true;
+
   #channel?: TextChannel | ThreadChannel;
   #newChannel?: TextChannel | ThreadChannel;
   #embed?: MessageEmbed;

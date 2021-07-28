@@ -1,4 +1,4 @@
-import Command, { DeploymentOptions, Reply } from './Command';
+import Command, { Reply } from './Command';
 import {
   ApplicationCommandData,
   CommandInteractionOption,
@@ -50,7 +50,6 @@ export default class StreamerCommand extends Command {
       },
     ],
   };
-  deploymentOptions: DeploymentOptions = ['dms', 'guilds'];
   static _streamers: Channel[];
 
   constructor() {

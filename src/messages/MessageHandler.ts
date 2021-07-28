@@ -1,10 +1,11 @@
 import DiscordClient from '../DiscordClient';
 import {
   ApplicationCommand,
-  ApplicationCommandManager,
+  ApplicationCommandData,
   GuildResolvable,
   Interaction,
   Message,
+  Role,
 } from 'discord.js';
 import PingCommand from './PingCommand';
 import ByeCommand from './ByeCommand';
@@ -14,8 +15,8 @@ import StreamerCommand from './StreamerCommand';
 import DeployCommand from './DeployCommand';
 import LinkResolve from './LinkResolve';
 import Command, { Reply } from './Command';
-import RegisterCommand from './RegisterCommand';
-import PermissionManager from '../PermissionManager';
+import CommandPermissions from './CommandPermissions';
+import Settings from '../Settings';
 
 export type ApplicationCommandType = ApplicationCommand<{
   guild: GuildResolvable;
@@ -41,35 +42,34 @@ export default class MessageHandler {
   }
 
   public static addCommands(): void {
-    for (const command of MessageHandler._commands) {
-      const deploymentOptions: ('dms' | 'guilds')[] = command.deploymentOptions;
-      if (deploymentOptions.includes('dms')) {
-        if (command.deploy.name === 'help')
-          (command as HelpCommand).loadHelp('dms');
-        const commandHandler: ApplicationCommandManager | undefined =
-          DiscordClient._client.application?.commands;
+    (
+      MessageHandler._commands.find(
+        (command: Command) => command.deploy.name === 'help'
+      ) as HelpCommand
+    ).loadHelp();
+    const guildCommands: ApplicationCommandData[] = MessageHandler._commands
+      .filter((command: Command): boolean => command.guildOnly)
+      .map((command: Command): ApplicationCommandData => command.deploy);
 
-        const registerCommand: RegisterCommand = new RegisterCommand(command);
-        commandHandler
-          ?.fetch()
-          .then(registerCommand.addCommand.bind(registerCommand))
-          .catch(console.error);
-      }
+    const dmCommands: ApplicationCommandData[] = MessageHandler._commands
+      .filter((command: Command): boolean => !command.guildOnly)
+      .map((command: Command): ApplicationCommandData => command.deploy);
 
-      if (deploymentOptions.includes('guilds')) {
-        if (command.deploy.name === 'help')
-          (command as HelpCommand).loadHelp('guilds');
-        for (const guild of DiscordClient._client.guilds.cache.array()) {
-          const registerCommand: RegisterCommand = new RegisterCommand(
-            command,
+    DiscordClient._client.application?.commands.set(dmCommands);
+
+    for (const guild of DiscordClient._client.guilds.cache.array()) {
+      guild.commands
+        .fetch()
+        .then((): void => {
+          const commandPermissions: CommandPermissions = new CommandPermissions(
             guild
           );
           guild.commands
-            .fetch()
-            .then(registerCommand.addCommand.bind(registerCommand))
+            .set(guildCommands)
+            .then(commandPermissions.onCommandsSet.bind(commandPermissions))
             .catch(console.error);
-        }
-      }
+        })
+        .catch(console.error);
     }
   }
 
@@ -95,10 +95,20 @@ export default class MessageHandler {
     if (message.content.match(/https:\/\/discord(app)?\.(com|gg)\/channels/))
       new LinkResolve().handleCommand(message.channel, message);
 
-    if (
-      PermissionManager.hasPermission(message.guild!, message.member?.roles) &&
-      message.content === '!deploy'
-    ) {
+    if (message.content === '!deploy') {
+      if (
+        !message.member!.roles.cache.find((role: Role): boolean =>
+          Settings.getSettings()['permission-roles'].includes(role.name)
+        )
+      ) {
+        message
+          .reply({
+            content: 'You do not have the permission to perform this command',
+            allowedMentions: { repliedUser: false },
+          })
+          .catch(console.error);
+        return;
+      }
       MessageHandler.addCommands();
       message
         .reply({

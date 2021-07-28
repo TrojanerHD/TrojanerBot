@@ -1,4 +1,4 @@
-import Command, { DeploymentOptions, Reply } from './Command';
+import Command, { Reply } from './Command';
 import {
   CommandInteractionOption,
   Interaction,
@@ -10,7 +10,6 @@ export default class PingCommand extends Command {
     name: 'ping',
     description: 'Shows the current ping of the bot',
   };
-  deploymentOptions: DeploymentOptions = ['dms', 'guilds'];
 
   handleCommand(
     _args: CommandInteractionOption[],
