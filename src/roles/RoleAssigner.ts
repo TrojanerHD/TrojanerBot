@@ -19,7 +19,11 @@ export default class RoleAssigner {
   #block: boolean = false;
   #parent: GuildRolesManager;
 
-  constructor(reaction: MessageReaction, guild: Guild, parent: GuildRolesManager) {
+  constructor(
+    reaction: MessageReaction,
+    guild: Guild,
+    parent: GuildRolesManager
+  ) {
     this.#reaction = reaction;
     this.#guild = guild;
     this.#parent = parent;

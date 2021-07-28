@@ -17,9 +17,8 @@ export default class StreamerCommand extends Command {
 
   constructor() {
     super();
-    StreamerCommand._streamers = Settings.getSettings()[
-      'streamer-subscriptions'
-    ];
+    StreamerCommand._streamers =
+      Settings.getSettings()['streamer-subscriptions'];
   }
 
   handleCommand(args: string[], channel: TextChannel, message: Message): void {

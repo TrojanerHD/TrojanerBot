@@ -6,7 +6,7 @@ export default class PermissionManager {
   static hasPermission(
     channel: TextChannel,
     message: Message,
-    roles?: Role[],
+    roles?: Role[]
   ): boolean {
     const permission: boolean = roles
       ? !!roles.find((role: Role) =>

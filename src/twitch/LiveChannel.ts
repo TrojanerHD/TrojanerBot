@@ -120,7 +120,7 @@ export default class LiveChannel {
       )?.name;
 
       createEmbed.addField({
-        category: category,
+        category,
         name: stream.user_name,
         title: stream.title,
         viewer_count: stream.viewer_count,

@@ -7,7 +7,6 @@ import {
   Collection,
 } from 'discord.js';
 import { DiscordClient } from '../DiscordClient';
-import Settings from '../Settings';
 
 interface StreamInformation {
   name: string;
@@ -66,9 +65,7 @@ export default class CreateEmbed {
    */
   sendEmbed(): void {
     for (const guild of DiscordClient._client.guilds.cache.array()) {
-      const liveChannel:
-        | GuildChannel
-        | undefined = guild.channels.cache
+      const liveChannel: GuildChannel | undefined = guild.channels.cache
         .array()
         .find(
           (channel: GuildChannel) =>

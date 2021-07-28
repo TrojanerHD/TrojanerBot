@@ -2,9 +2,13 @@ import Command from './Command';
 import { TextChannel, Message, GuildChannel, MessageEmbed } from 'discord.js';
 
 export default class LinkResolve extends Command {
-  helpInfo: {name: string, value: string} = {name: '', value: 'Resolves message links and embeds them as Discord should have done it'};
+  helpInfo: { name: string; value: string } = {
+    name: '',
+    value:
+      'Resolves message links and embeds them as Discord should have done it',
+  };
 
-  handleCommand(args: string[], channel: TextChannel, message: Message): void {
+  handleCommand(_args: string[], channel: TextChannel, message: Message): void {
     const splitMessage: string = message.content.split(
       /https:\/\/discord(app)?\.(com|gg)\/channels\//
     )[3];
@@ -22,12 +26,11 @@ export default class LinkResolve extends Command {
         .catch(console.error);
       return;
     }
-    const guildChannel:
-      | GuildChannel
-      | undefined = channel.guild.channels.cache.find(
-      (guildChannel: GuildChannel) =>
-        guildChannel.id === urlChannel && guildChannel.type === 'text'
-    );
+    const guildChannel: GuildChannel | undefined =
+      channel.guild.channels.cache.find(
+        (guildChannel: GuildChannel) =>
+          guildChannel.id === urlChannel && guildChannel.type === 'text'
+      );
     if (!guildChannel) {
       channel
         .send(embed.setDescription('Channel not found'))
@@ -38,7 +41,8 @@ export default class LinkResolve extends Command {
       .fetch(urlMessageString)
       .then((urlMessage: Message) => {
         if (urlMessage.content === '') return;
-        if (urlMessage.content.length > 1024) urlMessage.content = `${urlMessage.content.substring(0, 1023)}…`;
+        if (urlMessage.content.length > 1024)
+          urlMessage.content = `${urlMessage.content.substring(0, 1023)}…`;
         channel
           .send(
             embed

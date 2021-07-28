@@ -9,7 +9,7 @@ export default class ByeCommand extends Command {
     value: 'Shuts the bot down',
   };
 
-  handleCommand(args: string[], channel: TextChannel, message: Message): void {
+  handleCommand(_args: string[], channel: TextChannel, message: Message): void {
     if (
       !PermissionManager.hasPermission(
         channel,
