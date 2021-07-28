@@ -24,7 +24,7 @@ export default class ByeCommand extends Command {
         interaction.member!.roles
       )
     )
-      return { reply: PermissionManager._errorMessage };
+      return { reply: PermissionManager._errorMessage, ephemeral: true };
     return {
       reply:
         '**JavaScript**\n:robot: Bleeb Bloob :robot:\n:robot: Bleeb Blooouuub…\n[Shutting down]',
