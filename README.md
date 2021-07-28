@@ -26,7 +26,6 @@ In this step I will go over all properties of the `settings.json` file:
 
 Key | Type | Description | Default
 --- | --- | --- | ---
-`prefix` | string | Specifies the prefix the bot will use for commands | `"!"`
 `delete-messages-on-error` | boolean | Controls whether the embed and original message should get deleted after 5 seconds if a command was not successful and the bot sent an error embed | `true`
 `twitch-id` | string | The ID of your Twitch application found in the [Twitch Developer Console](https://dev.twitch.tv/console/apps). If you do not want to use the Twitch features of this bot, set the value to `""` | `""`
 `permission-roles` | string[] | Added roles will be able to execute commands that require permissions (e. g. !bye) | `[]`
