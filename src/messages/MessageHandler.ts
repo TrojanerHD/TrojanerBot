@@ -14,8 +14,12 @@ import StreamerCommand from './StreamerCommand';
 import DeployCommand from './DeployCommand';
 import LinkResolve from './LinkResolve';
 import Command, { Reply } from './Command';
+import RegisterCommand from './RegisterCommand';
 import PermissionManager from '../PermissionManager';
 
+export type ApplicationCommandType = ApplicationCommand<{
+  guild: GuildResolvable;
+}>;
 export interface CommandHandler {
   command: string | string[];
   handler: Command;
@@ -36,55 +40,34 @@ export default class MessageHandler {
     DiscordClient._client.on('interaction', this.onReaction.bind(this));
   }
 
-  public static async addCommands(): Promise<void> {
+  public static addCommands(): void {
     for (const command of MessageHandler._commands) {
       const deploymentOptions: ('dms' | 'guilds')[] = command.deploymentOptions;
       if (deploymentOptions.includes('dms')) {
         if (command.deploy.name === 'help')
           (command as HelpCommand).loadHelp('dms');
-        const commandHandler:
-          | ApplicationCommandManager<
-              ApplicationCommand<{ guild: GuildResolvable }>,
-              { guild: GuildResolvable },
-              null
-            >
-          | undefined = DiscordClient._client.application?.commands;
-        await commandHandler?.fetch();
-        const existingCommand:
-          | ApplicationCommand<{ guild: GuildResolvable }>
-          | undefined = commandHandler?.cache
-          .array()
-          .find(
-            (value: ApplicationCommand<{ guild: GuildResolvable }>) =>
-              value.name === command.deploy.name
-          );
-        if (!existingCommand)
-          commandHandler?.create(command.deploy).catch(console.error);
-        else
-          commandHandler!
-            .edit(existingCommand, command.deploy)
-            .catch(console.error);
+        const commandHandler: ApplicationCommandManager | undefined =
+          DiscordClient._client.application?.commands;
+
+        const registerCommand: RegisterCommand = new RegisterCommand(command);
+        commandHandler
+          ?.fetch()
+          .then(registerCommand.addCommand.bind(registerCommand))
+          .catch(console.error);
       }
 
       if (deploymentOptions.includes('guilds')) {
         if (command.deploy.name === 'help')
           (command as HelpCommand).loadHelp('guilds');
         for (const guild of DiscordClient._client.guilds.cache.array()) {
-          await guild.commands.fetch();
-          const existingCommand:
-            | ApplicationCommand<{ guild: GuildResolvable }>
-            | undefined = guild.commands.cache
-            .array()
-            .find(
-              (value: ApplicationCommand<{ guild: GuildResolvable }>) =>
-                value.name === command.deploy.name
-            );
-          if (!existingCommand)
-            guild.commands.create(command.deploy).catch(console.error);
-          else
-            guild.commands
-              .edit(existingCommand, command.deploy)
-              .catch(console.error);
+          const registerCommand: RegisterCommand = new RegisterCommand(
+            command,
+            guild
+          );
+          guild.commands
+            .fetch()
+            .then(registerCommand.addCommand.bind(registerCommand))
+            .catch(console.error);
         }
       }
     }

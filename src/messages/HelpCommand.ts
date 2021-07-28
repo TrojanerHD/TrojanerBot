@@ -12,7 +12,7 @@ import {
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
 import Command, { DeploymentOptions, Reply } from './Command';
-import MessageHandler from './MessageHandler';
+import MessageHandler, { ApplicationCommandType } from './MessageHandler';
 
 export default class HelpCommand extends Command {
   deploy: ApplicationCommandData = {
@@ -55,9 +55,7 @@ export default class HelpCommand extends Command {
       .setTitle('Help')
       .setColor(206694)
       .setFooter(`Requested by ${interaction.user.tag}`);
-    const commands: ApplicationCommand<{
-      guild: GuildResolvable;
-    }>[] = (
+    const commands: ApplicationCommandType[] = (
       interaction.inGuild()
         ? interaction.guild?.commands
         : DiscordClient._client.application?.commands
@@ -73,12 +71,10 @@ export default class HelpCommand extends Command {
       };
     }
     let requestedCommand: string = args[0].value as string;
-    const command: ApplicationCommand<{ guild: GuildResolvable }> | undefined =
-      commands.find(
-        (value: ApplicationCommand<{ guild: GuildResolvable }>) =>
-          value.name === requestedCommand ||
-          value.name.includes(requestedCommand)
-      );
+    const command: ApplicationCommandType | undefined = commands.find(
+      (value: ApplicationCommandType) =>
+        value.name === requestedCommand || value.name.includes(requestedCommand)
+    );
     if (!command)
       return { reply: 'This command does not exist', ephemeral: true };
 

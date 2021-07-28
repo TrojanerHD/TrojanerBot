@@ -11,7 +11,7 @@ import {
 import DiscordClient from '../DiscordClient';
 import PermissionManager from '../PermissionManager';
 import Command, { DeploymentOptions, Reply } from './Command';
-import MessageHandler from './MessageHandler';
+import MessageHandler, { ApplicationCommandType } from './MessageHandler';
 
 export default class DeployCommand extends Command {
   deploy: ApplicationCommandData = {
@@ -64,12 +64,11 @@ export default class DeployCommand extends Command {
   }
 
   private commandsFetched(
-    commands: Collection<
-      Snowflake,
-      ApplicationCommand<{ guild: GuildResolvable }>
-    >
+    commands: Collection<Snowflake, ApplicationCommandType>
   ) {
-    for (const command of commands.array().filter((command) => command.name !== 'deploy'))
+    for (const command of commands
+      .array()
+      .filter((command) => command.name !== 'deploy'))
       command.delete().catch(console.error);
   }
 }
