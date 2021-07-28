@@ -15,30 +15,33 @@ export default class StreamerCommand extends Command {
   deploy: ApplicationCommandData = {
     name: 'streamer',
     description:
-      'Lets you subscribe to Twitch streamers and get a DM whenever they go live',
+      'Lets you subscribe to Twitch streamers and get a DM whenever they go live (not yet implemented)',
     options: [
       {
         type: 1,
-        name: 'add',
-        description: 'Add a streamer',
+        name: 'manage',
+        description: 'Manage the streamers',
         options: [
           {
             type: 3,
-            name: 'streamer',
-            description: 'The streamer to add',
+            name: 'option',
+            description: 'Add/remove a streamer',
             required: true,
+            choices: [
+              {
+                name: 'add',
+                value: 'add',
+              },
+              {
+                name: 'remove',
+                value: 'remove',
+              },
+            ],
           },
-        ],
-      },
-      {
-        type: 1,
-        name: 'remove',
-        description: 'Remove a streamer',
-        options: [
           {
             type: 3,
             name: 'streamer',
-            description: 'The streamer to remove',
+            description: 'The streamer to manage',
             required: true,
           },
         ],
@@ -47,6 +50,7 @@ export default class StreamerCommand extends Command {
         type: 1,
         name: 'list',
         description: 'List all streamers you have subscribed to',
+        options: [],
       },
     ],
   };
@@ -80,12 +84,12 @@ export default class StreamerCommand extends Command {
       };
     }
     const streamer: string = (
-      args[0].options?.array()[0].value as string
+      args[0].options?.array()[1].value as string
     ).toLowerCase();
     let streamChannel: Channel | undefined = StreamerCommand._streamers.find(
       (channel: Channel) => channel.streamer === streamer
     );
-    switch (args[0].name) {
+    switch (args[0].options?.array()[0].value) {
       case 'add':
         if (!streamChannel) {
           streamChannel = { streamer, subscribers: [] };
@@ -103,7 +107,7 @@ export default class StreamerCommand extends Command {
 
         return {
           reply: `${
-            args[0].options?.array()[0].value
+            args[0].options?.array()[1].value
           } was successfully added to your subscription list`,
           ephemeral: true,
         };
@@ -127,7 +131,7 @@ export default class StreamerCommand extends Command {
         this.saveStreamers();
         return {
           reply: `${
-            args[0].options?.array()[0].value
+            args[0].options?.array()[1].value
           } has been removed from your subscription list`,
           ephemeral: true,
         };
