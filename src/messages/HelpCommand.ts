@@ -9,6 +9,7 @@ export default class HelpCommand extends Command {
     value:
       'Displays help info for the specified command if there was a command specified. Otherwise it will display help for all commands',
   };
+
   handleCommand(args: string[], channel: TextChannel, message: Message): void {
     const embed: MessageEmbed = new MessageEmbed()
       .setTimestamp(new Date())

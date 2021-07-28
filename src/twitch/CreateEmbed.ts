@@ -7,12 +7,11 @@ import {
   Collection,
 } from 'discord.js';
 import { DiscordClient } from '../DiscordClient';
-import Settings from '../Settings';
 
 interface StreamInformation {
   name: string;
   title: string;
-  game?: string;
+  category?: string;
   viewer_count: number;
 }
 
@@ -26,7 +25,7 @@ interface Field {
  * Creates the embed for #live
  */
 export default class CreateEmbed {
-  private _embed: Field[][] = [];
+  #embed: Field[][] = [];
 
   /**
    * Adds a formatted field to the embed containing information about a stream
@@ -52,13 +51,13 @@ export default class CreateEmbed {
       { name: 'Title', value: streamInformation.title, inline: true },
       { name: 'Size', value: size, inline: true },
     ];
-    if (streamInformation.game !== undefined)
+    if (streamInformation.category !== undefined)
       fieldArray.push({
-        name: 'Game',
-        value: streamInformation.game,
+        name: 'Category',
+        value: streamInformation.category,
         inline: true,
       });
-    this._embed.push(fieldArray);
+    this.#embed.push(fieldArray);
   }
 
   /**
@@ -66,9 +65,7 @@ export default class CreateEmbed {
    */
   sendEmbed(): void {
     for (const guild of DiscordClient._client.guilds.cache.array()) {
-      const liveChannel:
-        | GuildChannel
-        | undefined = guild.channels.cache
+      const liveChannel: GuildChannel | undefined = guild.channels.cache
         .array()
         .find(
           (channel: GuildChannel) =>
@@ -92,14 +89,7 @@ export default class CreateEmbed {
       .setTitle('Twitch')
       .setTimestamp(new Date());
 
-    this._embed.sort((a: Field[], b: Field[]) => {
-      for (const streamer of Settings.getSettings().streamers) {
-        if (a[0].value.split('[')[1].split(']')[0] === streamer) return -1;
-        if (b[0].value.split('[')[1].split(']')[0] === streamer) return 1;
-      }
-      return 0;
-    });
-    for (const fieldArray of this._embed) {
+    for (const fieldArray of this.#embed) {
       if (embed.fields.length !== 0) embed.addField('\u200b', '\u200b', false);
       for (const field of fieldArray)
         embed.addField(field.name, field.value, field.inline);
@@ -109,8 +99,7 @@ export default class CreateEmbed {
         message.delete().catch(console.error);
         continue;
       }
-      message.edit('').catch(console.error);
-      message.edit(embed).catch(console.error);
+      message.edit('', embed).catch(console.error);
     }
   }
 }

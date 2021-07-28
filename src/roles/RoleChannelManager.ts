@@ -2,6 +2,7 @@ import {
   Emoji,
   Guild,
   GuildChannel,
+  GuildEmoji,
   MessageEmbed,
   TextChannel,
 } from 'discord.js';
@@ -15,18 +16,17 @@ export interface CustomRole {
 }
 
 export interface EmojiEmbed {
-embed: MessageEmbed; usedEmoji: string[] 
+  embed: MessageEmbed;
+  usedEmoji: string[];
 }
 
 export default class RoleManager {
-  private _guild: undefined | Guild;
+  #guild?: Guild;
 
   constructor() {
     for (const guild of DiscordClient._client.guilds.cache.array()) {
-      this._guild = guild;
-      const rolesChannel:
-        | TextChannel
-        | undefined = guild.channels.cache
+      this.#guild = guild;
+      const rolesChannel: TextChannel | undefined = guild.channels.cache
         .array()
         .find(
           (channel: GuildChannel) =>
@@ -56,7 +56,6 @@ export default class RoleManager {
       }
 
       new GuildRolesManager(guild).checkRolesChannel(rolesChannel, newEmbeds);
-
     }
   }
 
@@ -82,14 +81,14 @@ export default class RoleManager {
     ) {
       const role: CustomRole = Settings.getSettings().roles[i];
       usedEmoji.push(role.emoji);
-      embed.addField(
-        role.name,
-        new Emoji(
-          DiscordClient._client,
-          this._guild!.emojis.cache.get(role.emoji)!
-        ),
-        true
+
+      const emoji: GuildEmoji | undefined = this.#guild!.emojis.cache.get(
+        role.emoji
       );
+      let emojiField: string | Emoji = '';
+      if (!emoji) emojiField = role.emoji;
+      else emojiField = new Emoji(DiscordClient._client, emoji);
+      embed.addField(role.name, emojiField, true);
       processed++;
     }
 

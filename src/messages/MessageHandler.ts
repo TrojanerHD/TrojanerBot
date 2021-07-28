@@ -29,10 +29,15 @@ export default class MessageHandler {
   }
 
   onMessage(message: Message) {
-    if (message.channel.type !== 'text' || message.author.bot || message.content.match(/@(everyone|here)/g)) return;
-    if (message.content.match(/https:\/\/discordapp.com\/channels/)) {
+    if (
+      message.channel.type !== 'text' ||
+      message.author.bot ||
+      message.content.match(/@(everyone|here)/g)
+    )
+      return;
+    if (message.content.match(/https:\/\/discord(app)?\.(com|gg)\/channels/))
       new LinkResolve().handleCommand([], message.channel, message);
-    }
+
     if (!message.content.startsWith(Settings.getSettings().prefix)) return;
     const args: string[] = message.content.split(' ');
     let userCommand: string | undefined = args.shift();

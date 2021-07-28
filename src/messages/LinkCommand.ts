@@ -7,11 +7,11 @@ export default class LinkCommand extends Command {
     value:
       'Sends a message that the current conversation should be moved to the specified channel',
   };
-  private _channel: TextChannel | undefined;
-  private _newChannel: TextChannel | undefined;
-  private _embed: MessageEmbed | undefined;
-  private _oldMessage: Message | undefined;
-  _author: string | undefined;
+  #channel?: TextChannel;
+  #newChannel?: TextChannel;
+  #embed?: MessageEmbed;
+  #oldMessage?: Message;
+  #author?: string;
 
   handleCommand(args: string[], channel: TextChannel, message: Message): void {
     const channelNameMatch: TextChannel | undefined = <TextChannel>(
@@ -32,43 +32,43 @@ export default class LinkCommand extends Command {
         .catch(console.error);
       return;
     }
-    this._newChannel =
+    this.#newChannel =
       messageMentions.length !== 0 ? messageMentions[0] : channelNameMatch;
     if (
-      this._newChannel.type !== 'text' ||
-      this._newChannel.id === channel.id ||
-      this._newChannel.parent?.name === 'Info' ||
-      this._newChannel.name === 'smm2'
+      this.#newChannel.type !== 'text' ||
+      this.#newChannel.id === channel.id ||
+      this.#newChannel.parent?.name === 'Info' ||
+      this.#newChannel.name === 'smm2'
     ) {
       channel.send('Please specify a different channel!').catch(console.error);
       return;
     }
-    this._author = message.author.id;
-    this._channel = channel;
-    this._embed = new MessageEmbed()
+    this.#author = message.author.id;
+    this.#channel = channel;
+    this.#embed = new MessageEmbed()
       .setTitle(`#${channel.name} -> <:portal_blue:631237086988599317>`)
       .setDescription(
-        `To #${this._newChannel.name}\nRequested by <@${this._author}>`
+        `To #${this.#newChannel.name}\nRequested by <@${this.#author}>`
       )
       .setTimestamp(new Date())
       .setColor(4176616);
 
     channel
-      .send(this._embed)
+      .send(this.#embed)
       .then(this.sendMessageToNewChannel.bind(this))
       .catch(console.error);
   }
 
-  sendMessageToNewChannel(message: Message) {
-    this._oldMessage = message;
-    this._newChannel!.send(
+  private sendMessageToNewChannel(message: Message) {
+    this.#oldMessage = message;
+    this.#newChannel!.send(
       new MessageEmbed()
         .setTitle(
-          `<:portal_orange:631237087022022656> -> #${this._newChannel!.name}`
+          `<:portal_orange:631237087022022656> -> #${this.#newChannel!.name}`
         )
         .setDescription(
-          `[From #${this._channel!.name}](${message.url})\nRequested by <@${
-            this._author
+          `[From #${this.#channel!.name}](${message.url})\nRequested by <@${
+            this.#author
           }>`
         )
         .setTimestamp(new Date())
@@ -79,9 +79,9 @@ export default class LinkCommand extends Command {
   }
 
   editOldMessage(message: Message) {
-    this._embed!.setDescription(
-      this._embed!.description?.replace(/(To.*$)/m, `[$1](${message.url})`)
+    this.#embed!.setDescription(
+      this.#embed!.description?.replace(/(To.*$)/m, `[$1](${message.url})`)
     );
-    this._oldMessage!.edit(this._embed!);
+    this.#oldMessage!.edit(this.#embed!);
   }
 }

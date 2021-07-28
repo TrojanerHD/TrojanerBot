@@ -2,14 +2,14 @@ import { Message } from 'discord.js';
 import Settings from '../Settings';
 
 export default class MessageDeletion {
-  private _message: Message;
+  #message: Message;
 
   constructor(message: Message) {
-    this._message = message;
+    this.#message = message;
   }
 
   private async commandNotExistsCallback(message: Message): Promise<void> {
-    const userMessage: Message = this._message;
+    const userMessage: Message = this.#message;
     await new Promise((resolve) => setTimeout(resolve, 5000));
     if (
       userMessage &&

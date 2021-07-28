@@ -3,7 +3,7 @@ import CreateEmbed from './CreateEmbed';
 import Settings from '../Settings';
 import fetch, { Response } from 'node-fetch';
 
-interface Game {
+interface Category {
   name: string;
   id: string;
 }
@@ -15,12 +15,16 @@ interface Stream {
   viewer_count: number;
 }
 
+interface StreamData {
+  data: Stream[];
+}
+
 export default class LiveChannel {
   /** URL for fetching all added streamers via Twitch api */
-  private _streamers: string | undefined;
+  #streamers?: string;
   /** The access token for the Twitch api */
-  private _accessToken: string | undefined;
-  private _streams: Stream[] = [];
+  #accessToken?: string;
+  #streams: Stream[] = [];
 
   /**
    * Handles the #live channel
@@ -40,12 +44,11 @@ export default class LiveChannel {
    * Fetches the current state of streams and updates the embed in #live if there is an update
    */
   private update(): void {
-    this._streamers = this.generateUrl(
+    this.#streamers = this.generateUrl(
       'streams',
-      'user_login',
       Settings.getSettings().streamers
     );
-    if (this._accessToken === undefined)
+    if (this.#accessToken === undefined)
       this.accessTokenRequest(this.channelRequest.bind(this));
     else this.channelRequest();
     this.timeout();
@@ -55,60 +58,69 @@ export default class LiveChannel {
    * Creates a request for fetching updates from streamers from Twitch
    */
   private channelRequest(): void {
-    fetch(this._streamers!, {
+    fetch(this.#streamers!, {
       headers: {
         'Client-ID': Settings.getSettings()['twitch-id'],
-        Authorization: `Bearer ${this._accessToken}`,
+        Authorization: `Bearer ${this.#accessToken}`,
       },
     })
       .then((res: Response) => res.json())
       .catch(console.error)
-      .then((data: any) => this.streamerFetch(data))
+      .then((data: StreamData) => this.streamerFetch(data))
       .catch(console.error);
   }
 
   /**
    * Callback for channelRequest.
-   * Creates a request to resolve the game ids of the games the streamers are playing
+   * Creates a request to resolve the category ids of the categories the streamers are streaming
    * @param body Updated content
    */
-  private streamerFetch(body: { data: Stream[] }): void {
+  private streamerFetch(body: StreamData): void {
     if ('error' in body) {
       console.error(
-        `Error in LiveChannel.ts on line 74:\n${JSON.stringify(body, null, 2)}`
+        `Error in LiveChannel.ts on line 77:\n${JSON.stringify(body, null, 2)}`
       );
       return;
     }
-    this._streams = body.data;
-    let games: Set<string> = new Set();
-    for (const stream of body.data) games.add(stream.game_id);
+    this.#streams = body.data;
+    this.#streams.sort((a: Stream, b: Stream) => {
+      for (const streamer of Settings.getSettings().streamers) {
+        if (a.user_name === streamer) return -1;
+        if (b.user_name === streamer) return 1;
+      }
+      return 0;
+    });
 
-    const gameUrl: string = this.generateUrl('games', 'id', games);
-    fetch(gameUrl, {
+    this.#streams = this.#streams.splice(0, 5);
+    let categories: Set<string> = new Set();
+    for (const stream of this.#streams) categories.add(stream.game_id);
+
+    const categoryUrl: string = this.generateUrl('games', categories);
+    fetch(categoryUrl, {
       headers: {
         'Client-ID': Settings.getSettings()['twitch-id'],
-        Authorization: `Bearer ${this._accessToken}`,
+        Authorization: `Bearer ${this.#accessToken}`,
       },
     })
       .then((res: Response) => res.json())
       .catch(console.error)
-      .then(this.gameIdResult.bind(this))
+      .then(this.categoryIdResult.bind(this))
       .catch(console.error);
   }
 
   /**
-   * Callback for the game id resolving
-   * @param body Game properties
+   * Callback for the category id resolving
+   * @param body Category properties
    */
-  private gameIdResult(body: { data: Game[] }): void {
+  private categoryIdResult(body: { data: Category[] }): void {
     const createEmbed = new CreateEmbed();
-    for (const stream of this._streams) {
-      let game: string | undefined = body.data.find(
-        (game: Game) => game.id === stream.game_id
+    for (const stream of this.#streams) {
+      let category: string | undefined = body.data.find(
+        (category: Category) => category.id === stream.game_id
       )?.name;
 
       createEmbed.addField({
-        game,
+        category,
         name: stream.user_name,
         title: stream.title,
         viewer_count: stream.viewer_count,
@@ -120,17 +132,16 @@ export default class LiveChannel {
   /**
    * Creates a url for the Twitch API to fetch
    * @param endpoint The endpoint to use
-   * @param parameter
-   * @param array All games or streamers
+   * @param array All categories or streamers to fetch
    * @returns The formatted url
    */
   private generateUrl(
     endpoint: 'games' | 'streams',
-    parameter: 'user_login' | 'id',
     array: string[] | Set<string>
   ): string {
+    const type: string = endpoint === 'games' ? 'id' : 'user_login';
     let url = `${STATICTWITCH.baseUrl}helix/${endpoint}?`;
-    for (const value of array) url += `${parameter}=${value}&`;
+    for (const value of array) url += `${type}=${value}&`;
     return url.replace(/&$/, '');
   }
 
@@ -150,7 +161,7 @@ export default class LiveChannel {
       .then((res: Response) => res.json())
       .catch(console.error)
       .then((data: any) => {
-        this._accessToken = data.access_token;
+        this.#accessToken = data.access_token;
         callback();
       });
   }
