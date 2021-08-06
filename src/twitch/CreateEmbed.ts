@@ -6,8 +6,10 @@ import {
   Message,
   Collection,
   ThreadChannel,
+  NewsChannel,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
+import { GuildTextChannel } from '../messages/Command';
 
 interface StreamInformation {
   name: string;
@@ -27,7 +29,7 @@ interface Field {
  */
 export default class CreateEmbed {
   #embed: Field[][] = [];
-  #liveChannel?: TextChannel;
+  #liveChannel?: GuildTextChannel;
 
   /**
    * Adds a formatted field to the embed containing information about a stream
@@ -66,13 +68,14 @@ export default class CreateEmbed {
    * Sends the embed into #live
    */
   sendEmbed(): void {
-    for (const guild of DiscordClient._client.guilds.cache.array()) {
-      this.#liveChannel = guild.channels.cache
-        .array()
-        .find(
-          (channel: GuildChannel | ThreadChannel): boolean =>
-            channel.type === 'text' && channel.name === 'live'
-        ) as TextChannel | undefined;
+    for (const guild of DiscordClient._client.guilds.cache.toJSON()) {
+      this.#liveChannel = guild.channels.cache.find(
+        (channel: GuildChannel | ThreadChannel): boolean =>
+          (channel instanceof TextChannel ||
+            channel instanceof NewsChannel ||
+            channel instanceof ThreadChannel) &&
+          channel.name === 'live'
+      ) as GuildTextChannel | undefined;
       if (!this.#liveChannel) continue;
 
       this.#liveChannel.messages
@@ -96,11 +99,11 @@ export default class CreateEmbed {
       for (const field of fieldArray)
         embed.addField(field.name, field.value, field.inline);
     }
-    if (messages.array().length === 0) {
+    if (messages.toJSON().length === 0) {
       DiscordClient.send(this.#liveChannel, embed);
       return;
     }
-    for (const message of messages.array()) {
+    for (const message of messages.toJSON()) {
       if (message.author.id !== DiscordClient._client.user!.id) {
         message.delete().catch(console.error);
         continue;

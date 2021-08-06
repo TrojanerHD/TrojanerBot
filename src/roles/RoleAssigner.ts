@@ -3,6 +3,7 @@ import {
   Guild,
   GuildMember,
   MessageReaction,
+  PartialMessageReaction,
   Role,
   Snowflake,
   User,
@@ -12,7 +13,7 @@ import GuildRolesManager from './GuildRolesManager';
 import { CustomRole } from './RoleChannelManager';
 
 export default class RoleAssigner {
-  #reaction: MessageReaction;
+  #reaction: MessageReaction | PartialMessageReaction;
   #guild: Guild;
   #members?: GuildMember[];
   #roles?: Role[];
@@ -20,7 +21,7 @@ export default class RoleAssigner {
   #parent: GuildRolesManager;
 
   constructor(
-    reaction: MessageReaction,
+    reaction: MessageReaction | PartialMessageReaction,
     guild: Guild,
     parent: GuildRolesManager
   ) {
@@ -30,13 +31,13 @@ export default class RoleAssigner {
   }
 
   membersFetched(members: Collection<string, GuildMember>): void {
-    this.#members = members.array();
+    this.#members = members.toJSON();
     this.#guild.roles.fetch().then(this.rolesFetched.bind(this));
   }
 
   private rolesFetched(roles: Collection<Snowflake, Role>): void {
     if (this.#block) return;
-    this.#roles = roles.array();
+    this.#roles = roles.toJSON();
 
     this.#reaction.users
       .fetch()
@@ -71,13 +72,13 @@ export default class RoleAssigner {
       const user: User = member.user;
       if (user.bot) continue;
       if (
-        member.roles.cache.array().includes(role) &&
-        !reactors.array().includes(user)
+        member.roles.cache.toJSON().includes(role) &&
+        !reactors.toJSON().includes(user)
       )
         member.roles.remove(role);
       if (
-        !member.roles.cache.array().includes(role) &&
-        reactors.array().includes(user)
+        !member.roles.cache.toJSON().includes(role) &&
+        reactors.toJSON().includes(user)
       )
         member.roles.add(role);
     }

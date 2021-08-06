@@ -5,11 +5,14 @@ import {
   MessageEmbed,
   ThreadChannel,
   Snowflake,
+  BaseGuildTextChannel,
+  NewsChannel,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
+import { GuildTextChannel } from './Command';
 
 export default class LinkResolve {
-  handleCommand(channel: TextChannel, message: Message): void {
+  handleCommand(channel: GuildTextChannel, message: Message): void {
     const splitMessage: string = message.content.split(
       /https:\/\/discord(app)?\.(com|gg)\/channels\//
     )[3];
@@ -31,22 +34,28 @@ export default class LinkResolve {
     const guildChannel: GuildChannel | ThreadChannel | undefined =
       channel.guild.channels.cache.find(
         (guildChannel: GuildChannel | ThreadChannel): boolean =>
-          guildChannel.id === urlChannel && guildChannel.type === 'text'
+          guildChannel.id === urlChannel &&
+          (guildChannel instanceof TextChannel ||
+            guildChannel instanceof NewsChannel ||
+            guildChannel instanceof ThreadChannel)
       );
     if (!guildChannel) {
       DiscordClient.send(channel, embed.setDescription('Channel not found'));
       return;
     }
-    (<TextChannel>guildChannel).messages
+    (guildChannel as BaseGuildTextChannel).messages
       .fetch(urlMessageString)
       .then((urlMessage: Message) => {
-        if (urlMessage.content === '') return;
         if (urlMessage.content.length > 1024)
           urlMessage.content = `${urlMessage.content.substring(0, 1023)}…`;
+        const content =
+          urlMessage.content !== ''
+            ? urlMessage.content
+            : 'Message content not available';
         DiscordClient.send(
           channel,
           embed
-            .addField('Message Content', urlMessage.content, false)
+            .addField('Message Content', content, false)
             .addField('Message Author', `<@${urlMessage.author.id}>`, false)
         );
       });

@@ -4,7 +4,6 @@ import {
   Guild,
   GuildChannel,
   CategoryChannel,
-  Channel,
   VoiceChannel,
   TextChannel,
   ThreadChannel,
@@ -23,9 +22,10 @@ export default class TalkingChannel {
       'voiceStateUpdate',
       this.onVoiceStateUpdate.bind(this)
     );
-    for (const guild of DiscordClient._client.guilds.cache.array())
-      for (const channel of guild.channels.cache.array())
-        if (channel.name.startsWith('Talking ')) channel.delete().catch(console.error);
+    for (const guild of DiscordClient._client.guilds.cache.toJSON())
+      for (const channel of guild.channels.cache.toJSON())
+        if (channel.name.startsWith('Talking '))
+          channel.delete().catch(console.error);
   }
 
   /**
@@ -42,7 +42,7 @@ export default class TalkingChannel {
       return;
     }
 
-    if (channel.members.array().length === 0) {
+    if (channel.members.toJSON().length === 0) {
       channel.delete().then(() => {
         this.#talkingChannelCount--;
         this.renameNextChannels(channel);
@@ -65,7 +65,7 @@ export default class TalkingChannel {
           channel.name === `Talking ${current + 1}`
       );
     if (
-      channel.members.array().length !== 0 ||
+      channel.members.toJSON().length !== 0 ||
       !nextChannel ||
       nextChannel instanceof ThreadChannel
     ) {
@@ -147,10 +147,11 @@ export default class TalkingChannel {
       return;
     guild.channels
       .create(`Talking ${++this.#talkingChannelCount}`, {
-        parent: channel.parent as Channel,
-        type: 'voice',
+        parent: channel.parent!,
+        type: 'GUILD_VOICE',
       })
-      .then(this.channelCreated.bind(this)).catch(console.error);
+      .then(this.channelCreated.bind(this))
+      .catch(console.error);
   }
 
   /**
@@ -167,7 +168,7 @@ export default class TalkingChannel {
             `Talking ${this.channelNameParser(channelToBeFound)! - 1}` ===
               channel.name && channel instanceof GuildChannel
         ) as GuildChannel
-      )?.members.array().length === 0
+      )?.members.toJSON().length === 0
     ) {
       channel.delete().catch(console.error);
       this.#talkingChannelCount--;

@@ -63,7 +63,7 @@ export default class StreamerCommand extends Command {
   }
 
   handleCommand(
-    args: CommandInteractionOption[],
+    args: readonly CommandInteractionOption[],
     interaction: Interaction
   ): Reply {
     if (args[0].name === 'list') {
@@ -84,12 +84,12 @@ export default class StreamerCommand extends Command {
       };
     }
     const streamer: string = (
-      args[0].options?.array()[1].value as string
+      args[0].options![1].value as string
     ).toLowerCase();
     let streamChannel: Channel | undefined = StreamerCommand._streamers.find(
       (channel: Channel) => channel.streamer === streamer
     );
-    switch (args[0].options?.array()[0].value) {
+    switch (args[0].options![0].value) {
       case 'add':
         if (!streamChannel) {
           streamChannel = { streamer, subscribers: [] };
@@ -107,7 +107,7 @@ export default class StreamerCommand extends Command {
 
         return {
           reply: `${
-            args[0].options?.array()[1].value
+            args[0].options![1].value
           } was successfully added to your subscription list`,
           ephemeral: true,
         };
@@ -131,7 +131,7 @@ export default class StreamerCommand extends Command {
         this.saveStreamers();
         return {
           reply: `${
-            args[0].options?.array()[1].value
+            args[0].options![1].value
           } has been removed from your subscription list`,
           ephemeral: true,
         };

@@ -12,7 +12,7 @@ export default class PingCommand extends Command {
   };
 
   handleCommand(
-    _args: CommandInteractionOption[],
+    _args: readonly CommandInteractionOption[],
     interaction: Interaction
   ): Reply {
     return {

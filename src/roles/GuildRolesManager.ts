@@ -3,17 +3,18 @@ import {
   Guild,
   Message,
   MessageReaction,
+  PartialMessageReaction,
   Snowflake,
-  TextChannel,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
 import Settings from '../Settings';
 import { EmojiEmbed, CustomRole } from './RoleChannelManager';
 import RoleAssigner from './RoleAssigner';
+import { GuildTextChannel } from '../messages/Command';
 
 export default class GuildRolesManager {
   #guild: Guild;
-  #rolesChannel?: TextChannel;
+  #rolesChannel?: GuildTextChannel;
   #newEmbed?: EmojiEmbed;
   #newEmbeds?: EmojiEmbed[];
   #message?: Message;
@@ -22,7 +23,10 @@ export default class GuildRolesManager {
     this.#guild = guild;
   }
 
-  checkRolesChannel(rolesChannel: TextChannel, newEmbeds: EmojiEmbed[]): void {
+  checkRolesChannel(
+    rolesChannel: GuildTextChannel,
+    newEmbeds: EmojiEmbed[]
+  ): void {
     this.#newEmbeds = newEmbeds;
     this.#rolesChannel = rolesChannel;
     this.#rolesChannel.messages
@@ -32,7 +36,7 @@ export default class GuildRolesManager {
   }
 
   private messagesFetched(messages: Collection<Snowflake, Message>): void {
-    const rolesMessages = messages.array();
+    const rolesMessages: Message[] = messages.toJSON();
     for (let i = 0; i < this.#newEmbeds!.length; i++) {
       this.#newEmbed = this.#newEmbeds![i];
       if (!rolesMessages[i]) {
@@ -62,7 +66,7 @@ export default class GuildRolesManager {
                     role.emoji === reaction.emoji.name
                 )
             )
-            .array();
+            .toJSON();
           for (const wrongEmoji of wrongEmojis)
             message.reactions
               .resolve(wrongEmoji)
@@ -78,7 +82,7 @@ export default class GuildRolesManager {
     if (!(message instanceof Message)) return;
     this.messageListener(message);
     for (const emoji of this.#newEmbed!.usedEmoji) {
-      if (this.#guild!.emojis.cache.array().length === 0) return;
+      if (this.#guild!.emojis.cache.toJSON().length === 0) return;
       message.react(emoji).catch(console.error);
     }
   }
@@ -92,16 +96,17 @@ export default class GuildRolesManager {
     );
   }
 
-  checkRoles(r: MessageReaction): void {
+  checkRoles(r: MessageReaction | PartialMessageReaction): void {
     if (
       r.message.id !== this.#message!.id ||
       r.message.author!.id !== DiscordClient._client.user!.id ||
-      r.message.guild!.id !== this.#message!.guild!.id
+      (r.message.channel as GuildTextChannel).guild!.id !==
+        (this.#message!.channel as GuildTextChannel).guild!.id
     )
       return;
     const roleAssigner: RoleAssigner = new RoleAssigner(r, this.#guild, this);
-    this.#guild!.members.fetch().then(
-      roleAssigner.membersFetched.bind(roleAssigner)
-    );
+    this.#guild!.members.fetch()
+      .then(roleAssigner.membersFetched.bind(roleAssigner))
+      .catch(console.error);
   }
 }

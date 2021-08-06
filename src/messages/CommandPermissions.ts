@@ -16,16 +16,16 @@ export default class CommandPermissions {
   }
 
   onCommandsSet(commands: Collection<Snowflake, ApplicationCommandType>) {
-    for (const command of commands.array())
+    for (const command of commands.toJSON())
       if (!command.defaultPermission)
         command.permissions
           .add({
             guild: this.#guild,
             permissions: Settings.getSettings()['permission-roles'].map(
               (roleName: string): ApplicationCommandPermissionData => ({
-                id: this.#guild?.roles.cache
-                  .array()
-                  .find((role: Role) => role.name === roleName)!.id!,
+                id: this.#guild?.roles.cache.find(
+                  (role: Role) => role.name === roleName
+                )!.id!,
                 permission: true,
                 type: 'ROLE',
               })

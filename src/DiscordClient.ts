@@ -1,12 +1,11 @@
 import {
   Client,
-  DMChannel,
+  Collection,
   GuildChannel,
   Intents,
   Message,
   MessageEmbed,
-  NewsChannel,
-  TextChannel,
+  TextBasedChannels,
   ThreadChannel,
   ThreadMember,
 } from 'discord.js';
@@ -51,24 +50,18 @@ export default class DiscordClient {
       });
   }
 
-  private onReady(): Awaited<void> {
-    for (const guild of DiscordClient._client.guilds.cache.array())
+  private onReady(): void {
+    for (const guild of DiscordClient._client.guilds.cache.toJSON())
       for (const threadChannel of (
-        guild.channels.cache
-          .array()
-          .filter(
-            (channel: GuildChannel | ThreadChannel) =>
-              channel instanceof ThreadChannel
-          ) as ThreadChannel[]
-      ).filter(
-        (channel: ThreadChannel) =>
-          !channel.members.cache
-            .array()
-            .find(
+        guild.channels.cache.filter(
+          (channel: GuildChannel | ThreadChannel) =>
+            channel instanceof ThreadChannel &&
+            !channel.members.cache.find(
               (member: ThreadMember) =>
                 member.user!.id === DiscordClient._client.user!.id
             )
-      ))
+        ) as Collection<string, ThreadChannel>
+      ).toJSON())
         threadChannel.join().catch(console.error);
     new TalkingChannel();
     if (!DiscordClient._client.application?.owner)
@@ -87,12 +80,12 @@ export default class DiscordClient {
     new LiveChannel();
   }
 
-  private onThreadCreate(thread: ThreadChannel): Awaited<void> {
+  private onThreadCreate(thread: ThreadChannel): void {
     thread.join().catch(console.error);
   }
 
   static send(
-    channel: TextChannel | DMChannel | NewsChannel | ThreadChannel | undefined,
+    channel: TextBasedChannels | undefined,
     message: MessageEmbed,
     callback?: (message: Message) => void
   ): void {

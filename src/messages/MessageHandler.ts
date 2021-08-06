@@ -37,8 +37,8 @@ export default class MessageHandler {
   ];
 
   constructor() {
-    DiscordClient._client.on('message', this.onMessage.bind(this));
-    DiscordClient._client.on('interaction', this.onReaction.bind(this));
+    DiscordClient._client.on('messageCreate', this.onMessage.bind(this));
+    DiscordClient._client.on('interactionCreate', this.onReaction.bind(this));
   }
 
   public static addCommands(): void {
@@ -57,7 +57,7 @@ export default class MessageHandler {
 
     DiscordClient._client.application?.commands.set(dmCommands);
 
-    for (const guild of DiscordClient._client.guilds.cache.array()) {
+    for (const guild of DiscordClient._client.guilds.cache.toJSON()) {
       guild.commands
         .fetch()
         .then((): void => {
@@ -78,7 +78,7 @@ export default class MessageHandler {
     for (const command of MessageHandler._commands)
       if (command.deploy.name === interaction.commandName) {
         const reply: Reply = command.handleCommand(
-          interaction.options.array(),
+          interaction.options.data,
           interaction
         );
         if (!reply.ephemeral) reply.ephemeral = false;
@@ -91,7 +91,7 @@ export default class MessageHandler {
   }
 
   onMessage(message: Message) {
-    if (message.channel.type !== 'text' || message.author.bot) return;
+    if (message.channel.type === 'DM' || message.author.bot) return;
     if (message.content.match(/https:\/\/discord(app)?\.(com|gg)\/channels/))
       new LinkResolve().handleCommand(message.channel, message);
 

@@ -31,7 +31,7 @@ export default class DeployCommand extends Command {
 
   guildOnly: boolean = true;
 
-  handleCommand(args: CommandInteractionOption[]): Reply {
+  handleCommand(args: readonly CommandInteractionOption[]): Reply {
     switch (args[0].name) {
       case 'all':
         MessageHandler.addCommands();
@@ -41,7 +41,7 @@ export default class DeployCommand extends Command {
           .fetch()
           .then(this.commandsFetched);
 
-        for (const guild of DiscordClient._client.guilds.cache.array())
+        for (const guild of DiscordClient._client.guilds.cache.toJSON())
           guild.commands.fetch().then(this.commandsFetched);
         return { reply: 'All commands have been removed', ephemeral: true };
       default:
@@ -52,7 +52,7 @@ export default class DeployCommand extends Command {
   private commandsFetched(
     commands: Collection<Snowflake, ApplicationCommandType>
   ) {
-    for (const command of commands.array())
+    for (const command of commands.toJSON())
       command.delete().catch(console.error);
   }
 }

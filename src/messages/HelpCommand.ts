@@ -1,17 +1,15 @@
 import {
-  TextChannel,
   MessageEmbed,
   CommandInteractionOption,
   Interaction,
-  ThreadChannel,
   ApplicationCommandData,
-  DMChannel,
   Channel,
   ApplicationCommandOptionChoice,
+  TextBasedChannels,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
 import Command, { Reply } from './Command';
-import MessageHandler, { ApplicationCommandType } from './MessageHandler';
+import MessageHandler from './MessageHandler';
 
 export default class HelpCommand extends Command {
   deploy: ApplicationCommandData = {
@@ -42,20 +40,20 @@ export default class HelpCommand extends Command {
   }
 
   handleCommand(
-    args: CommandInteractionOption[],
+    args: readonly CommandInteractionOption[],
     interaction: Interaction
   ): Reply {
     this.#interaction = interaction;
-    this.#embed = new MessageEmbed()
-      .setTimestamp(new Date())
-      .setTitle('Help')
-      .setColor(206694)
-      .setFooter(`Requested by ${interaction.user.tag}`);
 
     const commands: ApplicationCommandData[] = MessageHandler._commands.map(
       (command: Command): ApplicationCommandData => command.deploy
     );
     if (args.length === 0) {
+      this.#embed = new MessageEmbed()
+        .setTimestamp(new Date())
+        .setTitle('Help')
+        .setColor(206694)
+        .setFooter(`Requested by ${interaction.user.tag}`);
       for (const command of commands)
         this.#embed.addField(`/${command.name}`, command.description, false);
 
@@ -74,28 +72,23 @@ export default class HelpCommand extends Command {
     if (!command)
       return { reply: 'This command does not exist', ephemeral: true };
 
-    this.#embed.addField(`/${command.name}`, command.description, false);
     return {
-      reply: 'See embed',
-      afterResponse: this.afterResponse.bind(this),
+      reply: `**/${command.name}**: ${command.description}`,
       ephemeral: true,
     };
   }
 
   private afterResponse(): void {
-    let channel: Channel | null = this.#interaction!.channel;
+    let channel: TextBasedChannels | null = this.#interaction!.channel;
     if (!channel) {
       DiscordClient._client.channels
-        .fetch(this.#interaction!.channelID!)
+        .fetch(this.#interaction!.channelId!)
         .then((value: Channel | null) =>
-          DiscordClient.send(value! as TextChannel, this.#embed!)
+          DiscordClient.send(value! as TextBasedChannels, this.#embed!)
         )
         .catch(console.error);
       return;
     }
-    DiscordClient.send(
-      channel as TextChannel | ThreadChannel | DMChannel,
-      this.#embed!
-    );
+    DiscordClient.send(channel as TextBasedChannels, this.#embed!);
   }
 }
