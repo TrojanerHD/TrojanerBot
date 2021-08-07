@@ -100,8 +100,7 @@ export default class GuildRolesManager {
     if (
       r.message.id !== this.#message!.id ||
       r.message.author!.id !== DiscordClient._client.user!.id ||
-      (r.message.channel as GuildTextChannel).guild!.id !==
-        (this.#message!.channel as GuildTextChannel).guild!.id
+      r.message.guild!.id !== this.#message!.guild!.id
     )
       return;
     const roleAssigner: RoleAssigner = new RoleAssigner(r, this.#guild, this);
