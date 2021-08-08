@@ -2,6 +2,8 @@ import {
   Collection,
   Guild,
   Message,
+  MessageActionRow,
+  MessageButton,
   MessageReaction,
   PartialMessageReaction,
   Snowflake,
@@ -42,8 +44,18 @@ export default class GuildRolesManager {
       if (!rolesMessages[i]) {
         DiscordClient.send(
           this.#rolesChannel,
-          this.#newEmbed!.embed,
-          this.reactToMessage.bind(this)
+          {
+            embeds: [this.#newEmbed!.embed],
+            components: [
+              new MessageActionRow().addComponents(
+                new MessageButton()
+                  .setCustomId('select')
+                  .setLabel('Select your roles')
+                  .setStyle('PRIMARY')
+              ),
+            ],
+          },
+          //this.reactToMessage.bind(this)
         );
         continue;
       }

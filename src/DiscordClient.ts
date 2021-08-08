@@ -8,6 +8,7 @@ import {
   TextBasedChannels,
   ThreadChannel,
   ThreadMember,
+  MessageOptions,
 } from 'discord.js';
 import MessageHandler from './messages/MessageHandler';
 import LiveChannel from './twitch/LiveChannel';
@@ -86,11 +87,14 @@ export default class DiscordClient {
 
   static send(
     channel: TextBasedChannels | undefined,
-    message: MessageEmbed,
+    message: MessageEmbed | MessageOptions,
     callback?: (message: Message) => void
   ): void {
     if (!channel) return;
-    const msg: Promise<Message> = channel.send({ embeds: [message] });
+    let send: MessageOptions = {};
+    if (message instanceof MessageEmbed) send.embeds = [message];
+    else send = message;
+    const msg: Promise<Message> = channel.send(send);
 
     if (callback) msg.then(callback);
     msg.catch(console.error);
