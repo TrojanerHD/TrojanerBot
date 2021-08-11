@@ -1,34 +1,19 @@
 import {
-  Emoji,
-  Guild,
+  EmbedFieldData,
   GuildChannel,
-  GuildEmoji,
   MessageEmbed,
   NewsChannel,
   TextChannel,
   ThreadChannel,
 } from 'discord.js';
-import Settings from '../Settings';
+import Settings, { RolesField } from '../Settings';
 import DiscordClient from '../DiscordClient';
 import GuildRolesManager from './GuildRolesManager';
 import { GuildTextChannel } from '../messages/Command';
 
-export interface CustomRole {
-  name: string;
-  emoji: string;
-}
-
-export interface EmojiEmbed {
-  embed: MessageEmbed;
-  usedEmoji: string[];
-}
-
 export default class RoleManager {
-  #guild?: Guild;
-
   constructor() {
     for (const guild of DiscordClient._client.guilds.cache.toJSON()) {
-      this.#guild = guild;
       const rolesChannel: GuildTextChannel | undefined =
         guild.channels.cache.find(
           (channel: GuildChannel | ThreadChannel): boolean =>
@@ -39,68 +24,24 @@ export default class RoleManager {
         ) as GuildTextChannel | undefined;
       if (!rolesChannel) continue;
 
-      let embed: {
-        embed: MessageEmbed;
-        processed: number;
-        number: number;
-        usedEmoji: string[];
-      } = {
-        embed: new MessageEmbed(),
-        processed: 0,
-        number: 0,
-        usedEmoji: [],
-      };
+      const embed: MessageEmbed = this.generateEmbed();
 
-      const newEmbeds: EmojiEmbed[] = [];
-      while (embed.processed !== Settings.getSettings().roles.length) {
-        embed = this.generateEmbed(embed.processed, embed.number);
-        newEmbeds.push({
-          embed: embed.embed,
-          usedEmoji: embed.usedEmoji,
-        });
-      }
-
-      new GuildRolesManager(guild).checkRolesChannel(rolesChannel, newEmbeds);
+      new GuildRolesManager(rolesChannel, embed);
     }
   }
 
-  private generateEmbed(
-    processed: number = 0,
-    number: number = 0
-  ): {
-    embed: MessageEmbed;
-    processed: number;
-    number: number;
-    usedEmoji: string[];
-  } {
+  private generateEmbed(): MessageEmbed {
     const embed: MessageEmbed = new MessageEmbed()
       .setTimestamp(new Date())
-      .setTitle('Role Selector');
-
-    const usedEmoji: string[] = [];
-
-    for (
-      let i = processed;
-      processed < Settings.getSettings().roles.length || i - processed === 4;
-      i++
-    ) {
-      const role: CustomRole = Settings.getSettings().roles[i];
-      usedEmoji.push(role.emoji);
-
-      const emoji: GuildEmoji | undefined = this.#guild!.emojis.cache.find(
-        (value: GuildEmoji) => value.id == role.emoji
+      .setTitle('Role Selector')
+      .setFields(
+        Settings.getSettings().roles.map(
+          (role: RolesField): EmbedFieldData => ({
+            name: role.name,
+            value: role.description,
+          })
+        )
       );
-      let emojiField: string | Emoji = '';
-      if (!emoji) emojiField = role.emoji;
-      else emojiField = new Emoji(DiscordClient._client, emoji);
-      embed.addField(
-        role.name,
-        emojiField instanceof Emoji ? emojiField.toString() : emojiField,
-        true
-      );
-      processed++;
-    }
-
-    return { embed, processed, number: number++, usedEmoji };
+    return embed;
   }
 }

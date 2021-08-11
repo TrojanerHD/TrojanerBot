@@ -3,7 +3,6 @@ import {
   ApplicationCommand,
   ApplicationCommandData,
   GuildResolvable,
-  Interaction,
   Message,
   Role,
 } from 'discord.js';
@@ -14,7 +13,7 @@ import HelpCommand from './HelpCommand';
 import StreamerCommand from './StreamerCommand';
 import DeployCommand from './DeployCommand';
 import LinkResolve from './LinkResolve';
-import Command, { Reply } from './Command';
+import Command from './Command';
 import CommandPermissions from './CommandPermissions';
 import Settings from '../Settings';
 
@@ -38,7 +37,6 @@ export default class MessageHandler {
 
   constructor() {
     DiscordClient._client.on('messageCreate', this.onMessage.bind(this));
-    DiscordClient._client.on('interactionCreate', this.onReaction.bind(this));
   }
 
   public static addCommands(): void {
@@ -73,22 +71,7 @@ export default class MessageHandler {
     }
   }
 
-  private onReaction(interaction: Interaction): void {
-    if (!interaction.isCommand()) return;
-    for (const command of MessageHandler._commands)
-      if (command.deploy.name === interaction.commandName) {
-        const reply: Reply = command.handleCommand(
-          interaction.options.data,
-          interaction
-        );
-        if (!reply.ephemeral) reply.ephemeral = false;
-        if (!reply.afterResponse) reply.afterResponse = (): void => {};
-        interaction
-          .reply({ content: reply.reply, ephemeral: reply.ephemeral })
-          .then(reply.afterResponse.bind(command))
-          .catch(console.error);
-      }
-  }
+  
 
   onMessage(message: Message) {
     if (message.channel.type === 'DM' || message.author.bot) return;

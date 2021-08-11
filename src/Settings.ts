@@ -1,10 +1,15 @@
 import { Channel } from './messages/StreamerCommand';
 import fs from 'fs';
 
+export interface RolesField {
+  name: string;
+  emoji: string;
+  description: string;
+}
 export interface SettingsJSON {
   'twitch-id': string;
   'permission-roles': string[];
-  roles: { name: string; emoji: string }[];
+  roles: RolesField[];
   streamers: string[];
   'streamer-subscriptions': Channel[];
 }

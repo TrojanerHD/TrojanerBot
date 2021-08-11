@@ -11,6 +11,7 @@ import {
   MessageOptions,
 } from 'discord.js';
 import MessageHandler from './messages/MessageHandler';
+import ReactionHandler from './ReactionHandler';
 import LiveChannel from './twitch/LiveChannel';
 import TalkingChannel from './TalkingChannel';
 import RoleChannelManager from './roles/RoleChannelManager';
@@ -31,6 +32,7 @@ export default class DiscordClient {
    */
   constructor() {
     new MessageHandler();
+    new ReactionHandler();
     DiscordClient._client.on('ready', this.onReady);
     DiscordClient._client.on('threadCreate', this.onThreadCreate);
   }
