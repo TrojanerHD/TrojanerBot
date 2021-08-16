@@ -5,10 +5,12 @@ import {
   Interaction,
 } from 'discord.js';
 import Settings from '../Settings';
+import DMManager from '../twitch/DMManager';
 
 export interface Channel {
   streamer: string;
   subscribers: string[];
+  sent: boolean;
 }
 
 export default class StreamerCommand extends Command {
@@ -58,14 +60,14 @@ export default class StreamerCommand extends Command {
 
   constructor() {
     super();
-    StreamerCommand._streamers =
-      Settings.getSettings()['streamer-subscriptions'];
   }
 
   handleCommand(
     args: readonly CommandInteractionOption[],
     interaction: Interaction
   ): Reply {
+    StreamerCommand._streamers =
+      Settings.getSettings()['streamer-subscriptions'];
     if (args[0].name === 'list') {
       const streamerList: Channel[] = StreamerCommand._streamers.filter(
         (streamer: Channel): boolean =>
@@ -92,7 +94,7 @@ export default class StreamerCommand extends Command {
     switch (args[0].options![0].value) {
       case 'add':
         if (!streamChannel) {
-          streamChannel = { streamer, subscribers: [] };
+          streamChannel = { streamer, subscribers: [], sent: false };
           StreamerCommand._streamers.push(streamChannel);
         }
 
@@ -105,6 +107,7 @@ export default class StreamerCommand extends Command {
         streamChannel.subscribers.push(interaction.user.id);
         this.saveStreamers();
 
+        new DMManager();
         return {
           reply: `${
             args[0].options![1].value
@@ -129,6 +132,7 @@ export default class StreamerCommand extends Command {
             (channel: Channel) => channel.streamer !== streamChannel?.streamer
           );
         this.saveStreamers();
+        new DMManager();
         return {
           reply: `${
             args[0].options![1].value
