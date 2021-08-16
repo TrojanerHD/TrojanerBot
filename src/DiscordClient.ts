@@ -16,6 +16,7 @@ import LiveChannel from './twitch/LiveChannel';
 import TalkingChannel from './TalkingChannel';
 import RoleChannelManager from './roles/RoleChannelManager';
 import Settings from './Settings';
+import DMManager from './twitch/DMManager';
 
 export default class DiscordClient {
   static _client: Client = new Client({
@@ -81,6 +82,7 @@ export default class DiscordClient {
    */
   private startTwitch(): void {
     new LiveChannel();
+    new DMManager();
   }
 
   private onThreadCreate(thread: ThreadChannel): void {
