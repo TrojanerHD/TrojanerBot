@@ -85,7 +85,7 @@ export default class TwitchHelper {
   private streamerFetch(stream: StreamData): void {
     if ('error' in stream) {
       console.error(
-        `Error in LiveChannel.ts on line 77:\n${JSON.stringify(
+        `Error in TwitchHelper.ts on line 88:\n${JSON.stringify(
           stream,
           null,
           2
