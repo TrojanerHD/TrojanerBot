@@ -25,7 +25,7 @@ export default class TwitchHelper {
   #streamers?: string;
   /** The access token for the Twitch api */
   #accessToken?: string;
-  #streamersUpdate?: () => string[];
+  #streamerUpdate?: string[];
   #streams: Stream[] = [];
   #callback: (streams: Stream[]) => void;
 
@@ -52,9 +52,13 @@ export default class TwitchHelper {
    * Fetches the current state of streams
    * @param streamerUpdate The streamers to fetch
    */
-  update(streamerUpdate: () => string[]): void {
-    if (!!streamerUpdate) this.#streamersUpdate = streamerUpdate;
-    this.#streamers = TwitchHelper.generateUrl('streams', this.#streamersUpdate!());
+  update(streamerUpdate: string[]): void {
+    if (!!streamerUpdate) this.#streamerUpdate = streamerUpdate;
+    if (this.#streamerUpdate!.length === 0) return;
+    this.#streamers = TwitchHelper.generateUrl(
+      'streams',
+      this.#streamerUpdate!
+    );
     if (!this.#accessToken)
       this.accessTokenRequest(this.channelRequest.bind(this));
     else this.channelRequest();
@@ -84,7 +88,9 @@ export default class TwitchHelper {
    */
   private streamerFetch(stream: StreamData): void {
     if (!stream) {
-      console.error('Error in TwitchHelper.ts on line 87:\nstream is undefined');
+      console.error(
+        'Error in TwitchHelper.ts on line 87:\nstream is undefined'
+      );
       return;
     }
     if ('error' in stream) {

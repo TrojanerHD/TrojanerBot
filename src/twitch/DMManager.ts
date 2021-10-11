@@ -11,7 +11,7 @@ export default class DMManager {
   _streamer?: Stream;
 
   constructor() {
-    new TwitchHelper(this.streamerFetched.bind(this)).update((): string[] =>
+    new TwitchHelper(this.streamerFetched.bind(this)).update(
       Settings.getSettings()['streamer-subscriptions'].map(
         (channel: Channel): string => channel.streamer
       )
@@ -24,7 +24,9 @@ export default class DMManager {
     );
     for (const channel of Settings.getSettings()[
       'streamer-subscriptions'
-    ].filter((channel: Channel): boolean => logins.includes(channel.streamer))){
+    ].filter((channel: Channel): boolean =>
+      logins.includes(channel.streamer)
+    )) {
       for (const subscriber of channel.subscribers)
         DiscordClient._client.users
           .fetch(subscriber)
@@ -36,16 +38,16 @@ export default class DMManager {
             })
           )
           .catch(console.error);
-		}
+    }
     for (const channel of Settings.getSettings()[
       'streamer-subscriptions'
     ].filter(
       (channel: Channel): boolean =>
         !!channel.sent && !logins.includes(channel.streamer)
     )) {
-			channel.sent = false;
+      channel.sent = false;
     }
-		Settings.saveSettings();
+    Settings.saveSettings();
   }
 
   private usersFetched(user: User): void {
@@ -54,8 +56,10 @@ export default class DMManager {
     );
     if (!streamer || !!this._channel.sent) return;
     this._channel.sent = true;
-		Settings.getSettings()['streamer-subscriptions'].find((channel: Channel) => channel.streamer === this._channel.streamer)!.sent = true;
-		Settings.saveSettings();
+    Settings.getSettings()['streamer-subscriptions'].find(
+      (channel: Channel) => channel.streamer === this._channel.streamer
+    )!.sent = true;
+    Settings.saveSettings();
     if (!user.dmChannel)
       user
         .createDM()
