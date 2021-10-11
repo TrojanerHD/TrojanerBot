@@ -83,6 +83,10 @@ export default class TwitchHelper {
    * @param stream Updated content
    */
   private streamerFetch(stream: StreamData): void {
+    if (!stream) {
+      console.error('Error in TwitchHelper.ts on line 87:\nstream is undefined');
+      return;
+    }
     if ('error' in stream) {
       console.error(
         `Error in TwitchHelper.ts on line 88:\n${JSON.stringify(
