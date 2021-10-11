@@ -1,10 +1,25 @@
-import { TextChannel, Message } from 'discord.js';
+import {
+  ApplicationCommandData,
+  CommandInteractionOption,
+  Interaction,
+  NewsChannel,
+  TextChannel,
+  ThreadChannel,
+} from 'discord.js';
+
+export interface Reply {
+  reply: string | null | undefined;
+  ephemeral?: boolean;
+  afterResponse?: () => void;
+}
+export type GuildTextChannel = TextChannel | NewsChannel | ThreadChannel;
 
 export default abstract class Command {
-  abstract helpInfo: { name: string; value: string };
+  abstract deploy: ApplicationCommandData;
+  guildOnly: boolean = false;
+
   abstract handleCommand(
-    args: string[],
-    channel: TextChannel,
-    message: Message
-  ): void;
+    args: readonly CommandInteractionOption[],
+    interaction: Interaction
+  ): Reply;
 }

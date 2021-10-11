@@ -26,13 +26,11 @@ In this step I will go over all properties of the `settings.json` file:
 
 Key | Type | Description | Default
 --- | --- | --- | ---
-`prefix` | string | Specifies the prefix the bot will use for commands | `"!"`
-`delete-messages-on-error` | boolean | Controls whether the embed and original message should get deleted after 5 seconds if a command was not successful and the bot sent an error embed | `true`
 `twitch-id` | string | The ID of your Twitch application found in the [Twitch Developer Console](https://dev.twitch.tv/console/apps). If you do not want to use the Twitch features of this bot, set the value to `""` | `""`
-`permission-roles` | string[] | Added roles will be able to execute commands that require permissions (e. g. !bye) | `[]`
-`roles` | {name: string; emoji: string}[] | Added roles will be displayed in a `#roles` channel in Discord if the Discord has this channel. The emoji id will be used as reaction emoji so when a user reacts with the certain emoji they will get the role respectively. If you do not want to use this feature, set the value to `[]` | `[]`
+`permission-roles` | string[] | Added roles will be able to execute commands that require permissions (e. g. /bye) | `[]`
+`roles` | {name: string; emoji: string; description: string}[] | Added roles will be displayed in a `#roles` channel in Discord if the Discord has this channel. The emoji id will be used as reaction emoji so when a user reacts with the certain emoji they will get the role respectively. If you do not want to use this feature, set the value to `[]` | `[]`
 `streamers` | string[] | The bot will show whenever the here specified channels are live in a `#live` channel in Discord if the Discord has this channel. If you do not want to use this feature, set the value to `[]` | `[]`
-`streamer-subscriptions` | {streamer: string; subscribers: string[]} | The bot will store all subscriptions to Twitch streamers when somebody uses `!streamer` to subscribe to a streamer. Usually you want to leave it as it is | `[]`
+`streamer-subscriptions` | {streamer: string; subscribers: string[]} | The bot will store all subscriptions to Twitch streamers when somebody uses `/streamer` to subscribe to a streamer. Usually you want to leave it as it is | `[]`
 
 ### Execution
 ```sh

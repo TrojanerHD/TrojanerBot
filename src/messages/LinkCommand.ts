@@ -1,87 +1,107 @@
-import Command from './Command';
-import { TextChannel, Message, GuildChannel, MessageEmbed } from 'discord.js';
+import Command, { GuildTextChannel, Reply } from './Command';
+import {
+  TextChannel,
+  Message,
+  GuildChannel,
+  MessageEmbed,
+  ThreadChannel,
+  ApplicationCommandData,
+  CommandInteractionOption,
+  Interaction,
+  NewsChannel,
+} from 'discord.js';
+import DiscordClient from '../DiscordClient';
 
 export default class LinkCommand extends Command {
-  helpInfo: { name: string; value: string } = {
-    name: 'link|to <channel>',
-    value:
+  deploy: ApplicationCommandData = {
+    name: 'to',
+    description:
       'Sends a message that the current conversation should be moved to the specified channel',
+    options: [
+      {
+        type: 7,
+        name: 'channel',
+        description: 'Channel where the conversation will be linked to',
+        required: true,
+      },
+    ],
   };
-  #channel?: TextChannel;
-  #newChannel?: TextChannel;
+  guildOnly = true;
+
+  #channel?: GuildTextChannel;
+  #newChannel?: GuildTextChannel;
   #embed?: MessageEmbed;
   #oldMessage?: Message;
   #author?: string;
 
-  handleCommand(args: string[], channel: TextChannel, message: Message): void {
-    const channelNameMatch: TextChannel | undefined = <TextChannel>(
-      message.guild?.channels.cache.find(
-        (channel: GuildChannel) =>
-          channel.type === 'text' && channel.name === args[0]
-      )
-    );
-    const messageMentions: TextChannel[] = message.mentions.channels.array();
-    if (
-      args.length < 1 ||
-      (messageMentions.length === 0 && !channelNameMatch)
-    ) {
-      channel
-        .send(
-          'Please specify a channel! Syntax: `!<link|to> #<Discord Channel>`'
-        )
-        .catch(console.error);
-      return;
-    }
-    this.#newChannel =
-      messageMentions.length !== 0 ? messageMentions[0] : channelNameMatch;
-    if (
-      this.#newChannel.type !== 'text' ||
-      this.#newChannel.id === channel.id ||
-      this.#newChannel.parent?.name === 'Info' ||
-      this.#newChannel.name === 'smm2'
-    ) {
-      channel.send('Please specify a different channel!').catch(console.error);
-      return;
-    }
-    this.#author = message.author.id;
-    this.#channel = channel;
+  handleCommand(
+    args: readonly CommandInteractionOption[],
+    interaction: Interaction
+  ): Reply {
+    this.#newChannel = interaction.guild?.channels.cache.find(
+      (channel: GuildChannel | ThreadChannel): boolean =>
+        (channel instanceof TextChannel ||
+          channel instanceof NewsChannel ||
+          channel instanceof ThreadChannel) &&
+        channel.id === args[0].value
+    ) as GuildTextChannel;
+
+    this.#author = interaction.user.id;
+    this.#channel = interaction.channel! as GuildTextChannel;
+    if (!this.#newChannel || this.#newChannel.id === this.#channel.id)
+      return { reply: 'Please specify a different channel', ephemeral: true };
     this.#embed = new MessageEmbed()
-      .setTitle(`#${channel.name} -> <:portal_blue:631237086988599317>`)
+      .setTitle(
+        `${this.channelName(
+          this.#channel
+        )} -> <:portal_blue:631237086988599317>`
+      )
       .setDescription(
-        `To #${this.#newChannel.name}\nRequested by <@${this.#author}>`
+        `To ${this.channelName(this.#newChannel)}\nRequested by <@${
+          this.#author
+        }>`
       )
       .setTimestamp(new Date())
       .setColor(4176616);
 
-    channel
-      .send(this.#embed)
-      .then(this.sendMessageToNewChannel.bind(this))
-      .catch(console.error);
+    DiscordClient.send(
+      this.#channel,
+      this.#embed,
+      this.sendMessageToNewChannel.bind(this)
+    );
+    return { reply: 'See embed', ephemeral: true };
   }
 
-  private sendMessageToNewChannel(message: Message) {
+  private sendMessageToNewChannel(message: Message): void {
     this.#oldMessage = message;
-    this.#newChannel!.send(
+    DiscordClient.send(
+      this.#newChannel!,
       new MessageEmbed()
         .setTitle(
-          `<:portal_orange:631237087022022656> -> #${this.#newChannel!.name}`
+          `<:portal_orange:631237087022022656> -> ${this.channelName(
+            this.#newChannel
+          )}`
         )
         .setDescription(
-          `[From #${this.#channel!.name}](${message.url})\nRequested by <@${
-            this.#author
-          }>`
+          `[From ${this.channelName(this.#channel)}](${
+            message.url
+          })\nRequested by <@${this.#author}>`
         )
         .setTimestamp(new Date())
-        .setColor(16285727)
-    )
-      .then(this.editOldMessage.bind(this))
-      .catch(console.error);
+        .setColor(16285727),
+      this.editOldMessage.bind(this)
+    );
   }
 
-  editOldMessage(message: Message) {
+  editOldMessage(message: Message): void {
     this.#embed!.setDescription(
-      this.#embed!.description?.replace(/(To.*$)/m, `[$1](${message.url})`)
+      this.#embed!.description!.replace(/(To.*$)/m, `[$1](${message.url})`)
     );
-    this.#oldMessage!.edit(this.#embed!);
+    this.#oldMessage!.edit({ embeds: [this.#embed!] }).catch(console.error);
+  }
+
+  private channelName(channel?: GuildTextChannel): string {
+    if (!channel) return 'Not available';
+    return `${channel instanceof TextChannel ? '#' : ''}${channel.name}`;
   }
 }

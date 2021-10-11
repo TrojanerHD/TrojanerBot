@@ -1,12 +1,15 @@
 import { Channel } from './messages/StreamerCommand';
 import fs from 'fs';
 
+export interface RolesField {
+  name: string;
+  emoji: string;
+  description: string;
+}
 export interface SettingsJSON {
-  prefix: string;
-  'delete-messages-on-error': boolean;
   'twitch-id': string;
   'permission-roles': string[];
-  roles: { name: string; emoji: string }[];
+  roles: RolesField[];
   streamers: string[];
   'streamer-subscriptions': Channel[];
 }
@@ -14,8 +17,6 @@ export interface SettingsJSON {
 export default class Settings {
   private static _settingsFile: string = './settings.json';
   private static _settings: SettingsJSON = {
-    prefix: '!',
-    'delete-messages-on-error': true,
     'twitch-id': '',
     'permission-roles': [],
     roles: [],

@@ -1,12 +1,12 @@
-import { DiscordClient } from './DiscordClient';
+import DiscordClient from './DiscordClient';
 import {
   VoiceState,
   Guild,
   GuildChannel,
   CategoryChannel,
-  Channel,
   VoiceChannel,
   TextChannel,
+  ThreadChannel,
 } from 'discord.js';
 
 export default class TalkingChannel {
@@ -22,9 +22,10 @@ export default class TalkingChannel {
       'voiceStateUpdate',
       this.onVoiceStateUpdate.bind(this)
     );
-    for (const guild of DiscordClient._client.guilds.cache.array())
-      for (const channel of guild.channels.cache.array())
-        if (channel.name.startsWith('Talking ')) channel.delete().catch(console.error);
+    for (const guild of DiscordClient._client.guilds.cache.toJSON())
+      for (const channel of guild.channels.cache.toJSON())
+        if (channel.name.startsWith('Talking '))
+          channel.delete().catch(console.error);
   }
 
   /**
@@ -41,7 +42,7 @@ export default class TalkingChannel {
       return;
     }
 
-    if (channel.members.array().length === 0) {
+    if (channel.members.toJSON().length === 0) {
       channel.delete().then(() => {
         this.#talkingChannelCount--;
         this.renameNextChannels(channel);
@@ -58,10 +59,16 @@ export default class TalkingChannel {
   private renameNextChannels(channel: GuildChannel): void {
     const current: number = this.channelNameParser(channel)!;
     const guild: Guild = channel.guild;
-    const nextChannel: GuildChannel | undefined = guild.channels.cache.find(
-      (channel: GuildChannel) => channel.name === `Talking ${current + 1}`
-    );
-    if (channel.members.array().length !== 0 || !nextChannel) {
+    const nextChannel: GuildChannel | ThreadChannel | undefined =
+      guild.channels.cache.find(
+        (channel: GuildChannel | ThreadChannel): boolean =>
+          channel.name === `Talking ${current + 1}`
+      );
+    if (
+      channel.members.toJSON().length !== 0 ||
+      !nextChannel ||
+      nextChannel instanceof ThreadChannel
+    ) {
       this.createChannelIfRequired();
       return;
     }
@@ -79,9 +86,11 @@ export default class TalkingChannel {
     const current: number = this.channelNameParser(channel)!;
     if (current === 1) return;
     const guild: Guild = channel.guild;
-    const previousChannel: GuildChannel | undefined = guild.channels.cache.find(
-      (channel: GuildChannel) => channel.name === `Talking ${current - 1}`
-    );
+    const previousChannel: GuildChannel | ThreadChannel | undefined =
+      guild.channels.cache.find(
+        (channel: GuildChannel | ThreadChannel): boolean =>
+          channel.name === `Talking ${current - 1}`
+      );
     if (previousChannel) return;
     channel
       .setName(`Talking ${current - 1}`)
@@ -96,10 +105,11 @@ export default class TalkingChannel {
    * @returns The found channel
    */
   private getChannelById(guild: Guild, id: string): GuildChannel {
-    const channel: GuildChannel | undefined = guild.channels.cache.find(
-      (channel: GuildChannel) => channel.id === id
-    );
-    if (!channel)
+    const channel: GuildChannel | ThreadChannel | undefined =
+      guild.channels.cache.find(
+        (channel: GuildChannel | ThreadChannel): boolean => channel.id === id
+      );
+    if (!channel || channel instanceof ThreadChannel)
       throw new Error(
         `Channel with id ${id} does not exist in guild with id ${guild.id}`
       );
@@ -111,7 +121,9 @@ export default class TalkingChannel {
    * @param channel The talking channel
    * @returns The number of a talking channel if there is any
    */
-  private channelNameParser(channel: GuildChannel): number | undefined {
+  private channelNameParser(
+    channel: GuildChannel | ThreadChannel
+  ): number | undefined {
     if (!channel.name.startsWith('Talking')) return;
     if (channel.name === 'Talking') return 0;
     return +channel.name.split(' ')[1];
@@ -135,10 +147,11 @@ export default class TalkingChannel {
       return;
     guild.channels
       .create(`Talking ${++this.#talkingChannelCount}`, {
-        parent: <Channel>channel.parent,
-        type: 'voice',
+        parent: channel.parent!,
+        type: 'GUILD_VOICE',
       })
-      .then(this.channelCreated.bind(this)).catch(console.error);
+      .then(this.channelCreated.bind(this))
+      .catch(console.error);
   }
 
   /**
@@ -149,13 +162,13 @@ export default class TalkingChannel {
     channel: VoiceChannel | CategoryChannel | TextChannel
   ): void {
     if (
-      channel.guild.channels.cache
-        .find(
-          (channelToBeFound: GuildChannel) =>
+      (
+        channel.guild.channels.cache.find(
+          (channelToBeFound: GuildChannel | ThreadChannel): boolean =>
             `Talking ${this.channelNameParser(channelToBeFound)! - 1}` ===
-            channel.name
-        )
-        ?.members.array().length === 0
+              channel.name && channel instanceof GuildChannel
+        ) as GuildChannel
+      )?.members.toJSON().length === 0
     ) {
       channel.delete().catch(console.error);
       this.#talkingChannelCount--;

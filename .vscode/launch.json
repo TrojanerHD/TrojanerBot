@@ -20,6 +20,26 @@
                 "-r",
                 "dotenv/config"
             ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Program",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}/src/index.ts",
+            "preLaunchTask": "tsc: build - tsconfig.json",
+            "outFiles": [
+                "${workspaceFolder}/build/src/**/*.js"
+            ],
+            "sourceMaps": true,
+            "runtimeArgs": [
+                "-r",
+                "dotenv/config",
+                "--trace-deprecation",
+                "--trace-warnings"
+            ]
         }
     ]
 }

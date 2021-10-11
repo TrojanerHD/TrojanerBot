@@ -1,83 +1,48 @@
-import {
-  Collection,
-  Guild,
-  GuildMember,
-  MessageReaction,
-  Role,
-  RoleManager,
-  User,
-} from 'discord.js';
-import Settings from '../Settings';
-import GuildRolesManager from './GuildRolesManager';
-import { CustomRole } from './RoleChannelManager';
+import { ButtonInteraction, GuildMember, Role } from 'discord.js';
+import ReactionHandler from '../ReactionHandler';
+import { RolesField } from '../Settings';
 
 export default class RoleAssigner {
-  #reaction: MessageReaction;
-  #guild: Guild;
-  #members?: GuildMember[];
-  #roles?: Role[];
-  #block: boolean = false;
-  #parent: GuildRolesManager;
+  #member: GuildMember;
+  #parent: ReactionHandler;
+  #interaction: ButtonInteraction;
 
   constructor(
-    reaction: MessageReaction,
-    guild: Guild,
-    parent: GuildRolesManager
+    interaction: ButtonInteraction,
+    role: RolesField,
+    parent: ReactionHandler
   ) {
-    this.#reaction = reaction;
-    this.#guild = guild;
+    this.#interaction = interaction;
+    this.#member = interaction.member as GuildMember;
     this.#parent = parent;
-  }
 
-  membersFetched(members: Collection<string, GuildMember>): void {
-    this.#members = members.array();
-    this.#guild.roles.fetch().then(this.rolesFetched.bind(this));
-  }
-
-  private rolesFetched(roles: RoleManager): void {
-    if (this.#block) return;
-    this.#roles = roles.cache.array();
-
-    this.#reaction!.users.fetch()
-      .then(this.reactorsFetched.bind(this))
-      .catch(console.error);
-  }
-
-  private reactorsFetched(reactors: Collection<string, User>): void {
-    const roleName: string | undefined = Settings.getSettings().roles.find(
-      (role: CustomRole) =>
-        role.emoji === this.#reaction!.emoji.id ||
-        role.emoji === this.#reaction!.emoji.name
-    )?.name;
-    let role: Role | undefined = this.#roles!.find(
-      (role: Role) => role.name === roleName
+    const guildRole: Role | undefined = this.#member.guild.roles.cache.find(
+      (guildRole: Role): boolean => guildRole.name === role.name
     );
-    if (!role) {
-      this.#guild.roles
-        .create({
-          data: { name: roleName, mentionable: true },
-        })
-        .then(() => {
-          this.#block = false;
-          this.#parent.checkRoles(this.#reaction!);
-        })
+    if (!guildRole) {
+      this.#member.guild.roles
+        .create({ name: role.name, mentionable: true })
+        .then(this.guildRoleEstablished.bind(this))
         .catch(console.error);
-      this.#block = true;
       return;
     }
-    for (const member of this.#members!) {
-      const user: User = member.user;
-      if (user.bot) continue;
-      if (
-        member.roles.cache.array().includes(role) &&
-        !reactors.array().includes(user)
+    this.guildRoleEstablished(guildRole);
+  }
+
+  private guildRoleEstablished(role: Role) {
+    if (
+      !this.#member.roles.cache.find(
+        (memberRole: Role) => memberRole.id === role.id
       )
-        member.roles.remove(role);
-      if (
-        !member.roles.cache.array().includes(role) &&
-        reactors.array().includes(user)
-      )
-        member.roles.add(role);
-    }
+    )
+      this.#member.roles
+        .add(role)
+        .then((): Promise<void> => this.#parent.editRoleReply(this.#interaction))
+        .catch(console.error);
+    else
+      this.#member.roles
+        .remove(role)
+        .then((): Promise<void> => this.#parent.editRoleReply(this.#interaction))
+        .catch(console.error);
   }
 }

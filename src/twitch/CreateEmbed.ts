@@ -5,8 +5,11 @@ import {
   Snowflake,
   Message,
   Collection,
+  ThreadChannel,
+  NewsChannel,
 } from 'discord.js';
-import { DiscordClient } from '../DiscordClient';
+import DiscordClient from '../DiscordClient';
+import { GuildTextChannel } from '../messages/Command';
 
 interface StreamInformation {
   name: string;
@@ -26,6 +29,7 @@ interface Field {
  */
 export default class CreateEmbed {
   #embed: Field[][] = [];
+  #liveChannel?: GuildTextChannel;
 
   /**
    * Adds a formatted field to the embed containing information about a stream
@@ -64,16 +68,17 @@ export default class CreateEmbed {
    * Sends the embed into #live
    */
   sendEmbed(): void {
-    for (const guild of DiscordClient._client.guilds.cache.array()) {
-      const liveChannel: GuildChannel | undefined = guild.channels.cache
-        .array()
-        .find(
-          (channel: GuildChannel) =>
-            channel.type === 'text' && channel.name === 'live'
-        );
-      if (!liveChannel) continue;
+    for (const guild of DiscordClient._client.guilds.cache.toJSON()) {
+      this.#liveChannel = guild.channels.cache.find(
+        (channel: GuildChannel | ThreadChannel): boolean =>
+          (channel instanceof TextChannel ||
+            channel instanceof NewsChannel ||
+            channel instanceof ThreadChannel) &&
+          channel.name === 'live'
+      ) as GuildTextChannel | undefined;
+      if (!this.#liveChannel) continue;
 
-      (<TextChannel>liveChannel).messages
+      this.#liveChannel.messages
         .fetch()
         .then(this.messagesFetched.bind(this))
         .catch(console.error);
@@ -94,12 +99,16 @@ export default class CreateEmbed {
       for (const field of fieldArray)
         embed.addField(field.name, field.value, field.inline);
     }
-    for (const message of messages.array()) {
+    if (messages.toJSON().length === 0) {
+      DiscordClient.send(this.#liveChannel, embed);
+      return;
+    }
+    for (const message of messages.toJSON()) {
       if (message.author.id !== DiscordClient._client.user!.id) {
         message.delete().catch(console.error);
         continue;
       }
-      message.edit('', embed).catch(console.error);
+      message.edit({ embeds: [embed] }).catch(console.error);
     }
   }
 }

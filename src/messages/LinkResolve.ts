@@ -1,55 +1,63 @@
-import Command from './Command';
-import { TextChannel, Message, GuildChannel, MessageEmbed } from 'discord.js';
+import {
+  TextChannel,
+  Message,
+  GuildChannel,
+  MessageEmbed,
+  ThreadChannel,
+  Snowflake,
+  BaseGuildTextChannel,
+  NewsChannel,
+} from 'discord.js';
+import DiscordClient from '../DiscordClient';
+import { GuildTextChannel } from './Command';
 
-export default class LinkResolve extends Command {
-  helpInfo: { name: string; value: string } = {
-    name: '',
-    value:
-      'Resolves message links and embeds them as Discord should have done it',
-  };
-
-  handleCommand(_args: string[], channel: TextChannel, message: Message): void {
+export default class LinkResolve {
+  handleCommand(channel: GuildTextChannel, message: Message): void {
     const splitMessage: string = message.content.split(
       /https:\/\/discord(app)?\.(com|gg)\/channels\//
     )[3];
     const properties: string[] = splitMessage.split('/');
     const guild: string = properties[0];
     const urlChannel: string = properties[1];
-    const urlMessageString: string = properties[2];
+    const urlMessageString: Snowflake = properties[2] as Snowflake;
     const embed: MessageEmbed = new MessageEmbed()
       .setTitle('Quote')
       .setTimestamp(new Date())
       .setFooter(message.author.tag);
     if (guild !== channel.guild.id) {
-      channel
-        .send(embed.setDescription('Message not from this server'))
-        .catch(console.error);
+      DiscordClient.send(
+        channel,
+        embed.setDescription('Message not from this server')
+      );
       return;
     }
-    const guildChannel: GuildChannel | undefined =
+    const guildChannel: GuildChannel | ThreadChannel | undefined =
       channel.guild.channels.cache.find(
-        (guildChannel: GuildChannel) =>
-          guildChannel.id === urlChannel && guildChannel.type === 'text'
+        (guildChannel: GuildChannel | ThreadChannel): boolean =>
+          guildChannel.id === urlChannel &&
+          (guildChannel instanceof TextChannel ||
+            guildChannel instanceof NewsChannel ||
+            guildChannel instanceof ThreadChannel)
       );
     if (!guildChannel) {
-      channel
-        .send(embed.setDescription('Channel not found'))
-        .catch(console.error);
+      DiscordClient.send(channel, embed.setDescription('Channel not found'));
       return;
     }
-    (<TextChannel>guildChannel).messages
+    (guildChannel as BaseGuildTextChannel).messages
       .fetch(urlMessageString)
       .then((urlMessage: Message) => {
-        if (urlMessage.content === '') return;
         if (urlMessage.content.length > 1024)
           urlMessage.content = `${urlMessage.content.substring(0, 1023)}…`;
-        channel
-          .send(
-            embed
-              .addField('Message Content', urlMessage.content, false)
-              .addField('Message Author', `<@${urlMessage.author.id}>`, false)
-          )
-          .catch(console.error);
+        const content =
+          urlMessage.content !== ''
+            ? urlMessage.content
+            : 'Message content not available';
+        DiscordClient.send(
+          channel,
+          embed
+            .addField('Message Content', content, false)
+            .addField('Message Author', `<@${urlMessage.author.id}>`, false)
+        );
       });
   }
 }
