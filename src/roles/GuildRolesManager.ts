@@ -23,7 +23,12 @@ export default class GuildRolesManager {
   }
 
   private messagesFetched(messages: Collection<Snowflake, Message>): void {
-    const rolesMessages: Message[] = messages.toJSON();
+    const rolesMessages: Message[] = messages
+      .toJSON()
+      .filter(
+        (message: Message): boolean =>
+          message.author.id === DiscordClient._client.user!.id
+      );
     const button: MessageActionRow = new MessageActionRow().addComponents(
       new MessageButton()
         .setCustomId('select')
