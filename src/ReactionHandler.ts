@@ -61,7 +61,7 @@ export default class ReactionHandler {
             .reply({
               //Create a reply
               content: 'Select your roles', // Reply content
-              components: [this.createComponent(interaction.member)],
+              components: this.createComponent(interaction.member),
               ephemeral: true,
             })
             .catch(console.error);
@@ -86,33 +86,40 @@ export default class ReactionHandler {
   }
   private createComponent(
     member: GuildMember | APIGuildMember | null
-  ): MessageActionRow {
-    // Reply content
-    return new MessageActionRow().addComponents(
-      // One component consisting of multiple buttons
-      Settings.getSettings().roles.map(
-        // Map the roles stored in settings
-        (role: RolesField): MessageActionRowComponentResolvable => ({
-          customId: role.name.toLowerCase(),
-          label: role.name,
-          style: !(member?.roles as GuildMemberRoleManager).cache.find(
-            (memberRole: Role): boolean => memberRole.name === role.name
+  ): MessageActionRow[] {
+    const messageActionRows: MessageActionRow[] = [];
+    let currentMessageActionRow: MessageActionRow;
+    for (let i = 0; i < Settings.getSettings().roles.length / 5; i++) {
+      currentMessageActionRow = new MessageActionRow();
+      messageActionRows.push(currentMessageActionRow);
+      currentMessageActionRow.addComponents(
+        Settings.getSettings()
+          .roles.slice(i * 5, i * 5 + 5)
+          .map(
+            // Map the roles stored in settings
+            (role: RolesField): MessageActionRowComponentResolvable => ({
+              customId: role.name.toLowerCase(),
+              label: role.name,
+              style: !(member?.roles as GuildMemberRoleManager).cache.find(
+                (memberRole: Role): boolean => memberRole.name === role.name
+              )
+                ? 'SECONDARY' //If member does not have the role
+                : 'PRIMARY', //If member has the role
+              type: 'BUTTON',
+              emoji: role.emoji,
+            })
           )
-            ? 'SECONDARY' //If member does not have the role
-            : 'PRIMARY', //If member has the role
-          type: 'BUTTON',
-          emoji: role.emoji,
-        })
-      )
-    );
+      );
+    }
+    return messageActionRows;
   }
 
   async editRoleReply(interaction: ButtonInteraction): Promise<void> {
-		await (interaction.member as GuildMember).fetch();
+    await (interaction.member as GuildMember).fetch();
     interaction
       .editReply({
         content: 'Select your roles',
-        components: [this.createComponent(interaction.member)],
+        components: this.createComponent(interaction.member),
       })
       .catch(console.error);
   }
