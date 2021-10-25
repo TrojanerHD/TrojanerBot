@@ -11,6 +11,7 @@ export interface SettingsJSON {
   'permission-roles': string[];
   roles: RolesField[];
   streamers: string[];
+  logging: 'verbose' | 'errors' | 'warnings';
   'streamer-subscriptions': Channel[];
 }
 
@@ -21,6 +22,7 @@ export default class Settings {
     'permission-roles': [],
     roles: [],
     streamers: [],
+    logging: 'warnings',
     'streamer-subscriptions': [],
   };
 
@@ -32,19 +34,31 @@ export default class Settings {
         Settings._settingsFile,
         'utf8'
       );
-      if (!Settings.isJsonString(settingsFileContent)) Settings.saveSettings();
-      else Settings._settings = JSON.parse(settingsFileContent);
+      const newSettings: undefined | SettingsJSON =
+        Settings.getJsonString(settingsFileContent);
+      if (!newSettings) Settings.saveSettings();
+      else if (
+        Object.keys(Settings._settings).find(
+          (key: string): boolean => !(key in newSettings)
+        )
+      ) {
+        for (const untypedSetting of Object.keys(newSettings)) {
+          const setting: keyof SettingsJSON = untypedSetting as keyof SettingsJSON;
+          Settings._settings[setting] = newSettings[setting] as any;
+        }
+        Settings.saveSettings();
+      }
+      Settings._settings = JSON.parse(settingsFileContent);
     }
     return Settings._settings;
   }
 
-  private static isJsonString(str: string): boolean {
+  private static getJsonString(str: string): undefined | SettingsJSON {
     try {
-      JSON.parse(str);
+      return JSON.parse(str);
     } catch (e) {
-      return false;
+      return undefined;
     }
-    return true;
   }
 
   static saveSettings(): void {
