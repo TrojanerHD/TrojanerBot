@@ -33,7 +33,7 @@ export default class DiscordClient {
    * The discord client handler and initializer of the bot
    */
   constructor() {
-    if (Settings.getSettings().logging !== 'errors') new FeatureChecker();
+    new FeatureChecker();
     new MessageHandler();
     new ReactionHandler();
     DiscordClient._client.on('ready', this.onReady.bind(this));
