@@ -31,6 +31,7 @@ Key | Type | Description | Default
 `roles` | {name: string; emoji: string; description?: string}[] | Added roles will be displayed in a `#roles` channel in Discord if the Discord has this channel. The emoji id will be used as reaction emoji so when a user reacts with the certain emoji they will get the role respectively. If you do not want to use this feature, set the value to `[]` | `[]`
 `streamers` | string[] | The bot will show whenever the here specified channels are live in a `#live` channel in Discord if the Discord has this channel. If you do not want to use this feature, set the value to `[]` | `[]`
 `streamer-subscriptions` | {streamer: string; subscribers: string[]} | The bot will store all subscriptions to Twitch streamers when somebody uses `/streamer` to subscribe to a streamer. Usually you want to leave it as it is | `[]`
+`logging` | "errors" \| "warnings" \| "verbose" | The log-level. "warnings" will inform if, for example, twitch id was set but a token was not provided | `"warnings"`
 
 ### Execution
 ```sh
