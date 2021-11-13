@@ -56,21 +56,24 @@ export default class DMManager {
     );
     if (!streamer || !!this._channel.sent) return;
     this._channel.sent = true;
+    let streamerIndex: number = -1;
     Settings.getSettings()['streamer-subscriptions'].find(
-      (channel: Channel) => channel.streamer === this._channel.streamer
-    )!.sent = true;
+      (channel: Channel, i: number) => {
+        streamerIndex = i;
+        return channel.streamer === this._channel.streamer;
+      }
+    );
+    Settings.getSettings()['streamer-subscriptions'][streamerIndex].sent = true;
     Settings.saveSettings();
     if (!user.dmChannel)
       user
         .createDM()
-        .then(this.sendMessage.bind({ _user: user, _streamer: streamer }))
+        .then((): void => this.sendMessage(user, streamer))
         .catch(console.error);
     this.sendMessage(user, streamer);
   }
 
-  private sendMessage(user?: User | DMChannel, streamer?: Stream): void {
-    if (!user || user instanceof DMChannel) user = this._user;
-    if (!streamer) streamer = this._streamer;
+  private sendMessage(user: User, streamer: Stream): void {
     user!.dmChannel
       ?.send(
         `${streamer!.user_name} is now live at https://twitch.tv/${
