@@ -37,16 +37,35 @@ export default class Settings {
       const newSettings: undefined | SettingsJSON =
         Settings.getJsonString(settingsFileContent);
       if (!newSettings) Settings.saveSettings();
-      else if (
-        Object.keys(Settings._settings).find(
-          (key: string): boolean => !(key in newSettings)
-        )
-      ) {
-        for (const untypedSetting of Object.keys(newSettings)) {
-          const setting: keyof SettingsJSON = untypedSetting as keyof SettingsJSON;
-          Settings._settings[setting] = newSettings[setting] as any;
+      else {
+        let changed: boolean = false;
+        if (
+          Object.keys(Settings._settings).find(
+            (key: string): boolean => !(key in newSettings)
+          )
+        ) {
+          for (const untypedSetting of Object.keys(newSettings)) {
+            const setting: keyof SettingsJSON =
+              untypedSetting as keyof SettingsJSON;
+            Settings._settings[setting] = newSettings[setting] as any;
+          }
+          changed = true;
         }
-        Settings.saveSettings();
+        //TODO: This is a hard-coded checker to see if every streamer has a sent boolean because there was a version where it was not there. Very hacky
+        if (
+          Settings._settings['streamer-subscriptions'].find(
+            (key: Channel): boolean => key.sent === undefined
+          )
+        ) {
+          Settings._settings['streamer-subscriptions'].forEach(
+            (channel: Channel, i: number) => {
+              if (channel.sent === undefined)
+                Settings._settings['streamer-subscriptions'][i].sent = false;
+            }
+          );
+          changed = true;
+        }
+        if (changed) Settings.saveSettings();
       }
       Settings._settings = JSON.parse(settingsFileContent);
     }
