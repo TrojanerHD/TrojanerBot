@@ -1,4 +1,4 @@
-import { DMChannel, User } from 'discord.js';
+import { User } from 'discord.js';
 import DiscordClient from '../DiscordClient';
 import { Channel } from '../messages/StreamerCommand';
 import Settings from '../Settings';
@@ -9,9 +9,12 @@ export default class DMManager {
   _streamers: Stream[] = [];
   _user?: User;
   _streamer?: Stream;
+  #twitchHelper: TwitchHelper = new TwitchHelper(
+    this.streamerFetched.bind(this)
+  );
 
   constructor() {
-    new TwitchHelper(this.streamerFetched.bind(this)).update(
+    this.#twitchHelper.update(
       Settings.getSettings()['streamer-subscriptions'].map(
         (channel: Channel): string => channel.streamer
       )
@@ -19,6 +22,9 @@ export default class DMManager {
   }
 
   private streamerFetched(streamers: Stream[]): void {
+    this.#twitchHelper._streamerUpdate = Settings.getSettings()[
+      'streamer-subscriptions'
+    ].map((channel: Channel): string => channel.streamer);
     const logins: string[] = streamers.map(
       (stream: Stream): string => stream.user_login
     );

@@ -25,7 +25,7 @@ export default class TwitchHelper {
   #streamers?: string;
   /** The access token for the Twitch api */
   #accessToken?: string;
-  #streamerUpdate?: string[];
+  _streamerUpdate?: string[];
   #streams: Stream[] = [];
   #callback: (streams: Stream[]) => void;
 
@@ -53,11 +53,11 @@ export default class TwitchHelper {
    * @param streamerUpdate The streamers to fetch
    */
   update(streamerUpdate: string[]): void {
-    if (!!streamerUpdate) this.#streamerUpdate = streamerUpdate;
-    if (this.#streamerUpdate!.length === 0) return;
+    if (!!streamerUpdate) this._streamerUpdate = streamerUpdate;
+    if (this._streamerUpdate!.length === 0) return;
     this.#streamers = TwitchHelper.generateUrl(
       'streams',
-      this.#streamerUpdate!
+      this._streamerUpdate!
     );
     if (!this.#accessToken)
       this.accessTokenRequest(this.channelRequest.bind(this));
