@@ -77,7 +77,7 @@ export default class MessageHandler {
    */
   onMessage(message: Message): void {
     if (message.channel.type === 'DM' || message.author.bot) return;
-    if (message.content.match(/https:\/\/discord(app)?\.(com|gg)\/channels/))
+    if (!Settings.getSettings()['disable-quote-replies'] && message.content.match(/https:\/\/discord(app)?\.(com|gg)\/channels/))
       new LinkResolve().handleCommand(message.channel, message);
 
     if (message.content === '!deploy') {

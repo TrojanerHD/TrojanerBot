@@ -10,6 +10,7 @@ export interface RolesField {
 export interface SettingsJSON {
   'twitch-id': string;
   'permission-roles': string[];
+  'disable-quote-replies': boolean;
   roles: RolesField[];
   streamers: string[];
   logging: 'verbose' | 'errors' | 'warnings';
@@ -35,6 +36,7 @@ export default class Settings {
   private static _settings: SettingsJSON = {
     'twitch-id': '',
     'permission-roles': [],
+    'disable-quote-replies': false,
     roles: [],
     streamers: [],
     logging: 'warnings',
