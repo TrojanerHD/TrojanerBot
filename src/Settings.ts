@@ -1,5 +1,6 @@
 import { Channel } from './messages/StreamerCommand';
 import fs from 'fs';
+import DMManager from './twitch/DMManager';
 
 export interface RolesField {
   name: string;
@@ -62,6 +63,21 @@ export default class Settings {
               if (channel.sent === undefined)
                 Settings._settings['streamer-subscriptions'][i].sent = false;
             }
+          );
+          changed = true;
+        }
+        // Backwards compatibility: If users added streamers with invalid characters in previous versions of the bot, they get deleted
+        if (
+          Settings._settings['streamer-subscriptions'].find(
+            (channel: Channel) =>
+              !channel.streamer.match(DMManager.validNameRegex)
+          )
+        ) {
+          Settings._settings['streamer-subscriptions'] = Settings._settings[
+            'streamer-subscriptions'
+          ].filter(
+            (channel: Channel) =>
+              !!channel.streamer.match(DMManager.validNameRegex)
           );
           changed = true;
         }
