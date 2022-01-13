@@ -93,7 +93,7 @@ export default class StreamerCommand extends Command {
     );
     switch (args[0].options![0].value) {
       case 'add':
-        if (!streamer.match(/^[a-zA-Z1-9_\-]*$/))
+        if (!streamer.match(DMManager.validNameRegex))
           return {
             reply: `${streamer} cannot be a streamer since Twitch does not allow user names with some characters`,
             ephemeral: true,
@@ -113,7 +113,6 @@ export default class StreamerCommand extends Command {
         streamChannel.subscribers.push(interaction.user.id);
         this.saveStreamers();
 
-        new DMManager();
         return {
           reply: `${
             args[0].options![1].value
@@ -138,7 +137,6 @@ export default class StreamerCommand extends Command {
             (channel: Channel) => channel.streamer !== streamChannel?.streamer
           );
         this.saveStreamers();
-        new DMManager();
         return {
           reply: `${
             args[0].options![1].value
