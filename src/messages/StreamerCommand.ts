@@ -93,6 +93,12 @@ export default class StreamerCommand extends Command {
     );
     switch (args[0].options![0].value) {
       case 'add':
+        if (!streamer.match(/^[a-zA-Z1-9_\-]*$/))
+          return {
+            reply: `${streamer} cannot be a streamer since Twitch does not allow user names with some characters`,
+            ephemeral: true,
+          };
+
         if (!streamChannel) {
           streamChannel = { streamer, subscribers: [], sent: false };
           StreamerCommand._streamers.push(streamChannel);
