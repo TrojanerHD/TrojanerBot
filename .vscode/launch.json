@@ -16,10 +16,6 @@
             "outFiles": [
                 "${workspaceFolder}/build/**/*.js"
             ],
-            "runtimeArgs": [
-                "-r",
-                "dotenv/config"
-            ]
         },
         {
             "type": "node",
@@ -35,8 +31,6 @@
             ],
             "sourceMaps": true,
             "runtimeArgs": [
-                "-r",
-                "dotenv/config",
                 "--trace-deprecation",
                 "--trace-warnings"
             ]

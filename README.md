@@ -36,5 +36,5 @@ Key | Type | Description | Default
 ### Execution
 ```sh
 tsc -p .
-node -r dotenv/config $PWD/build/src/index.js
+node $PWD/build/src/index.js
 ```
