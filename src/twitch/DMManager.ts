@@ -12,7 +12,7 @@ export default class DMManager {
   #twitchHelper: TwitchHelper = new TwitchHelper(
     this.streamerFetched.bind(this)
   );
-  static validNameRegex: RegExp = /^[a-zA-Z1-9_\-]*$/;
+  static validNameRegex: RegExp = /^[a-zA-Z0-9_\-]*$/;
 
   constructor() {
     this.#twitchHelper.update(
