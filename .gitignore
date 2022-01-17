@@ -2,6 +2,5 @@
 /.history/
 /node_modules/
 yarn-error.log
-yarn.lock
 /build/
 settings.json
