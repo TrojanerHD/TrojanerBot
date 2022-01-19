@@ -5,15 +5,15 @@ import {
   GuildChannel,
   MessageEmbed,
   ThreadChannel,
-  ApplicationCommandData,
   CommandInteractionOption,
   Interaction,
   NewsChannel,
+  ChatInputApplicationCommandData,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
 
 export default class LinkCommand extends Command {
-  deploy: ApplicationCommandData = {
+  deploy: ChatInputApplicationCommandData = {
     name: 'to',
     description:
       'Sends a message that the current conversation should be moved to the specified channel',

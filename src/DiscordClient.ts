@@ -5,10 +5,10 @@ import {
   Intents,
   Message,
   MessageEmbed,
-  TextBasedChannels,
   ThreadChannel,
   ThreadMember,
   MessageOptions,
+  TextBasedChannel,
 } from 'discord.js';
 import MessageHandler from './messages/MessageHandler';
 import ReactionHandler from './ReactionHandler';
@@ -96,7 +96,7 @@ export default class DiscordClient {
   }
 
   static send(
-    channel: TextBasedChannels | undefined,
+    channel: TextBasedChannel | undefined,
     message: MessageEmbed | MessageOptions,
     callback?: (message: Message) => void
   ): void {

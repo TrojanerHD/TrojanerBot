@@ -23,7 +23,7 @@ export default class LinkResolve {
     const embed: MessageEmbed = new MessageEmbed()
       .setTitle('Quote')
       .setTimestamp(new Date())
-      .setFooter(message.author.tag);
+      .setFooter({ text: message.author.tag });
     if (guild !== channel.guild.id) {
       DiscordClient.send(
         channel,

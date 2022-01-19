@@ -1,5 +1,5 @@
 import {
-  ApplicationCommandData,
+  ChatInputApplicationCommandData,
   CommandInteractionOption,
   Interaction,
   NewsChannel,
@@ -15,7 +15,7 @@ export interface Reply {
 export type GuildTextChannel = TextChannel | NewsChannel | ThreadChannel;
 
 export default abstract class Command {
-  abstract deploy: ApplicationCommandData;
+  abstract deploy: ChatInputApplicationCommandData;
   guildOnly: boolean = false;
 
   abstract handleCommand(
