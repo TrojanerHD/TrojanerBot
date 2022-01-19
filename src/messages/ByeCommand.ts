@@ -1,9 +1,9 @@
 import Command, { Reply } from './Command';
-import { ApplicationCommandData } from 'discord.js';
+import { ChatInputApplicationCommandData } from 'discord.js';
 import DiscordClient from '../DiscordClient';
 
 export default class ByeCommand extends Command {
-  deploy: ApplicationCommandData = {
+  deploy: ChatInputApplicationCommandData = {
     name: 'bye',
     description: 'Shuts the bot down',
     defaultPermission: false,

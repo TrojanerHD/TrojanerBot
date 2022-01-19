@@ -1,6 +1,6 @@
 import Command, { Reply } from './Command';
 import {
-  ApplicationCommandData,
+  ChatInputApplicationCommandData,
   CommandInteractionOption,
   Interaction,
 } from 'discord.js';
@@ -14,7 +14,7 @@ export interface Channel {
 }
 
 export default class StreamerCommand extends Command {
-  deploy: ApplicationCommandData = {
+  deploy: ChatInputApplicationCommandData = {
     name: 'streamer',
     description:
       'Lets you subscribe to Twitch streamers and get a DM whenever they go live (not yet implemented)',
