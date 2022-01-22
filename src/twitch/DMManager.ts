@@ -94,7 +94,7 @@ export default class DMManager {
       ?.send(
         `${streamer.user_name} is now live at https://twitch.tv/${
           streamer.user_name
-        } playing **${streamer.category}**`
+        } streaming **${streamer.category}**`
       )
       .catch(console.error);
   }
