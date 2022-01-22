@@ -9,6 +9,12 @@ interface UserFetchedContext {
   streamers: Stream[];
   sendMessage: (user: User, stream: Stream) => void;
 }
+
+interface ChannelWithIndex {
+  channel: Channel;
+  index: number;
+}
+
 export default class DMManager {
   #twitchHelper: TwitchHelper = new TwitchHelper(
     this.streamerFetched.bind(this)
@@ -40,16 +46,31 @@ export default class DMManager {
     const logins: string[] = streamers.map(
       (stream: Stream): string => stream.user_login
     );
-    for (const channel of Settings.getSettings()[
-      'streamer-subscriptions'
-    ].filter((channel: Channel): boolean =>
-      logins.includes(channel.streamer) && !channel.sent
-    )) {
+    const dmPendingChannels: ChannelWithIndex[] = Settings.getSettings()
+      ['streamer-subscriptions'].map(
+        (channel: Channel, index: number): ChannelWithIndex => ({
+          channel,
+          index,
+        })
+      )
+      .filter(
+        ({ channel }: ChannelWithIndex): boolean =>
+          logins.includes(channel.streamer) && !channel.sent
+      );
+
+    for (let i: number = 0; i < dmPendingChannels.length; ++i) {
+      const channel = dmPendingChannels[i].channel;
+
+      Settings.getSettings()['streamer-subscriptions'][
+        dmPendingChannels[i].index
+      ].sent = true;
+      Settings.saveSettings();
+
       for (const subscriber of channel.subscribers)
         DiscordClient._client.users
           .fetch(subscriber)
           .then(
-            this.usersFetched.bind({
+            this.userFetched.bind({
               channel: channel,
               streamers: streamers,
               sendMessage: this.sendMessage,
@@ -68,19 +89,12 @@ export default class DMManager {
     Settings.saveSettings();
   }
 
-  private usersFetched(this: UserFetchedContext, user: User): void {
+  private userFetched(this: UserFetchedContext, user: User): void {
     const streamer: Stream | undefined = this.streamers.find(
       (stream: Stream): boolean => stream.user_login === this.channel.streamer
     );
     if (!streamer) return;
     this.channel.sent = true;
-    const streamerIndex: number = Settings.getSettings()[
-      'streamer-subscriptions'
-    ].findIndex(
-      (channel: Channel): boolean => channel.streamer === this.channel.streamer
-    );
-    Settings.getSettings()['streamer-subscriptions'][streamerIndex].sent = true;
-    Settings.saveSettings();
     if (!user.dmChannel)
       user
         .createDM()
@@ -92,9 +106,7 @@ export default class DMManager {
   private sendMessage(user: User, streamer: Stream): void {
     user.dmChannel
       ?.send(
-        `${streamer.user_name} is now live at https://twitch.tv/${
-          streamer.user_name
-        } streaming **${streamer.category}**`
+        `${streamer.user_name} is now live at https://twitch.tv/${streamer.user_name} streaming **${streamer.category}**`
       )
       .catch(console.error);
   }
