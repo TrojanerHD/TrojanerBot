@@ -62,7 +62,6 @@ export default class TwitchHelper {
     if (!this.#accessToken)
       this.accessTokenRequest(this.channelRequest.bind(this));
     else this.channelRequest();
-    this.timeout();
   }
 
   /**
@@ -91,6 +90,7 @@ export default class TwitchHelper {
       console.error(
         'Error in TwitchHelper.ts on line 87:\nstream is undefined'
       );
+      this.timeout();
       return;
     }
     if ('error' in stream) {
@@ -101,10 +101,11 @@ export default class TwitchHelper {
           2
         )}`
       );
+      this.timeout();
       return;
     }
     this.#streams = stream.data;
-    this.#streams.sort((a: Stream, b: Stream) => {
+    this.#streams.sort((a: Stream, b: Stream): number => {
       for (const streamer of Settings.getSettings().streamers) {
         if (a.user_name === streamer) return -1;
         if (b.user_name === streamer) return 1;
@@ -138,6 +139,7 @@ export default class TwitchHelper {
         (category: Category): boolean => category.id === stream.game_id
       )?.name;
     this.#callback(this.#streams);
+    this.timeout();
   }
 
   /**
