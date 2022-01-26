@@ -5,8 +5,7 @@ import Settings from '../Settings';
 import TwitchHelper, { Stream } from './TwitchHelper';
 
 interface UserFetchedContext {
-  channel: Channel;
-  streamers: Stream[];
+  streamer?: Stream;
   sendMessage: (user: User, stream: Stream) => void;
 }
 
@@ -71,8 +70,10 @@ export default class DMManager {
           .fetch(subscriber)
           .then(
             this.userFetched.bind({
-              channel: channel,
-              streamers: streamers,
+              streamer: streamers.find(
+                (stream: Stream): boolean =>
+                  stream.user_login === channel.streamer
+              ),
               sendMessage: this.sendMessage,
             })
           )
@@ -90,17 +91,15 @@ export default class DMManager {
   }
 
   private userFetched(this: UserFetchedContext, user: User): void {
-    const streamer: Stream | undefined = this.streamers.find(
-      (stream: Stream): boolean => stream.user_login === this.channel.streamer
-    );
-    if (!streamer) return;
-    this.channel.sent = true;
-    if (!user.dmChannel)
+    if (this.streamer === undefined) return;
+    if (!user.dmChannel) {
       user
         .createDM()
-        .then((): void => this.sendMessage(user, streamer))
+        .then((): void => this.sendMessage(user, this.streamer!))
         .catch(console.error);
-    this.sendMessage(user, streamer);
+      return;
+    }
+    this.sendMessage(user, this.streamer);
   }
 
   private sendMessage(user: User, streamer: Stream): void {
