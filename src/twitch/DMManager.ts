@@ -104,10 +104,8 @@ export default class DMManager {
   }
 
   private sendMessage(user: User, streamer: Stream): void {
-    user.dmChannel
-      ?.send(
-        `${streamer.user_name} is now live at https://twitch.tv/${streamer.user_name} streaming **${streamer.category}**`
-      )
-      .catch(console.error);
+    DiscordClient.send(user.dmChannel!, {
+      content: `${streamer.user_name} is now live at https://twitch.tv/${streamer.user_name} streaming **${streamer.category}**`,
+    });
   }
 }
