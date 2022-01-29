@@ -86,8 +86,8 @@ export default class DMManager {
         !!channel.sent && !logins.includes(channel.streamer)
     )) {
       channel.sent = false;
-    }
     Settings.saveSettings();
+  }
   }
 
   private userFetched(this: UserFetchedContext, user: User): void {
