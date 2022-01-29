@@ -14,7 +14,7 @@ export default class LiveChannel {
     const createEmbed = new CreateEmbed();
     for (const stream of streams.slice(0, 5))
       createEmbed.addField({
-        category: stream.category,
+        category: stream.game_name,
         name: stream.user_name,
         title: stream.title,
         viewer_count: stream.viewer_count,
