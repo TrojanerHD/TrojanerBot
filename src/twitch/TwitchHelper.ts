@@ -7,12 +7,11 @@ export interface Category {
 }
 
 export interface Stream {
-  game_id: string;
+  game_name: string;
   user_name: string;
   user_login: string;
   title: string;
   viewer_count: number;
-  category?: string;
   started_at: string;
 }
 
@@ -35,17 +34,12 @@ export default class TwitchHelper {
 
   /**
    * Creates a url for the Twitch API to fetch
-   * @param endpoint The endpoint to use
-   * @param streamers All categories or streamers to fetch
+   * @param streamers All streamers to fetch
    * @returns The formatted url
    */
-  static generateUrl(
-    endpoint: 'games' | 'streams',
-    streamers: string[]
-  ): string {
-    const type: string = endpoint === 'games' ? 'id' : 'user_login';
-    return `https://api.twitch.tv/helix/${endpoint}?${streamers
-      .map((streamer: string): string => `${type}=${streamer.toLowerCase()}`)
+  static generateUrl(streamers: string[]): string {
+    return `https://api.twitch.tv/helix/streams?${streamers
+      .map((streamer: string): string => `user_login=${streamer.toLowerCase()}`)
       .join('&')}`;
   }
   /**
@@ -58,7 +52,7 @@ export default class TwitchHelper {
       this.timeout();
       return;
     }
-    this.#streamers = TwitchHelper.generateUrl('streams', this._streamerUpdate);
+    this.#streamers = TwitchHelper.generateUrl(this._streamerUpdate);
     if (!this.#accessToken)
       this.accessTokenRequest(this.channelRequest.bind(this));
     else this.channelRequest();
@@ -113,31 +107,6 @@ export default class TwitchHelper {
       return 0;
     });
 
-    let categories: string[] = [];
-    for (const stream of this.#streams) categories.push(stream.game_id);
-
-    const categoryUrl: string = TwitchHelper.generateUrl('games', categories);
-    fetch(categoryUrl, {
-      headers: {
-        'Client-ID': Settings.getSettings()['twitch-id'],
-        Authorization: `Bearer ${this.#accessToken}`,
-      },
-    })
-      .then((res: Response) => res.json())
-      .catch(console.error)
-      .then(this.categoryIdResult.bind(this))
-      .catch(console.error);
-  }
-
-  /**
-   * Callback for the category id resolving
-   * @param streams Category properties
-   */
-  private categoryIdResult(body: { data: Category[] }) {
-    for (const stream of this.#streams)
-      stream.category = body.data.find(
-        (category: Category): boolean => category.id === stream.game_id
-      )?.name;
     this.#callback(this.#streams);
     this.timeout();
   }

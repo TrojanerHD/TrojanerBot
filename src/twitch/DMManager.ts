@@ -86,8 +86,8 @@ export default class DMManager {
         !!channel.sent && !logins.includes(channel.streamer)
     )) {
       channel.sent = false;
-    Settings.saveSettings();
-  }
+      Settings.saveSettings();
+    }
   }
 
   private userFetched(this: UserFetchedContext, user: User): void {
@@ -104,7 +104,7 @@ export default class DMManager {
 
   private sendMessage(user: User, streamer: Stream): void {
     DiscordClient.send(user.dmChannel!, {
-      content: `${streamer.user_name} is now live at https://twitch.tv/${streamer.user_name} streaming **${streamer.category}**`,
+      content: `${streamer.user_name} is now live at https://twitch.tv/${streamer.user_name} streaming **${streamer.game_name}**`,
     });
   }
 }
