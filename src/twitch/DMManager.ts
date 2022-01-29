@@ -21,7 +21,7 @@ export default class DMManager {
   static validNameRegex: RegExp = /^[a-zA-Z0-9_\-]*$/;
 
   constructor() {
-    this.#twitchHelper.update(
+    this.#twitchHelper.update(() =>
       Settings.getSettings()
         ['streamer-subscriptions'].map(
           (channel: Channel): string => channel.streamer
@@ -34,14 +34,6 @@ export default class DMManager {
   }
 
   private streamerFetched(streamers: Stream[]): void {
-    this.#twitchHelper._streamerUpdate = Settings.getSettings()
-      ['streamer-subscriptions'].map(
-        (channel: Channel): string => channel.streamer
-      )
-      .filter(
-        (streamer: string): boolean =>
-          !!streamer.match(DMManager.validNameRegex)
-      );
     const logins: string[] = streamers.map(
       (stream: Stream): string => stream.user_login
     );
