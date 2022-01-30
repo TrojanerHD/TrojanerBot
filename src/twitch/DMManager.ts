@@ -52,9 +52,15 @@ export default class DMManager {
     for (let i: number = 0; i < dmPendingChannels.length; ++i) {
       const channel = dmPendingChannels[i].channel;
 
+      channel.sent = true;
+      channel['started-at'] = 
+        streamers.find(
+          (login: Stream) => login.user_login === channel.streamer
+        )!.started_at
+
       Settings.getSettings()['streamer-subscriptions'][
         dmPendingChannels[i].index
-      ].sent = true;
+      ] = channel;
       Settings.saveSettings();
 
       for (const subscriber of channel.subscribers)
@@ -75,9 +81,12 @@ export default class DMManager {
       'streamer-subscriptions'
     ].filter(
       (channel: Channel): boolean =>
-        !!channel.sent && !logins.includes(channel.streamer)
+        !!channel.sent &&
+        !logins.includes(channel.streamer) &&
+        new Date().getTime() - new Date(channel['started-at']!).getTime() >= 5 * 60 * 1000 // Check to see whether five minutes have passed after stream start
     )) {
       channel.sent = false;
+      delete channel['started-at'];
       Settings.saveSettings();
     }
   }

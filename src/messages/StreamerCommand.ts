@@ -11,6 +11,7 @@ export interface Channel {
   streamer: string;
   subscribers: string[];
   sent: boolean;
+  'started-at'?: string
 }
 
 export default class StreamerCommand extends Command {
