@@ -14,7 +14,7 @@ import { GuildTextChannel } from './Command';
 export default class LinkResolve {
   handleCommand(channel: GuildTextChannel, message: Message): void {
     const splitMessage: string = message.content.split(
-      /https:\/\/discord(app)?\.(com|gg)\/channels\//
+      /https:\/\/(?:canary\.|ptb\.)?discord(app)?\.(com|gg)\/channels\//
     )[3];
     const properties: string[] = splitMessage.split('/');
     const guild: string = properties[0];
