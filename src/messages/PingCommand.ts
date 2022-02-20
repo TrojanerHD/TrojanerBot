@@ -2,11 +2,11 @@ import Command, { Reply } from './Command';
 import {
   CommandInteractionOption,
   Interaction,
-  ApplicationCommandData,
+  ChatInputApplicationCommandData,
 } from 'discord.js';
 
 export default class PingCommand extends Command {
-  deploy: ApplicationCommandData = {
+  deploy: ChatInputApplicationCommandData = {
     name: 'ping',
     description: 'Shows the current ping of the bot',
   };

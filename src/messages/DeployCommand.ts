@@ -1,5 +1,5 @@
 import {
-  ApplicationCommandData,
+  ChatInputApplicationCommandData,
   Collection,
   CommandInteractionOption,
   Snowflake,
@@ -9,7 +9,7 @@ import Command, { Reply } from './Command';
 import MessageHandler, { ApplicationCommandType } from './MessageHandler';
 
 export default class DeployCommand extends Command {
-  deploy: ApplicationCommandData = {
+  deploy: ChatInputApplicationCommandData = {
     name: 'deploy',
     description: 'Deploys the custom commands',
     options: [

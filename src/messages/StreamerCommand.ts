@@ -1,21 +1,25 @@
 import Command, { Reply } from './Command';
 import {
-  ApplicationCommandData,
+  ChatInputApplicationCommandData,
   CommandInteractionOption,
   Interaction,
 } from 'discord.js';
 import Settings from '../Settings';
+import DMManager from '../twitch/DMManager';
+import Common from '../common';
 
 export interface Channel {
   streamer: string;
   subscribers: string[];
+  sent: boolean;
+  'started-at'?: string;
 }
 
 export default class StreamerCommand extends Command {
-  deploy: ApplicationCommandData = {
+  deploy: ChatInputApplicationCommandData = {
     name: 'streamer',
     description:
-      'Lets you subscribe to Twitch streamers and get a DM whenever they go live (not yet implemented)',
+      'Lets you subscribe to Twitch streamers and get a DM whenever they go live',
     options: [
       {
         type: 1,
@@ -56,16 +60,19 @@ export default class StreamerCommand extends Command {
   };
   static _streamers: Channel[];
 
+  #interaction?: Interaction;
+
   constructor() {
     super();
-    StreamerCommand._streamers =
-      Settings.getSettings()['streamer-subscriptions'];
   }
 
   handleCommand(
     args: readonly CommandInteractionOption[],
     interaction: Interaction
   ): Reply {
+    this.#interaction = interaction;
+    StreamerCommand._streamers =
+      Settings.getSettings()['streamer-subscriptions'];
     if (args[0].name === 'list') {
       const streamerList: Channel[] = StreamerCommand._streamers.filter(
         (streamer: Channel): boolean =>
@@ -78,72 +85,86 @@ export default class StreamerCommand extends Command {
         };
       return {
         reply: `You have subscribed to ${streamerList
-          .map((value: Channel): string => value.streamer)
+          .map((value: Channel): string => Common.sanitize(value.streamer))
           .join(', ')}`,
         ephemeral: true,
       };
     }
-    const streamer: string = (
-      args[0].options![1].value as string
-    ).toLowerCase();
-    let streamChannel: Channel | undefined = StreamerCommand._streamers.find(
-      (channel: Channel) => channel.streamer === streamer
-    );
+    const streamers: string[] = (args[0].options![1].value as string)
+      .toLowerCase()
+      .split(/\s*\,\s*/g);
+    let reply: string = '';
     switch (args[0].options![0].value) {
       case 'add':
-        if (!streamChannel) {
-          streamChannel = { streamer, subscribers: [] };
-          StreamerCommand._streamers.push(streamChannel);
-        }
-
-        if (streamChannel.subscribers.includes(interaction.user.id))
-          return {
-            reply: 'You have already subscribed to that channel',
-            ephemeral: true,
-          };
-
-        streamChannel.subscribers.push(interaction.user.id);
-        this.saveStreamers();
-
-        return {
-          reply: `${
-            args[0].options![1].value
-          } was successfully added to your subscription list`,
-          ephemeral: true,
-        };
+        for (const streamer of streamers)
+          reply += `${this.addChannel(streamer)}\n`;
+        break;
       case 'remove':
-        if (
-          !streamChannel ||
-          !streamChannel.subscribers.includes(interaction.user.id)
-        )
-          return {
-            reply: 'You have not subscribed to that channel!',
-            ephemeral: true,
-          };
-
-        streamChannel.subscribers = streamChannel.subscribers.filter(
-          (subscriber: string) => subscriber !== interaction.user.id
-        );
-        if (streamChannel.subscribers.length === 0)
-          StreamerCommand._streamers = StreamerCommand._streamers.filter(
-            (channel: Channel) => channel.streamer !== streamChannel?.streamer
-          );
-        this.saveStreamers();
-        return {
-          reply: `${
-            args[0].options![1].value
-          } has been removed from your subscription list`,
-          ephemeral: true,
-        };
+        for (const streamer of streamers)
+          reply += `${this.removeChannel(streamer)}\n`;
+        break;
       default:
-        return {
-          reply: 'Option not available, something went wrong',
-          ephemeral: true,
-        };
+        reply = 'Option not available, something went wrong';
+        break;
     }
+    return { reply, ephemeral: true };
   }
 
-  private saveStreamers() {
+  private findStreamChannel(streamer: string): Channel | undefined {
+    return StreamerCommand._streamers.find(
+      (channel: Channel) => channel.streamer === streamer
+    );
+  }
+
+  private addChannel(streamer: string): string {
+    let streamChannel: Channel | undefined = this.findStreamChannel(streamer);
+    if (!streamer.match(DMManager.validNameRegex))
+      return `${Common.sanitize(
+        streamer
+      )} cannot be a streamer since Twitch does not allow user names with some characters`;
+
+    if (!streamChannel) {
+      streamChannel = { streamer, subscribers: [], sent: false };
+      StreamerCommand._streamers.push(streamChannel);
+    }
+
+    if (streamChannel.subscribers.includes(this.#interaction!.user.id))
+      return `You have already subscribed to the channel ${Common.sanitize(
+        streamer
+      )}`;
+
+    streamChannel.subscribers.push(this.#interaction!.user.id);
+    this.saveStreamers();
+
+    return `${Common.sanitize(
+      streamer
+    )} was successfully added to your subscription list`;
+  }
+
+  private removeChannel(streamer: string): string {
+    let streamChannel: Channel | undefined = this.findStreamChannel(streamer);
+    if (
+      !streamChannel ||
+      !streamChannel.subscribers.includes(this.#interaction!.user.id)
+    )
+      return `You have not subscribed to the channel ${Common.sanitize(
+        streamer
+      )}`;
+
+    streamChannel.subscribers = streamChannel.subscribers.filter(
+      (subscriber: string) => subscriber !== this.#interaction!.user.id
+    );
+    if (streamChannel.subscribers.length === 0)
+      StreamerCommand._streamers = StreamerCommand._streamers.filter(
+        (channel: Channel) => channel.streamer !== streamChannel?.streamer
+      );
+    this.saveStreamers();
+    return `${Common.sanitize(
+      streamer
+    )} has been removed from your subscription list`;
+  }
+
+  private saveStreamers(): void {
     Settings.getSettings()['streamer-subscriptions'] =
       StreamerCommand._streamers;
     Settings.saveSettings();

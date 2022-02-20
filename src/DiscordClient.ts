@@ -5,10 +5,10 @@ import {
   Intents,
   Message,
   MessageEmbed,
-  TextBasedChannels,
   ThreadChannel,
   ThreadMember,
   MessageOptions,
+  TextBasedChannel,
 } from 'discord.js';
 import MessageHandler from './messages/MessageHandler';
 import ReactionHandler from './ReactionHandler';
@@ -16,6 +16,8 @@ import LiveChannel from './twitch/LiveChannel';
 import TalkingChannel from './TalkingChannel';
 import RoleChannelManager from './roles/RoleChannelManager';
 import Settings from './Settings';
+import DMManager from './twitch/DMManager';
+import FeatureChecker from './FeatureChecker';
 
 export default class DiscordClient {
   static _client: Client = new Client({
@@ -31,9 +33,10 @@ export default class DiscordClient {
    * The discord client handler and initializer of the bot
    */
   constructor() {
+    new FeatureChecker();
     new MessageHandler();
     new ReactionHandler();
-    DiscordClient._client.on('ready', this.onReady);
+    DiscordClient._client.on('ready', this.onReady.bind(this));
     DiscordClient._client.on('threadCreate', this.onThreadCreate);
   }
 
@@ -44,16 +47,28 @@ export default class DiscordClient {
     DiscordClient._client
       .login(process.env.DISCORD_TOKEN)
       .catch(console.error)
-      .then(() => {
-        if (Settings.getSettings()['twitch-id'] !== '') this.startTwitch();
-        else
-          console.log(
-            'Twitch module not loaded. Add a twitch id to the settings.json'
-          ); //TODO: Rewrite message and create a warning system that reports what features are enabled/disabled
+      .then((): void => {
+        if (
+          Settings.getSettings()['twitch-id'] !== '' &&
+          process.env.TWITCH_TOKEN
+        )
+          this.startTwitch();
       });
   }
 
   private onReady(): void {
+    this.joinAllThreads();
+    new TalkingChannel();
+    if (!DiscordClient._client.application?.owner)
+      DiscordClient._client.application
+        ?.fetch()
+        .then(MessageHandler.addCommands)
+        .catch(console.error);
+    else MessageHandler.addCommands();
+    if (Settings.getSettings().roles.length !== 0) new RoleChannelManager();
+  }
+
+  private joinAllThreads(): void {
     for (const guild of DiscordClient._client.guilds.cache.toJSON())
       for (const threadChannel of (
         guild.channels.cache.filter(
@@ -66,14 +81,6 @@ export default class DiscordClient {
         ) as Collection<string, ThreadChannel>
       ).toJSON())
         threadChannel.join().catch(console.error);
-    new TalkingChannel();
-    if (!DiscordClient._client.application?.owner)
-      DiscordClient._client.application
-        ?.fetch()
-        .then(MessageHandler.addCommands)
-        .catch(console.error);
-    else MessageHandler.addCommands();
-    if (Settings.getSettings().roles.length !== 0) new RoleChannelManager(); //TODO Warning system (see TODO in line 47)
   }
 
   /**
@@ -81,6 +88,7 @@ export default class DiscordClient {
    */
   private startTwitch(): void {
     new LiveChannel();
+    new DMManager();
   }
 
   private onThreadCreate(thread: ThreadChannel): void {
@@ -88,7 +96,7 @@ export default class DiscordClient {
   }
 
   static send(
-    channel: TextBasedChannels | undefined,
+    channel: TextBasedChannel | undefined,
     message: MessageEmbed | MessageOptions,
     callback?: (message: Message) => void
   ): void {

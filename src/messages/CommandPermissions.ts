@@ -21,15 +21,22 @@ export default class CommandPermissions {
         command.permissions
           .add({
             guild: this.#guild,
-            permissions: Settings.getSettings()['permission-roles'].map(
-              (roleName: string): ApplicationCommandPermissionData => ({
-                id: this.#guild?.roles.cache.find(
-                  (role: Role) => role.name === roleName
-                )!.id!,
-                permission: true,
-                type: 'ROLE',
-              })
-            ),
+            permissions: Settings.getSettings()
+              ['permission-roles'].filter(
+                (roleName: string): boolean =>
+                  !!this.#guild?.roles.cache.find(
+                    (role: Role): boolean => role.name === roleName
+                  )
+              )
+              .map(
+                (roleName: string): ApplicationCommandPermissionData => ({
+                  id: this.#guild?.roles.cache.find(
+                    (role: Role) => role.name === roleName
+                  )!.id!,
+                  permission: true,
+                  type: 'ROLE',
+                })
+              ),
           })
           .catch(console.error);
   }

@@ -1,16 +1,18 @@
 import { Channel } from './messages/StreamerCommand';
 import fs from 'fs';
+import DMManager from './twitch/DMManager';
 
 export interface RolesField {
   name: string;
   emoji: string;
-  description: string;
+  description?: string;
 }
 export interface SettingsJSON {
   'twitch-id': string;
   'permission-roles': string[];
   roles: RolesField[];
   streamers: string[];
+  logging: 'verbose' | 'errors' | 'warnings';
   'streamer-subscriptions': Channel[];
 }
 
@@ -21,6 +23,7 @@ export default class Settings {
     'permission-roles': [],
     roles: [],
     streamers: [],
+    logging: 'warnings',
     'streamer-subscriptions': [],
   };
 
@@ -32,19 +35,65 @@ export default class Settings {
         Settings._settingsFile,
         'utf8'
       );
-      if (!Settings.isJsonString(settingsFileContent)) Settings.saveSettings();
-      else Settings._settings = JSON.parse(settingsFileContent);
+      const newSettings: undefined | SettingsJSON =
+        Settings.getJsonString(settingsFileContent);
+      if (!newSettings) Settings.saveSettings();
+      else {
+        let changed: boolean = false;
+        if (
+          Object.keys(Settings._settings).find(
+            (key: string): boolean => !(key in newSettings)
+          )
+        ) {
+          for (const untypedSetting of Object.keys(newSettings)) {
+            const setting: keyof SettingsJSON =
+              untypedSetting as keyof SettingsJSON;
+            Settings._settings[setting] = newSettings[setting] as any;
+          }
+          changed = true;
+        }
+        //TODO: This is a hard-coded checker to see if every streamer has a sent boolean because there was a version where it was not there. Very hacky
+        if (
+          Settings._settings['streamer-subscriptions'].find(
+            (key: Channel): boolean => key.sent === undefined
+          )
+        ) {
+          Settings._settings['streamer-subscriptions'].forEach(
+            (channel: Channel, i: number) => {
+              if (channel.sent === undefined)
+                Settings._settings['streamer-subscriptions'][i].sent = false;
+            }
+          );
+          changed = true;
+        }
+        // Backwards compatibility: If users added streamers with invalid characters in previous versions of the bot, they get deleted
+        if (
+          Settings._settings['streamer-subscriptions'].find(
+            (channel: Channel) =>
+              !channel.streamer.match(DMManager.validNameRegex)
+          )
+        ) {
+          Settings._settings['streamer-subscriptions'] = Settings._settings[
+            'streamer-subscriptions'
+          ].filter(
+            (channel: Channel) =>
+              !!channel.streamer.match(DMManager.validNameRegex)
+          );
+          changed = true;
+        }
+        if (changed) Settings.saveSettings();
+      }
+      Settings._settings = JSON.parse(settingsFileContent);
     }
     return Settings._settings;
   }
 
-  private static isJsonString(str: string): boolean {
+  private static getJsonString(str: string): undefined | SettingsJSON {
     try {
-      JSON.parse(str);
+      return JSON.parse(str);
     } catch (e) {
-      return false;
+      return undefined;
     }
-    return true;
   }
 
   static saveSettings(): void {

@@ -71,8 +71,6 @@ export default class MessageHandler {
     }
   }
 
-  
-
   onMessage(message: Message) {
     if (message.channel.type === 'DM' || message.author.bot) return;
     if (message.content.match(/https:\/\/discord(app)?\.(com|gg)\/channels/))
