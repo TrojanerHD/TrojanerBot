@@ -1,5 +1,9 @@
-import Command, { Reply } from './Command';
-import { ChatInputApplicationCommandData } from 'discord.js';
+import Command from './Command';
+import {
+  ChatInputApplicationCommandData,
+  CommandInteraction,
+  CommandInteractionOption,
+} from 'discord.js';
 import DiscordClient from '../DiscordClient';
 
 export default class ByeCommand extends Command {
@@ -10,12 +14,16 @@ export default class ByeCommand extends Command {
   };
   guildOnly: boolean = true;
 
-  handleCommand(): Reply {
-    return {
-      reply:
-        '**JavaScript**\n:robot: Bleeb Bloob :robot:\n:robot: Bleeb Blooouuub…\n[Shutting down]',
-      afterResponse: ByeCommand.destroyBot,
-    };
+  handleCommand(
+    _args: readonly CommandInteractionOption[],
+    interaction: CommandInteraction
+  ): void {
+    interaction
+      .reply(
+        '**JavaScript**\n:robot: Bleeb Bloob :robot:\n:robot: Bleeb Blooouuub…\n[Shutting down]'
+      )
+      .then(ByeCommand.destroyBot)
+      .catch(console.error);
   }
 
   private static destroyBot(): void {

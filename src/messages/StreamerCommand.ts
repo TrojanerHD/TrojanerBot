@@ -1,8 +1,8 @@
-import Command, { Reply } from './Command';
+import Command from './Command';
 import {
   ChatInputApplicationCommandData,
+  CommandInteraction,
   CommandInteractionOption,
-  Interaction,
 } from 'discord.js';
 import Settings from '../Settings';
 import DMManager from '../twitch/DMManager';
@@ -60,7 +60,7 @@ export default class StreamerCommand extends Command {
   };
   static _streamers: Channel[];
 
-  #interaction?: Interaction;
+  #interaction?: CommandInteraction;
 
   constructor() {
     super();
@@ -68,8 +68,8 @@ export default class StreamerCommand extends Command {
 
   handleCommand(
     args: readonly CommandInteractionOption[],
-    interaction: Interaction
-  ): Reply {
+    interaction: CommandInteraction
+  ): void {
     this.#interaction = interaction;
     StreamerCommand._streamers =
       Settings.getSettings()['streamer-subscriptions'];
@@ -78,41 +78,44 @@ export default class StreamerCommand extends Command {
         (streamer: Channel): boolean =>
           streamer.subscribers.includes(interaction.user.id)
       );
-      if (!streamerList || streamerList.length === 0)
-        return {
-          reply: 'You have not subscribed to any streamer',
+      if (!streamerList || streamerList.length === 0) {
+        interaction.reply({
+          content: 'You have not subscribed to any streamer',
           ephemeral: true,
-        };
-      return {
-        reply: `You have subscribed to ${streamerList
+        }).catch(console.error);
+        return;
+      }
+      interaction.reply({
+        content: `You have subscribed to ${streamerList
           .map((value: Channel): string => Common.sanitize(value.streamer))
           .join(', ')}`,
         ephemeral: true,
-      };
+      }).catch(console.error);
+      return;
     }
     const streamers: string[] = (args[0].options![1].value as string)
       .toLowerCase()
       .split(/\s*\,\s*/g);
-    let reply: string = '';
+    let content: string = '';
     switch (args[0].options![0].value) {
       case 'add':
         for (const streamer of streamers)
-          reply += `${this.addChannel(streamer)}\n`;
+          content += `${this.addChannel(streamer)}\n`;
         break;
       case 'remove':
         for (const streamer of streamers)
-          reply += `${this.removeChannel(streamer)}\n`;
+          content += `${this.removeChannel(streamer)}\n`;
         break;
       default:
-        reply = 'Option not available, something went wrong';
+        content = 'Option not available, something went wrong';
         break;
     }
-    return { reply, ephemeral: true };
+    interaction.reply({content, ephemeral: true}).catch(console.error);
   }
 
   private findStreamChannel(streamer: string): Channel | undefined {
     return StreamerCommand._streamers.find(
-      (channel: Channel) => channel.streamer === streamer
+      (channel: Channel): boolean => channel.streamer === streamer
     );
   }
 

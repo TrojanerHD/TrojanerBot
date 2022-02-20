@@ -9,7 +9,6 @@ import {
   Role,
 } from 'discord.js';
 import DiscordClient from './DiscordClient';
-import { Reply } from './messages/Command';
 import RoleAssigner from './roles/RoleAssigner';
 import MessageHandler from './messages/MessageHandler';
 import Settings, { RolesField } from './Settings';
@@ -71,18 +70,8 @@ export default class ReactionHandler {
     }
     if (!interaction.isCommand()) return;
     for (const command of MessageHandler._commands)
-      if (command.deploy.name === interaction.commandName) {
-        const reply: Reply = command.handleCommand(
-          interaction.options.data,
-          interaction
-        );
-        if (!reply.ephemeral) reply.ephemeral = false;
-        if (!reply.afterResponse) reply.afterResponse = (): void => {};
-        interaction
-          .reply({ content: reply.reply, ephemeral: reply.ephemeral })
-          .then(reply.afterResponse.bind(command))
-          .catch(console.error);
-      }
+      if (command.deploy.name === interaction.commandName)
+        command.handleCommand(interaction.options.data, interaction);
   }
   private createComponent(
     member: GuildMember | APIGuildMember | null

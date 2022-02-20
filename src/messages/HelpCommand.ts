@@ -1,16 +1,13 @@
 import {
   MessageEmbed,
   CommandInteractionOption,
-  Interaction,
   ApplicationCommandData,
   ApplicationCommandOptionChoice,
-  TextBasedChannel,
-  AnyChannel,
   ChatInputApplicationCommandData,
   ApplicationCommandChoicesData,
+  CommandInteraction,
 } from 'discord.js';
-import DiscordClient from '../DiscordClient';
-import Command, { Reply } from './Command';
+import Command from './Command';
 import MessageHandler from './MessageHandler';
 
 export default class HelpCommand extends Command {
@@ -29,9 +26,6 @@ export default class HelpCommand extends Command {
     ],
   };
 
-  #embed?: MessageEmbed;
-  #interaction?: Interaction;
-
   loadHelp(): void {
     (this.deploy.options![0] as ApplicationCommandChoicesData).choices =
       MessageHandler._commands.map(
@@ -44,28 +38,28 @@ export default class HelpCommand extends Command {
 
   handleCommand(
     args: readonly CommandInteractionOption[],
-    interaction: Interaction
-  ): Reply {
-    this.#interaction = interaction;
-
+    interaction: CommandInteraction
+  ): void {
     const commands: ChatInputApplicationCommandData[] =
       MessageHandler._commands.map(
         (command: Command): ChatInputApplicationCommandData => command.deploy
       );
     if (args.length === 0) {
-      this.#embed = new MessageEmbed()
+      const embed: MessageEmbed = new MessageEmbed()
         .setTimestamp(new Date())
         .setTitle('Help')
         .setColor(206694)
         .setFooter({ text: `Requested by ${interaction.user.tag}` });
       for (const command of commands)
-        this.#embed.addField(`/${command.name}`, command.description, false);
+        embed.addField(`/${command.name}`, command.description, false);
 
-      return {
-        reply: 'See embed',
-        afterResponse: this.afterResponse.bind(this),
-        ephemeral: true,
-      };
+      interaction
+        .reply({
+          embeds: [embed],
+          ephemeral: true,
+        })
+        .catch(console.error);
+      return;
     }
     let requestedCommand: string = args[0].value as string;
     const command: ApplicationCommandData | undefined = commands.find(
@@ -73,26 +67,18 @@ export default class HelpCommand extends Command {
         command.name === requestedCommand ||
         command.name.includes(requestedCommand)
     );
-    if (!command)
-      return { reply: 'This command does not exist', ephemeral: true };
-
-    return {
-      reply: `**/${command.name}**: ${command.description}`,
-      ephemeral: true,
-    };
-  }
-
-  private afterResponse(): void {
-    let channel: TextBasedChannel | null = this.#interaction!.channel;
-    if (!channel) {
-      DiscordClient._client.channels
-        .fetch(this.#interaction!.channelId!)
-        .then((value: AnyChannel | null) =>
-          DiscordClient.send(value! as TextBasedChannel, this.#embed!)
-        )
+    if (!command) {
+      interaction
+        .reply({ content: 'This command does not exist', ephemeral: true })
         .catch(console.error);
       return;
     }
-    DiscordClient.send(channel as TextBasedChannel, this.#embed!);
+
+    interaction
+      .reply({
+        content: `**/${command.name}**: ${command.description}`,
+        ephemeral: true,
+      })
+      .catch(console.error);
   }
 }
