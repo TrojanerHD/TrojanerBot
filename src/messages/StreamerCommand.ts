@@ -96,12 +96,11 @@ export default class StreamerCommand extends Command {
     switch (args[0].options![0].value) {
       case 'add':
         for (const streamer of streamers)
-          reply += `${this.addChannel(streamer)}, `;
+          reply += `${this.addChannel(streamer)}\n`;
         break;
       case 'remove':
         for (const streamer of streamers)
-          reply += `${this.removeChannel(streamer)}, `;
-          reply = reply.replace(/, $/, '')
+          reply += `${this.removeChannel(streamer)}\n`;
         break;
       default:
         reply = 'Option not available, something went wrong';
