@@ -20,12 +20,10 @@ export interface StreamData {
 }
 
 export default class TwitchHelper {
-  /** URL for fetching all added streamers via Twitch api */
-  #streamers?: string;
   /** The access token for the Twitch api */
   #accessToken?: string;
   #streamerUpdate: () => string[] = () => [];
-  #streams: Stream[] = [];
+  #streamerUpdateSplit: string[][] = [];
   #callback: (streams: Stream[]) => void;
 
   constructor(callback: (streams: Stream[]) => void) {
@@ -48,11 +46,13 @@ export default class TwitchHelper {
    */
   update(streamerUpdate?: () => string[]): void {
     if (streamerUpdate !== undefined) this.#streamerUpdate = streamerUpdate;
-    if (this.#streamerUpdate().length === 0) {
+    const streamers: string[] = this.#streamerUpdate();
+    if (streamers.length === 0) {
       this.timeout();
       return;
     }
-    this.#streamers = TwitchHelper.generateUrl(this.#streamerUpdate());
+    for (let i: number = 0; i < streamers.length; i += 100)
+      this.#streamerUpdateSplit.push(streamers.slice(i, i + 100));
     if (!this.#accessToken)
       this.accessTokenRequest(this.channelRequest.bind(this));
     else this.channelRequest();
@@ -61,45 +61,42 @@ export default class TwitchHelper {
   /**
    * Creates a request for fetching updates from streamers from Twitch
    */
-  private channelRequest(): void {
-    fetch(this.#streamers!, {
-      headers: {
-        'Client-ID': Settings.getSettings()['twitch-id'],
-        Authorization: `Bearer ${this.#accessToken}`,
-      },
-    })
-      .then((res: Response) => res.json())
-      .catch(console.error)
-      .then((data: StreamData) => this.streamerFetch(data))
-      .catch(console.error);
-  }
+  private async channelRequest(): Promise<void> {
+    const streams: Stream[] = [];
+    for (const streamers of this.#streamerUpdateSplit)
+      try {
+        const res: Response = await fetch(TwitchHelper.generateUrl(streamers), {
+          headers: {
+            'Client-ID': Settings.getSettings()['twitch-id'],
+            Authorization: `Bearer ${this.#accessToken}`,
+          },
+        });
 
-  /**
-   * Callback for channelRequest.
-   * Creates a request to resolve the category ids of the categories the streamers are streaming
-   * @param stream Updated content
-   */
-  private streamerFetch(stream: StreamData): void {
-    if (!stream) {
-      console.error(
-        'Error in TwitchHelper.ts on line 87:\nstream is undefined'
-      );
-      this.timeout();
-      return;
-    }
-    if ('error' in stream) {
-      console.error(
-        `Error in TwitchHelper.ts on line 88:\n${JSON.stringify(
-          stream,
-          null,
-          2
-        )}`
-      );
-      this.timeout();
-      return;
-    }
-    this.#streams = stream.data;
-    this.#streams.sort((a: Stream, b: Stream): number => {
+        const stream: StreamData = await res.json();
+        if (!stream) {
+          console.error(
+            'Error in TwitchHelper.ts on line 78:\nstream is undefined'
+          );
+          this.timeout();
+          return;
+        }
+        if ('error' in streams) {
+          console.error(
+            `Error in TwitchHelper.ts on line 85:\n${JSON.stringify(
+              streams,
+              null,
+              2
+            )}`
+          );
+          this.timeout();
+          return;
+        }
+        streams.push.apply(stream.data);
+      } catch (e: any) {
+        console.error(e);
+      }
+
+    streams.sort((a: Stream, b: Stream): number => {
       for (const streamer of Settings.getSettings().streamers) {
         if (a.user_name === streamer) return -1;
         if (b.user_name === streamer) return 1;
@@ -107,7 +104,7 @@ export default class TwitchHelper {
       return 0;
     });
 
-    this.#callback(this.#streams);
+    this.#callback(streams);
     this.timeout();
   }
 
