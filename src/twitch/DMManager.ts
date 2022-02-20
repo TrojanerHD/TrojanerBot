@@ -3,6 +3,7 @@ import DiscordClient from '../DiscordClient';
 import { Channel } from '../messages/StreamerCommand';
 import Settings from '../Settings';
 import TwitchHelper, { Stream } from './TwitchHelper';
+import Common from '../common';
 
 interface UserFetchedContext {
   streamer?: Stream;
@@ -105,7 +106,7 @@ export default class DMManager {
 
   private sendMessage(user: User, streamer: Stream): void {
     DiscordClient.send(user.dmChannel!, {
-      content: `${streamer.user_name} is now live at https://twitch.tv/${streamer.user_name} streaming **${streamer.game_name}**`,
+      content: `${Common.sanitize(streamer.user_name)} is now live at https://twitch.tv/${streamer.user_name} streaming **${Common.sanitize(streamer.game_name)}**`,
     });
   }
 }

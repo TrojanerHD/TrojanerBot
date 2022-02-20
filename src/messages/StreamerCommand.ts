@@ -6,6 +6,7 @@ import {
 } from 'discord.js';
 import Settings from '../Settings';
 import DMManager from '../twitch/DMManager';
+import Common from '../common';
 
 export interface Channel {
   streamer: string;
@@ -84,7 +85,7 @@ export default class StreamerCommand extends Command {
         };
       return {
         reply: `You have subscribed to ${streamerList
-          .map((value: Channel): string => this.desanitize(value.streamer))
+          .map((value: Channel): string => Common.sanitize(value.streamer))
           .join(', ')}`,
         ephemeral: true,
       };
@@ -109,10 +110,6 @@ export default class StreamerCommand extends Command {
     return { reply, ephemeral: true };
   }
 
-  private desanitize(streamer: string): string {
-    return streamer.replace(/_/g, '\\_');
-  }
-
   private findStreamChannel(streamer: string): Channel | undefined {
     return StreamerCommand._streamers.find(
       (channel: Channel) => channel.streamer === streamer
@@ -122,7 +119,7 @@ export default class StreamerCommand extends Command {
   private addChannel(streamer: string): string {
     let streamChannel: Channel | undefined = this.findStreamChannel(streamer);
     if (!streamer.match(DMManager.validNameRegex))
-      return `${this.desanitize(
+      return `${Common.sanitize(
         streamer
       )} cannot be a streamer since Twitch does not allow user names with some characters`;
 
@@ -132,14 +129,14 @@ export default class StreamerCommand extends Command {
     }
 
     if (streamChannel.subscribers.includes(this.#interaction!.user.id))
-      return `You have already subscribed to the channel ${this.desanitize(
+      return `You have already subscribed to the channel ${Common.sanitize(
         streamer
       )}`;
 
     streamChannel.subscribers.push(this.#interaction!.user.id);
     this.saveStreamers();
 
-    return `${this.desanitize(
+    return `${Common.sanitize(
       streamer
     )} was successfully added to your subscription list`;
   }
@@ -150,7 +147,7 @@ export default class StreamerCommand extends Command {
       !streamChannel ||
       !streamChannel.subscribers.includes(this.#interaction!.user.id)
     )
-      return `You have not subscribed to the channel ${this.desanitize(
+      return `You have not subscribed to the channel ${Common.sanitize(
         streamer
       )}`;
 
@@ -162,7 +159,7 @@ export default class StreamerCommand extends Command {
         (channel: Channel) => channel.streamer !== streamChannel?.streamer
       );
     this.saveStreamers();
-    return `${this.desanitize(
+    return `${Common.sanitize(
       streamer
     )} has been removed from your subscription list`;
   }
