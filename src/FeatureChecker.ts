@@ -21,6 +21,14 @@ export default class FeatureChecker {
       this.error(
         'Currently, only a maximum of 25 roles is allowed. If you need more, file an issue at https://github.com/TrojanerHD/TrojanerBot/issues/new'
       );
+    if (
+      process.argv[
+        process.argv.findIndex((value: string): boolean => value === '-r') + 1
+      ] === 'dotenv/config'
+    )
+      this.warning(
+        'You specified the -r dotenv/config option which is not required anymore'
+      );
     console.log(this.#message.trim());
     if (this.#crash) process.exit(1);
   }
