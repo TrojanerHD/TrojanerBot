@@ -33,12 +33,13 @@ export default class HelpCommand extends Command {
   #interaction?: Interaction;
 
   loadHelp(): void {
-    (this.deploy.options![0] as ApplicationCommandChoicesData).choices = MessageHandler._commands.map(
-      (command: Command): ApplicationCommandOptionChoice => ({
-        name: command.deploy.name,
-        value: command.deploy.name,
-      })
-    );
+    (this.deploy.options![0] as ApplicationCommandChoicesData).choices =
+      MessageHandler._commands.map(
+        (command: Command): ApplicationCommandOptionChoice => ({
+          name: command.deploy.name,
+          value: command.deploy.name,
+        })
+      );
   }
 
   handleCommand(
@@ -47,15 +48,16 @@ export default class HelpCommand extends Command {
   ): Reply {
     this.#interaction = interaction;
 
-    const commands: ChatInputApplicationCommandData[] = MessageHandler._commands.map(
-      (command: Command): ChatInputApplicationCommandData => command.deploy
-    );
+    const commands: ChatInputApplicationCommandData[] =
+      MessageHandler._commands.map(
+        (command: Command): ChatInputApplicationCommandData => command.deploy
+      );
     if (args.length === 0) {
       this.#embed = new MessageEmbed()
         .setTimestamp(new Date())
         .setTitle('Help')
         .setColor(206694)
-        .setFooter({text: `Requested by ${interaction.user.tag}`});
+        .setFooter({ text: `Requested by ${interaction.user.tag}` });
       for (const command of commands)
         this.#embed.addField(`/${command.name}`, command.description, false);
 

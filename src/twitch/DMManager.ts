@@ -54,10 +54,9 @@ export default class DMManager {
       const channel = dmPendingChannels[i].channel;
 
       channel.sent = true;
-      channel['started-at'] = 
-        streamers.find(
-          (login: Stream) => login.user_login === channel.streamer
-        )!.started_at
+      channel['started-at'] = streamers.find(
+        (login: Stream) => login.user_login === channel.streamer
+      )!.started_at;
 
       Settings.getSettings()['streamer-subscriptions'][
         dmPendingChannels[i].index
@@ -84,7 +83,8 @@ export default class DMManager {
       (channel: Channel): boolean =>
         !!channel.sent &&
         !logins.includes(channel.streamer) &&
-        new Date().getTime() - new Date(channel['started-at']!).getTime() >= 5 * 60 * 1000 // Check to see whether five minutes have passed after stream start
+        new Date().getTime() - new Date(channel['started-at']!).getTime() >=
+          5 * 60 * 1000 // Check to see whether five minutes have passed after stream start
     )) {
       channel.sent = false;
       delete channel['started-at'];
@@ -106,7 +106,11 @@ export default class DMManager {
 
   private sendMessage(user: User, streamer: Stream): void {
     DiscordClient.send(user.dmChannel!, {
-      content: `${Common.sanitize(streamer.user_name)} is now live at https://twitch.tv/${streamer.user_name} streaming **${Common.sanitize(streamer.game_name)}**`,
+      content: `${Common.sanitize(
+        streamer.user_name
+      )} is now live at https://twitch.tv/${
+        streamer.user_name
+      } streaming **${Common.sanitize(streamer.game_name)}**`,
     });
   }
 }

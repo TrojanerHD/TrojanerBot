@@ -37,12 +37,16 @@ export default class RoleAssigner {
     )
       this.#member.roles
         .add(role)
-        .then((): Promise<void> => this.#parent.editRoleReply(this.#interaction))
+        .then(
+          (): Promise<void> => this.#parent.editRoleReply(this.#interaction)
+        )
         .catch(console.error);
     else
       this.#member.roles
         .remove(role)
-        .then((): Promise<void> => this.#parent.editRoleReply(this.#interaction))
+        .then(
+          (): Promise<void> => this.#parent.editRoleReply(this.#interaction)
+        )
         .catch(console.error);
   }
 }

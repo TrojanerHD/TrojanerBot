@@ -7,7 +7,9 @@ export default class LiveChannel {
    * Handles the #live channel
    */
   constructor() {
-    new TwitchHelper(this.streamerFetch.bind(this)).update(() => Settings.getSettings().streamers);
+    new TwitchHelper(this.streamerFetch.bind(this)).update(
+      () => Settings.getSettings().streamers
+    );
   }
 
   private streamerFetch(streams: Stream[]): void {
