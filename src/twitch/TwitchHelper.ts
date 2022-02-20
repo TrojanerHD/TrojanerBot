@@ -51,6 +51,7 @@ export default class TwitchHelper {
       this.timeout();
       return;
     }
+    this.#streamerUpdateSplit = [];
     for (let i: number = 0; i < streamers.length; i += 100)
       this.#streamerUpdateSplit.push(streamers.slice(i, i + 100));
     if (!this.#accessToken)
@@ -91,7 +92,7 @@ export default class TwitchHelper {
           this.timeout();
           return;
         }
-        streams.push.apply(stream.data);
+        streams.push.apply(streams, stream.data);
       } catch (e: any) {
         console.error(e);
       }
