@@ -18,7 +18,7 @@ export default class StreamerCommand extends Command {
   deploy: ChatInputApplicationCommandData = {
     name: 'streamer',
     description:
-      'Lets you subscribe to Twitch streamers and get a DM whenever they go live (not yet implemented)',
+      'Lets you subscribe to Twitch streamers and get a DM whenever they go live',
     options: [
       {
         type: 1,
@@ -84,7 +84,7 @@ export default class StreamerCommand extends Command {
         };
       return {
         reply: `You have subscribed to ${streamerList
-          .map((value: Channel): string => value.streamer)
+          .map((value: Channel): string => this.desanitize(value.streamer))
           .join(', ')}`,
         ephemeral: true,
       };
@@ -109,6 +109,10 @@ export default class StreamerCommand extends Command {
     return { reply, ephemeral: true };
   }
 
+  private desanitize(streamer: string): string {
+    return streamer.replace(/_/g, '\\_');
+  }
+
   private findStreamChannel(streamer: string): Channel | undefined {
     return StreamerCommand._streamers.find(
       (channel: Channel) => channel.streamer === streamer
@@ -118,7 +122,9 @@ export default class StreamerCommand extends Command {
   private addChannel(streamer: string): string {
     let streamChannel: Channel | undefined = this.findStreamChannel(streamer);
     if (!streamer.match(DMManager.validNameRegex))
-      return `${streamer} cannot be a streamer since Twitch does not allow user names with some characters`;
+      return `${this.desanitize(
+        streamer
+      )} cannot be a streamer since Twitch does not allow user names with some characters`;
 
     if (!streamChannel) {
       streamChannel = { streamer, subscribers: [], sent: false };
@@ -126,12 +132,16 @@ export default class StreamerCommand extends Command {
     }
 
     if (streamChannel.subscribers.includes(this.#interaction!.user.id))
-      return `You have already subscribed to the channel ${streamer}`;
+      return `You have already subscribed to the channel ${this.desanitize(
+        streamer
+      )}`;
 
     streamChannel.subscribers.push(this.#interaction!.user.id);
     this.saveStreamers();
 
-    return `${streamer} was successfully added to your subscription list`;
+    return `${this.desanitize(
+      streamer
+    )} was successfully added to your subscription list`;
   }
 
   private removeChannel(streamer: string): string {
@@ -140,7 +150,9 @@ export default class StreamerCommand extends Command {
       !streamChannel ||
       !streamChannel.subscribers.includes(this.#interaction!.user.id)
     )
-      return `You have not subscribed to the channel ${streamer}`;
+      return `You have not subscribed to the channel ${this.desanitize(
+        streamer
+      )}`;
 
     streamChannel.subscribers = streamChannel.subscribers.filter(
       (subscriber: string) => subscriber !== this.#interaction!.user.id
@@ -150,7 +162,9 @@ export default class StreamerCommand extends Command {
         (channel: Channel) => channel.streamer !== streamChannel?.streamer
       );
     this.saveStreamers();
-    return `${streamer} has been removed from your subscription list`;
+    return `${this.desanitize(
+      streamer
+    )} has been removed from your subscription list`;
   }
 
   private saveStreamers(): void {
