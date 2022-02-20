@@ -24,7 +24,7 @@ export default class StreamerCommand extends Command {
       {
         type: 1,
         name: 'manage',
-        description: 'Manage the streamers',
+        description: 'Lets you subscribe to Twitch streamers and get a DM whenever they go live',
         options: [
           {
             type: 3,
