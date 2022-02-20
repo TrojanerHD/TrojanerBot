@@ -1,4 +1,4 @@
-import Command, { GuildTextChannel, Reply } from './Command';
+import Command, { GuildTextChannel } from './Command';
 import {
   TextChannel,
   Message,
@@ -6,11 +6,14 @@ import {
   MessageEmbed,
   ThreadChannel,
   CommandInteractionOption,
-  Interaction,
   NewsChannel,
   ChatInputApplicationCommandData,
+  CommandInteraction,
+  DMChannel,
+  PartialDMChannel,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
+import { APIMessage } from 'discord-api-types';
 
 export default class LinkCommand extends Command {
   deploy: ChatInputApplicationCommandData = {
@@ -28,7 +31,6 @@ export default class LinkCommand extends Command {
   };
   guildOnly = true;
 
-  #channel?: GuildTextChannel;
   #newChannel?: GuildTextChannel;
   #embed?: MessageEmbed;
   #oldMessage?: Message;
@@ -36,8 +38,8 @@ export default class LinkCommand extends Command {
 
   handleCommand(
     args: readonly CommandInteractionOption[],
-    interaction: Interaction
-  ): Reply {
+    interaction: CommandInteraction
+  ): void {
     this.#newChannel = interaction.guild?.channels.cache.find(
       (channel: GuildChannel | ThreadChannel): boolean =>
         (channel instanceof TextChannel ||
@@ -47,13 +49,19 @@ export default class LinkCommand extends Command {
     ) as GuildTextChannel;
 
     this.#author = interaction.user.id;
-    this.#channel = interaction.channel! as GuildTextChannel;
-    if (!this.#newChannel || this.#newChannel.id === this.#channel.id)
-      return { reply: 'Please specify a different channel', ephemeral: true };
+    if (!this.#newChannel || this.#newChannel.id === interaction.channelId) {
+      interaction
+        .reply({
+          content: 'Please specify a different channel',
+          ephemeral: true,
+        })
+        .catch(console.error);
+      return;
+    }
     this.#embed = new MessageEmbed()
       .setTitle(
         `${this.channelName(
-          this.#channel
+          interaction.channel!
         )} -> <:portal_blue:631237086988599317>`
       )
       .setDescription(
@@ -64,16 +72,16 @@ export default class LinkCommand extends Command {
       .setTimestamp(new Date())
       .setColor(4176616);
 
-    DiscordClient.send(
-      this.#channel,
-      this.#embed,
-      this.sendMessageToNewChannel.bind(this)
-    );
-    return { reply: 'See embed', ephemeral: true };
+    interaction
+      .reply({ embeds: [this.#embed], fetchReply: true })
+      .then(this.sendMessageToNewChannel.bind(this))
+      .catch(console.error);
   }
 
-  private sendMessageToNewChannel(message: Message): void {
-    this.#oldMessage = message;
+  private sendMessageToNewChannel(
+    message: APIMessage | Message<boolean>
+  ): void {
+    this.#oldMessage = message as Message;
     DiscordClient.send(
       this.#newChannel!,
       new MessageEmbed()
@@ -83,8 +91,8 @@ export default class LinkCommand extends Command {
           )}`
         )
         .setDescription(
-          `[From ${this.channelName(this.#channel)}](${
-            message.url
+          `[From ${this.channelName(this.#oldMessage.channel)}](${
+            this.#oldMessage.url
           })\nRequested by <@${this.#author}>`
         )
         .setTimestamp(new Date())
@@ -100,8 +108,12 @@ export default class LinkCommand extends Command {
     this.#oldMessage!.edit({ embeds: [this.#embed!] }).catch(console.error);
   }
 
-  private channelName(channel?: GuildTextChannel): string {
+  private channelName(
+    channel?: GuildTextChannel | DMChannel | PartialDMChannel
+  ): string {
     if (!channel) return 'Not available';
-    return `${channel instanceof TextChannel ? '#' : ''}${channel.name}`;
+    return `${channel instanceof TextChannel ? '#' : ''}${
+      (channel as GuildTextChannel).name
+    }`;
   }
 }

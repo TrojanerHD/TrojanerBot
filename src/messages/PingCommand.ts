@@ -1,8 +1,8 @@
-import Command, { Reply } from './Command';
+import Command from './Command';
 import {
   CommandInteractionOption,
-  Interaction,
   ChatInputApplicationCommandData,
+  CommandInteraction,
 } from 'discord.js';
 
 export default class PingCommand extends Command {
@@ -13,12 +13,12 @@ export default class PingCommand extends Command {
 
   handleCommand(
     _args: readonly CommandInteractionOption[],
-    interaction: Interaction
-  ): Reply {
-    return {
-      reply: `My ping is ${Math.floor(
+    interaction: CommandInteraction
+  ): void {
+    interaction.reply(
+      `My ping is ${Math.floor(
         new Date().getTime() - interaction.createdTimestamp
-      )}ms`,
-    };
+      )}ms`
+    ).catch(console.error);
   }
 }

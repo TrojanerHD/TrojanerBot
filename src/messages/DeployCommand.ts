@@ -1,11 +1,12 @@
 import {
   ChatInputApplicationCommandData,
   Collection,
+  CommandInteraction,
   CommandInteractionOption,
   Snowflake,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
-import Command, { Reply } from './Command';
+import Command from './Command';
 import MessageHandler, { ApplicationCommandType } from './MessageHandler';
 
 export default class DeployCommand extends Command {
@@ -31,21 +32,44 @@ export default class DeployCommand extends Command {
 
   guildOnly: boolean = true;
 
-  handleCommand(args: readonly CommandInteractionOption[]): Reply {
+  handleCommand(
+    args: readonly CommandInteractionOption[],
+    interaction: CommandInteraction
+  ): void {
     switch (args[0].name) {
       case 'all':
         MessageHandler.addCommands();
-        return { reply: 'All commands have been added', ephemeral: true };
+        interaction
+          .reply({
+            content: 'All commands have been added',
+            ephemeral: true,
+          })
+          .catch(console.error);
+        break;
       case 'remove':
         DiscordClient._client.application?.commands
           .fetch()
-          .then(this.commandsFetched);
+          .then(this.commandsFetched)
+          .catch(console.error);
 
         for (const guild of DiscordClient._client.guilds.cache.toJSON())
-          guild.commands.fetch().then(this.commandsFetched);
-        return { reply: 'All commands have been removed', ephemeral: true };
+          guild.commands
+            .fetch()
+            .then(this.commandsFetched)
+            .catch(console.error);
+
+        interaction
+          .reply({
+            content: 'All commands have been removed',
+            ephemeral: true,
+          })
+          .catch(console.error);
+        break;
       default:
-        return { reply: 'Something went wrong', ephemeral: true };
+        interaction
+          .reply({ content: 'Something went wrong', ephemeral: true })
+          .catch(console.error);
+        break;
     }
   }
 
