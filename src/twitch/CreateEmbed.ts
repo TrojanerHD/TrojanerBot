@@ -94,11 +94,10 @@ export default class CreateEmbed {
       .setTitle('Twitch')
       .setTimestamp(new Date());
 
-    for (const fieldArray of this.#embed) {
-      if (embed.fields.length !== 0) embed.addField('\u200b', '\u200b', false);
+    for (const fieldArray of this.#embed) 
       for (const field of fieldArray)
         embed.addField(field.name, field.value, field.inline);
-    }
+    
     if (messages.toJSON().length === 0) {
       DiscordClient.send(this.#liveChannel, embed);
       return;
