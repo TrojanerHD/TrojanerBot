@@ -24,4 +24,4 @@ jobs:
       - name: Synchronize server's code
         env:
           DIRECTORY: ${{ secrets.DIRECTORY }}
-        run: ssh -i $HOME/ssh-key -o "StrictHostKeyChecking=no" ${{ secrets.USERNAME }}@${{ secrets.HOST }} "pm2 restart TrojanerBot"
+        run: ssh -i $HOME/ssh-key -o "StrictHostKeyChecking=no" ${{ secrets.USERNAME }}@${{ secrets.HOST }} "pm2 restart TrojanerBot">/dev/null
