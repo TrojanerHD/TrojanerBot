@@ -9,7 +9,6 @@ import {
 import PingCommand from './PingCommand';
 import ByeCommand from './ByeCommand';
 import LinkCommand from './LinkCommand';
-import HelpCommand from './HelpCommand';
 import StreamerCommand from './StreamerCommand';
 import DeployCommand from './DeployCommand';
 import LinkResolve from './LinkResolve';
@@ -31,7 +30,6 @@ export default class MessageHandler {
     new ByeCommand(),
     new LinkCommand(),
     new StreamerCommand(),
-    new HelpCommand(),
     new DeployCommand(),
   ];
 
@@ -40,11 +38,6 @@ export default class MessageHandler {
   }
 
   public static addCommands(): void {
-    (
-      MessageHandler._commands.find(
-        (command: Command) => command.deploy.name === 'help'
-      ) as HelpCommand
-    ).loadHelp();
     const guildCommands: ApplicationCommandData[] = MessageHandler._commands
       .filter((command: Command): boolean => command.guildOnly)
       .map((command: Command): ApplicationCommandData => command.deploy);
