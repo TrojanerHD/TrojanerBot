@@ -3,7 +3,6 @@ import {
   Collection,
   GuildChannel,
   Intents,
-  Message,
   MessageEmbed,
   ThreadChannel,
   ThreadMember,
@@ -95,18 +94,15 @@ export default class DiscordClient {
     thread.join().catch(console.error);
   }
 
-  static send(
+  public static send(
     channel: TextBasedChannel | undefined,
-    message: MessageEmbed | MessageOptions,
-    callback?: (message: Message) => void
+    message: MessageEmbed | MessageOptions
   ): void {
     if (!channel) return;
     let send: MessageOptions = {};
     if (message instanceof MessageEmbed) send.embeds = [message];
     else send = message;
-    const msg: Promise<Message> = channel.send(send);
 
-    if (callback) msg.then(callback);
-    msg.catch(console.error);
+    channel.send(send).catch(console.error);
   }
 }

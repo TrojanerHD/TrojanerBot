@@ -1,12 +1,11 @@
 import {
   MessageEmbed,
-  GuildChannel,
   TextChannel,
-  Snowflake,
   Message,
   Collection,
   ThreadChannel,
   NewsChannel,
+  GuildBasedChannel,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
 import { GuildTextChannel } from '../messages/Command';
@@ -29,7 +28,6 @@ interface Field {
  */
 export default class CreateEmbed {
   #embed: Field[][] = [];
-  #liveChannel?: GuildTextChannel;
 
   /**
    * Adds a formatted field to the embed containing information about a stream
@@ -67,47 +65,41 @@ export default class CreateEmbed {
   /**
    * Sends the embed into #live
    */
-  sendEmbed(): void {
+  async sendEmbed(): Promise<void> {
     for (const guild of DiscordClient._client.guilds.cache.toJSON()) {
-      this.#liveChannel = guild.channels.cache.find(
-        (channel: GuildChannel | ThreadChannel): boolean =>
-          (channel instanceof TextChannel ||
-            channel instanceof NewsChannel ||
-            channel instanceof ThreadChannel) &&
-          channel.name === 'live'
-      ) as GuildTextChannel | undefined;
-      if (!this.#liveChannel) continue;
+      const liveChannel: GuildTextChannel | undefined =
+        guild.channels.cache.find(
+          (channel: GuildBasedChannel): boolean =>
+            (channel instanceof TextChannel ||
+              channel instanceof NewsChannel ||
+              channel instanceof ThreadChannel) &&
+            channel.name === 'live'
+        ) as GuildTextChannel | undefined;
+      if (liveChannel === undefined) continue;
 
-      this.#liveChannel.messages
-        .fetch()
-        .then(this.messagesFetched.bind(this))
-        .catch(console.error);
-    }
-  }
+      const messages: Collection<string, Message> | void =
+        await liveChannel.messages.fetch().catch(console.error);
+      if (!messages) continue;
 
-  /**
-   * Callback for the fetch request in the #live channel. Deletes all messages in #live that do not belong there
-   * @param messages The fetched messages
-   */
-  private messagesFetched(messages: Collection<Snowflake, Message>): void {
-    const embed: MessageEmbed = new MessageEmbed()
-      .setTitle('Twitch')
-      .setTimestamp(new Date());
+      const embed: MessageEmbed = new MessageEmbed()
+        .setTitle('Twitch')
+        .setTimestamp(new Date());
 
-    for (const fieldArray of this.#embed) 
-      for (const field of fieldArray)
-        embed.addField(field.name, field.value, field.inline);
-    
-    if (messages.toJSON().length === 0) {
-      DiscordClient.send(this.#liveChannel, embed);
-      return;
-    }
-    for (const message of messages.toJSON()) {
-      if (message.author.id !== DiscordClient._client.user!.id) {
-        message.delete().catch(console.error);
-        continue;
+      for (const fieldArray of this.#embed)
+        for (const field of fieldArray)
+          embed.addField(field.name, field.value, field.inline);
+
+      if (messages.toJSON().length === 0) {
+        await liveChannel.send({ embeds: [embed] }).catch(console.error);
+        return;
       }
-      message.edit({ embeds: [embed] }).catch(console.error);
+      for (const message of messages.toJSON()) {
+        if (message.author.id !== DiscordClient._client.user!.id) {
+          await message.delete().catch(console.error);
+          continue;
+        }
+        await message.edit({ embeds: [embed] }).catch(console.error);
+      }
     }
   }
 }

@@ -12,8 +12,8 @@ export default class LiveChannel {
     );
   }
 
-  private streamerFetch(streams: Stream[]): void {
-    const createEmbed = new CreateEmbed();
+  private async streamerFetch(streams: Stream[]): Promise<void> {
+    const createEmbed: CreateEmbed = new CreateEmbed();
     for (const stream of streams.slice(0, 5))
       createEmbed.addField({
         category: stream.game_name,
@@ -21,6 +21,6 @@ export default class LiveChannel {
         title: stream.title,
         viewer_count: stream.viewer_count,
       });
-    createEmbed.sendEmbed();
+    await createEmbed.sendEmbed();
   }
 }

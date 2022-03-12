@@ -1,14 +1,9 @@
-import { User } from 'discord.js';
+import { DMChannel, User } from 'discord.js';
 import DiscordClient from '../DiscordClient';
 import { Channel } from '../messages/StreamerCommand';
 import Settings from '../Settings';
 import TwitchHelper, { Stream } from './TwitchHelper';
 import Common from '../common';
-
-interface UserFetchedContext {
-  streamer?: Stream;
-  sendMessage: (user: User, stream: Stream) => void;
-}
 
 interface ChannelWithIndex {
   channel: Channel;
@@ -34,7 +29,7 @@ export default class DMManager {
     );
   }
 
-  private streamerFetched(streamers: Stream[]): void {
+  private async streamerFetched(streamers: Stream[]): Promise<void> {
     const logins: string[] = streamers.map(
       (stream: Stream): string => stream.user_login
     );
@@ -63,19 +58,33 @@ export default class DMManager {
       ] = channel;
       Settings.saveSettings();
 
-      for (const subscriber of channel.subscribers)
-        DiscordClient._client.users
+      for (const subscriber of channel.subscribers) {
+        const user: void | User = await DiscordClient._client.users
           .fetch(subscriber)
-          .then(
-            this.userFetched.bind({
-              streamer: streamers.find(
-                (stream: Stream): boolean =>
-                  stream.user_login === channel.streamer
-              ),
-              sendMessage: this.sendMessage,
-            })
-          )
           .catch(console.error);
+        if (!user) continue;
+        const streamer: Stream | undefined = streamers.find(
+          (stream: Stream): boolean => stream.user_login === channel.streamer
+        );
+        if (streamer === undefined) continue;
+        let dmChannel: DMChannel | null = user.dmChannel;
+        if (dmChannel === null) {
+          const tempDmChannel: DMChannel | void = await user
+            .createDM()
+            .catch(console.error);
+          if (!tempDmChannel) continue;
+          dmChannel = tempDmChannel;
+        }
+        await dmChannel
+          .send({
+            content: `${Common.sanitize(
+              streamer.user_name
+            )} is now live at https://twitch.tv/${
+              streamer.user_name
+            } streaming **${Common.sanitize(streamer.game_name)}**`,
+          })
+          .catch(console.error);
+      }
     }
     for (const channel of Settings.getSettings()[
       'streamer-subscriptions'
@@ -90,27 +99,6 @@ export default class DMManager {
       delete channel['started-at'];
       Settings.saveSettings();
     }
-  }
-
-  private userFetched(this: UserFetchedContext, user: User): void {
-    if (this.streamer === undefined) return;
-    if (!user.dmChannel) {
-      user
-        .createDM()
-        .then((): void => this.sendMessage(user, this.streamer!))
-        .catch(console.error);
-      return;
-    }
-    this.sendMessage(user, this.streamer);
-  }
-
-  private sendMessage(user: User, streamer: Stream): void {
-    DiscordClient.send(user.dmChannel!, {
-      content: `${Common.sanitize(
-        streamer.user_name
-      )} is now live at https://twitch.tv/${
-        streamer.user_name
-      } streaming **${Common.sanitize(streamer.game_name)}**`,
-    });
+    return Promise.resolve();
   }
 }
