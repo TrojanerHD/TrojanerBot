@@ -113,7 +113,7 @@ export default class TwitchHelper {
    * Sets the timeout for the update function
    */
   private timeout(): void {
-    setTimeout(this.update.bind(this), 5000);
+    setTimeout(this.update.bind(this), 10000);
   }
 
   /**
