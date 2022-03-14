@@ -19,7 +19,7 @@ export default class LinkResolve {
     const properties: string[] = splitMessage.split('/');
     const guild: string = properties[0];
     const urlChannel: string = properties[1];
-    const urlMessageString: Snowflake = properties[2] as Snowflake;
+    const urlMessageString: string = properties[2].substring(0, 18);
     const embed: MessageEmbed = new MessageEmbed()
       .setTitle('Quote')
       .setTimestamp(new Date())
