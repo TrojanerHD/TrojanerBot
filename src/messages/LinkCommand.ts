@@ -82,23 +82,25 @@ export default class LinkCommand extends Command {
     message: APIMessage | Message<boolean>
   ): void {
     this.#oldMessage = message as Message;
-    DiscordClient.send(
-      this.#newChannel!,
-      new MessageEmbed()
-        .setTitle(
-          `<:portal_orange:631237087022022656> -> ${this.channelName(
-            this.#newChannel
-          )}`
-        )
-        .setDescription(
-          `[From ${this.channelName(this.#oldMessage.channel)}](${
-            this.#oldMessage.url
-          })\nRequested by <@${this.#author}>`
-        )
-        .setTimestamp(new Date())
-        .setColor(16285727),
-      this.editOldMessage.bind(this)
-    );
+    this.#newChannel!.send({
+      embeds: [
+        new MessageEmbed()
+          .setTitle(
+            `<:portal_orange:631237087022022656> -> ${this.channelName(
+              this.#newChannel
+            )}`
+          )
+          .setDescription(
+            `[From ${this.channelName(this.#oldMessage.channel)}](${
+              this.#oldMessage.url
+            })\nRequested by <@${this.#author}>`
+          )
+          .setTimestamp(new Date())
+          .setColor(16285727),
+      ],
+    })
+      .then(this.editOldMessage.bind(this))
+      .catch(console.error);
   }
 
   editOldMessage(message: Message): void {

@@ -24,9 +24,9 @@ export default class TwitchHelper {
   #accessToken?: string;
   #streamerUpdate: () => string[] = () => [];
   #streamerUpdateSplit: string[][] = [];
-  #callback: (streams: Stream[]) => void;
+  #callback: (streams: Stream[]) => Promise<void>;
 
-  constructor(callback: (streams: Stream[]) => void) {
+  constructor(callback: (streams: Stream[]) => Promise<void>) {
     this.#callback = callback;
   }
 
@@ -105,15 +105,19 @@ export default class TwitchHelper {
       return 0;
     });
 
-    this.#callback(streams);
-    this.timeout();
+    this.#callback(streams)
+      .then(this.timeout.bind(this))
+      .catch((reason: any): void => {
+        console.error(reason);
+        this.timeout();
+      });
   }
 
   /**
    * Sets the timeout for the update function
    */
   private timeout(): void {
-    setTimeout(this.update.bind(this), 5000);
+    setTimeout(this.update.bind(this), 10000);
   }
 
   /**
