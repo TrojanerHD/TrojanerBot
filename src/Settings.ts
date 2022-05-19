@@ -14,6 +14,7 @@ export interface SettingsJSON {
   streamers: string[];
   logging: 'verbose' | 'errors' | 'warnings';
   'streamer-subscriptions': Channel[];
+  'express-port'?: number;
 }
 
 export default class Settings {
@@ -48,6 +49,8 @@ export default class Settings {
           for (const untypedSetting of Object.keys(newSettings)) {
             const setting: keyof SettingsJSON =
               untypedSetting as keyof SettingsJSON;
+            //TODO: Understand what is going on here and document code
+            //@ts-ignore
             Settings._settings[setting] = newSettings[setting] as any;
           }
           changed = true;

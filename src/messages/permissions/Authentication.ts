@@ -29,7 +29,9 @@ export default class Authentication {
       // Stop express app
       this.#server.close();
     });
-    this.#server = this.#app.listen(3000);
+    if (Settings.getSettings()['express-port'] !== undefined && Settings.getSettings()['express-port'] !== null && Settings.getSettings()['express-port']! > 0)
+      this.#server = this.#app.listen(Settings.getSettings()['express-port']);
+    else this.#server = this.#app.listen();
   }
 
   static getAccessToken(callback: () => void) {
