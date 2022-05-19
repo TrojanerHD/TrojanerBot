@@ -52,9 +52,8 @@ export default class MessageHandler {
       guild.commands
         .fetch()
         .then((): void => {
-          const commandPermissions: CommandPermissions = new CommandPermissions(
-            guild
-          );
+          const commandPermissions: CommandPermissions =
+            new CommandPermissions();
           guild.commands
             .set(guildCommands)
             .then(commandPermissions.onCommandsSet.bind(commandPermissions))
