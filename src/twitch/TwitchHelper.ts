@@ -1,6 +1,6 @@
 import Settings from '../Settings';
-import { Response } from 'node-fetch';
-import Common from '../common';
+import { request } from 'https';
+import { IncomingMessage } from 'http';
 
 export interface Category {
   name: string;
@@ -37,9 +37,9 @@ export default class TwitchHelper {
    * @returns The formatted url
    */
   static generateUrl(streamers: string[]): string {
-    return `https://api.twitch.tv/helix/streams?${streamers
+    return streamers
       .map((streamer: string): string => `user_login=${streamer.toLowerCase()}`)
-      .join('&')}`;
+      .join('&');
   }
   /**
    * Fetches the current state of streams
@@ -65,43 +65,10 @@ export default class TwitchHelper {
    */
   private async channelRequest(): Promise<void> {
     const streams: Stream[] = [];
-    for (const streamers of this.#streamerUpdateSplit)
-      try {
-        const fetch: void | typeof import('node-fetch') = await Common.fetch().catch(console.error);
-        if (fetch === undefined) return;
-        const res: Response = await fetch.default(
-          TwitchHelper.generateUrl(streamers),
-          {
-            headers: {
-              'Client-ID': Settings.getSettings()['twitch-id'],
-              Authorization: `Bearer ${this.#accessToken}`,
-            },
-          }
-        );
-
-        const stream: StreamData = (await res.json()) as StreamData;
-        if (!stream) {
-          console.error(
-            'Error in TwitchHelper.ts on line 78:\nstream is undefined'
-          );
-          this.timeout();
-          return;
-        }
-        if ('error' in streams) {
-          console.error(
-            `Error in TwitchHelper.ts on line 85:\n${JSON.stringify(
-              streams,
-              null,
-              2
-            )}`
-          );
-          this.timeout();
-          return;
-        }
-        streams.push.apply(streams, stream.data);
-      } catch (e: any) {
-        console.error(e);
-      }
+    for (const streamers of this.#streamerUpdateSplit) {
+      const stream: StreamData = await this.requestWrapper(streamers);
+      streams.push.apply(streams, stream.data);
+    }
 
     streams.sort((a: Stream, b: Stream): number => {
       for (const streamer of Settings.getSettings().streamers) {
@@ -119,6 +86,32 @@ export default class TwitchHelper {
       });
   }
 
+  private async requestWrapper(streamers: string[]): Promise<StreamData> {
+    return new Promise(
+      (
+        resolve: (data: StreamData) => void,
+        reject: (e: Error) => void
+      ): void => {
+        request(
+          {
+            host: 'api.twitch.tv',
+            path: `/helix/streams?${TwitchHelper.generateUrl(streamers)}`,
+            headers: {
+              'Client-ID': Settings.getSettings()['twitch-id'],
+              Authorization: `Bearer ${this.#accessToken}`,
+            },
+          },
+          (res: IncomingMessage): void => {
+            let data: string = '';
+            res.on('error', reject);
+            res.on('data', (chunk: Buffer): string => (data += chunk));
+            res.on('end', () => resolve(JSON.parse(data)));
+          }
+        ).end(TwitchHelper.generateUrl(streamers));
+      }
+    );
+  }
+
   /**
    * Sets the timeout for the update function
    */
@@ -131,23 +124,25 @@ export default class TwitchHelper {
    * @param callback The function to call after the access token was obtained
    */
   private async accessTokenRequest(callback: () => void): Promise<void> {
-    const fetch: void | typeof import('node-fetch') =
-      await Common.fetch().catch(console.error);
-    if (fetch === undefined) return;
-    fetch
-      .default(
-        `https://id.twitch.tv/oauth2/token?client_id=${
-          Settings.getSettings()['twitch-id']
-        }&client_secret=${
-          process.env.TWITCH_TOKEN
-        }&grant_type=client_credentials`,
-        { method: 'POST' }
-      )
-      .then((res: Response) => res.json())
-      .catch(console.error)
-      .then((data: any) => {
-        this.#accessToken = data.access_token;
-        callback();
-      });
+    const params = new URLSearchParams();
+    params.append('client_id', Settings.getSettings()['twitch-id']);
+    params.append('client_secret', process.env.TWITCH_TOKEN!);
+    params.append('grant_type', 'client_credentials');
+    request(
+      {
+        host: 'id.twitch.tv',
+        path: `/oauth2/token`,
+        method: 'POST',
+      },
+      (res: IncomingMessage) => {
+        let data: string = '';
+        res.on('error', console.error);
+        res.on('data', (chunk: Buffer): string => (data += chunk));
+        res.on('end', () => {
+          this.#accessToken = JSON.parse(data).access_token;
+          callback();
+        });
+      }
+    ).end(params.toString());
   }
 }
