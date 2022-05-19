@@ -21,7 +21,7 @@ export default class Authentication {
 
   constructor(callback: () => void) {
     console.log(
-      `Warning: To update the command's permissions, please authenticate the application at https://discord.com/oauth2/authorize?client_id=${DiscordClient._client.application?.id}&scope=applications.commands.permissions.update&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%3A3000`
+      `Warning: To update the command's permissions, please authenticate the application at https://discord.com/oauth2/authorize?client_id=${DiscordClient._client.application?.id}&scope=applications.commands.permissions.update&response_type=code&redirect_uri=<redirect_uri>`
     );
     this.#app.get('/discord_callback', async (req, res): Promise<void> => {
       Authentication.makeRequest(callback, req.query.code as string);
