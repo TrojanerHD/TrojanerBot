@@ -13,7 +13,7 @@ import StreamerCommand from './StreamerCommand';
 import DeployCommand from './DeployCommand';
 import LinkResolve from './LinkResolve';
 import Command from './Command';
-import CommandPermissions from './CommandPermissions';
+import CommandPermissions from './permissions/CommandPermissions';
 import Settings from '../Settings';
 
 export type ApplicationCommandType = ApplicationCommand<{
