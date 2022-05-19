@@ -36,6 +36,7 @@ Key | Type | Description | Default
 `streamers` | string[] | The bot will show whenever the here specified channels are live in a `#live` channel in Discord if the Discord has this channel. If you do not want to use this feature, set the value to `[]` | `[]`
 `streamer-subscriptions` | {streamer: string; subscribers: string[]} | The bot will store all subscriptions to Twitch streamers when somebody uses `/streamer` to subscribe to a streamer. Usually you want to leave it as it is | `[]`
 `logging` | "errors" \| "warnings" \| "verbose" | The log-level. "warnings" will inform if, for example, twitch id was set but a token was not provided | `"warnings"`
+`express-port` | number \| undefined | The port the express app will listen on | `undefined`
 
 ### Execution
 ```sh
