@@ -5,6 +5,7 @@ import { request, RequestOptions } from 'https';
 import { IncomingMessage, Server } from 'http';
 import fs from 'fs';
 import Common from '../../common';
+import Settings from '../../Settings';
 
 interface TokenResponse {
   access_token: string;
