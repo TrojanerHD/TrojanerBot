@@ -11,9 +11,9 @@ import {
   CommandInteraction,
   DMChannel,
   PartialDMChannel,
+  GuildCacheMessage,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
-import { APIMessage } from 'discord-api-types';
 
 export default class LinkCommand extends Command {
   deploy: ChatInputApplicationCommandData = {
@@ -79,7 +79,7 @@ export default class LinkCommand extends Command {
   }
 
   private sendMessageToNewChannel(
-    message: APIMessage | Message<boolean>
+    message: Message<boolean> | GuildCacheMessage<'raw'>
   ): void {
     this.#oldMessage = message as Message;
     this.#newChannel!.send({

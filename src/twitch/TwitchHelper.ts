@@ -1,5 +1,6 @@
-import fetch, { Response } from 'node-fetch';
 import Settings from '../Settings';
+import { Response } from 'node-fetch';
+import Common from '../common';
 
 export interface Category {
   name: string;
@@ -66,14 +67,19 @@ export default class TwitchHelper {
     const streams: Stream[] = [];
     for (const streamers of this.#streamerUpdateSplit)
       try {
-        const res: Response = await fetch(TwitchHelper.generateUrl(streamers), {
-          headers: {
-            'Client-ID': Settings.getSettings()['twitch-id'],
-            Authorization: `Bearer ${this.#accessToken}`,
-          },
-        });
+        const fetch: void | typeof import('node-fetch') = await Common.fetch().catch(console.error);
+        if (fetch === undefined) return;
+        const res: Response = await fetch.default(
+          TwitchHelper.generateUrl(streamers),
+          {
+            headers: {
+              'Client-ID': Settings.getSettings()['twitch-id'],
+              Authorization: `Bearer ${this.#accessToken}`,
+            },
+          }
+        );
 
-        const stream: StreamData = await res.json();
+        const stream: StreamData = (await res.json()) as StreamData;
         if (!stream) {
           console.error(
             'Error in TwitchHelper.ts on line 78:\nstream is undefined'
@@ -124,15 +130,19 @@ export default class TwitchHelper {
    * Creates a request to get an access token and calls a function afterward
    * @param callback The function to call after the access token was obtained
    */
-  private accessTokenRequest(callback: () => void): void {
-    fetch(
-      `https://id.twitch.tv/oauth2/token?client_id=${
-        Settings.getSettings()['twitch-id']
-      }&client_secret=${
-        process.env.TWITCH_TOKEN
-      }&grant_type=client_credentials`,
-      { method: 'POST' }
-    )
+  private async accessTokenRequest(callback: () => void): Promise<void> {
+    const fetch: void | typeof import('node-fetch') =
+      await Common.fetch().catch(console.error);
+    if (fetch === undefined) return;
+    fetch
+      .default(
+        `https://id.twitch.tv/oauth2/token?client_id=${
+          Settings.getSettings()['twitch-id']
+        }&client_secret=${
+          process.env.TWITCH_TOKEN
+        }&grant_type=client_credentials`,
+        { method: 'POST' }
+      )
       .then((res: Response) => res.json())
       .catch(console.error)
       .then((data: any) => {
