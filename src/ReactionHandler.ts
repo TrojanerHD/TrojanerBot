@@ -1,4 +1,3 @@
-import { APIGuildMember } from 'discord-api-types';
 import {
   ButtonInteraction,
   GuildMember,
@@ -60,7 +59,9 @@ export default class ReactionHandler {
             .reply({
               //Create a reply
               content: 'Select your roles', // Reply content
-              components: this.createComponent(interaction.member),
+              components: this.createComponent(
+                interaction.member as GuildMember | null
+              ),
               ephemeral: true,
             })
             .catch(console.error);
@@ -73,9 +74,7 @@ export default class ReactionHandler {
       if (command.deploy.name === interaction.commandName)
         command.handleCommand(interaction.options.data, interaction);
   }
-  private createComponent(
-    member: GuildMember | APIGuildMember | null
-  ): MessageActionRow[] {
+  private createComponent(member: GuildMember | null): MessageActionRow[] {
     const messageActionRows: MessageActionRow[] = [];
     let currentMessageActionRow: MessageActionRow;
     for (let i = 0; i < Settings.getSettings().roles.length / 5; i++) {
@@ -108,7 +107,9 @@ export default class ReactionHandler {
     interaction
       .editReply({
         content: 'Select your roles',
-        components: this.createComponent(interaction.member),
+        components: this.createComponent(
+          interaction.member as GuildMember | null
+        ),
       })
       .catch(console.error);
   }
