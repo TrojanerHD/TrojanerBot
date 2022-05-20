@@ -2,10 +2,10 @@ import TwitchHelper, { Stream } from './TwitchHelper';
 import CreateEmbed from './CreateEmbed';
 import Settings from '../Settings';
 
+/**
+ * Handles the #live channel
+ */
 export default class LiveChannel {
-  /**
-   * Handles the #live channel
-   */
   constructor() {
     new TwitchHelper(this.streamerFetch.bind(this)).update(
       (): string[] => Settings.getSettings().streamers

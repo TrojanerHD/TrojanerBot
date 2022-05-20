@@ -1,4 +1,10 @@
-import { DMChannel, Message, MessageEditOptions, MessageOptions, User } from 'discord.js';
+import {
+  DMChannel,
+  Message,
+  MessageEditOptions,
+  MessageOptions,
+  User,
+} from 'discord.js';
 import DiscordClient from '../DiscordClient';
 import { Channel } from '../messages/StreamerCommand';
 import Settings from '../Settings';
@@ -127,7 +133,9 @@ export default class DMManager {
     return Promise.resolve();
   }
 
-  private static generateMessage(streamer: Stream): MessageOptions & MessageEditOptions {
+  private static generateMessage(
+    streamer: Stream
+  ): MessageOptions & MessageEditOptions {
     return {
       content: `${Common.sanitize(
         streamer.user_name

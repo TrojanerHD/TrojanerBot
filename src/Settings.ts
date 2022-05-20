@@ -49,13 +49,13 @@ export default class Settings {
           for (const untypedSetting of Object.keys(newSettings)) {
             const setting: keyof SettingsJSON =
               untypedSetting as keyof SettingsJSON;
-            //TODO: Understand what is going on here and document code
-            //@ts-ignore
+            // TODO: Understand what is going on here and document code
+            // @ts-ignore
             Settings._settings[setting] = newSettings[setting] as any;
           }
           changed = true;
         }
-        //TODO: This is a hard-coded checker to see if every streamer has a sent boolean because there was a version where it was not there. Very hacky
+        // TODO: This is a hard-coded checker to see if every streamer has a sent boolean because there was a version where it was not there. Very hacky
         if (
           Settings._settings['streamer-subscriptions'].some(
             (key: Channel): boolean => key.sent === undefined

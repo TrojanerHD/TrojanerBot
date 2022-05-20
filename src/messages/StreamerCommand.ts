@@ -24,7 +24,8 @@ export default class StreamerCommand extends Command {
       {
         type: 1,
         name: 'manage',
-        description: 'Lets you subscribe to Twitch streamers and get a DM whenever they go live',
+        description:
+          'Lets you subscribe to Twitch streamers and get a DM whenever they go live',
         options: [
           {
             type: 3,
@@ -79,18 +80,22 @@ export default class StreamerCommand extends Command {
           streamer.subscribers.includes(interaction.user.id)
       );
       if (!streamerList || streamerList.length === 0) {
-        interaction.reply({
-          content: 'You have not subscribed to any streamer',
-          ephemeral: true,
-        }).catch(console.error);
+        interaction
+          .reply({
+            content: 'You have not subscribed to any streamer',
+            ephemeral: true,
+          })
+          .catch(console.error);
         return;
       }
-      interaction.reply({
-        content: `You have subscribed to ${streamerList
-          .map((value: Channel): string => Common.sanitize(value.streamer))
-          .join(', ')}`,
-        ephemeral: true,
-      }).catch(console.error);
+      interaction
+        .reply({
+          content: `You have subscribed to ${streamerList
+            .map((value: Channel): string => Common.sanitize(value.streamer))
+            .join(', ')}`,
+          ephemeral: true,
+        })
+        .catch(console.error);
       return;
     }
     const streamers: string[] = (args[0].options![1].value as string)
@@ -110,7 +115,7 @@ export default class StreamerCommand extends Command {
         content = 'Option not available, something went wrong';
         break;
     }
-    interaction.reply({content, ephemeral: true}).catch(console.error);
+    interaction.reply({ content, ephemeral: true }).catch(console.error);
   }
 
   private findStreamChannel(streamer: string): Channel | undefined {
@@ -159,7 +164,8 @@ export default class StreamerCommand extends Command {
     );
     if (streamChannel.subscribers.length === 0)
       StreamerCommand._streamers = StreamerCommand._streamers.filter(
-        (channel: Channel): boolean => channel.streamer !== streamChannel?.streamer
+        (channel: Channel): boolean =>
+          channel.streamer !== streamChannel?.streamer
       );
     this.saveStreamers();
     return `${Common.sanitize(
