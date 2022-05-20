@@ -4,8 +4,7 @@ import {
   Role,
   Snowflake,
 } from 'discord.js';
-import { IncomingMessage } from 'http';
-import { request } from 'https';
+import { requestWrapper as request } from '../../common';
 import Common from '../../common';
 import DiscordClient from '../../DiscordClient';
 import Settings from '../../Settings';
@@ -60,10 +59,8 @@ export default class CommandPermissions {
             'Content-Type': 'application/json',
           },
         },
-        (res: IncomingMessage): void => {
-          res.on('error', console.error);
-        }
-      ).end(JSON.stringify(body));
+        JSON.stringify(body)
+      ).catch(console.error);
     }
   }
 }

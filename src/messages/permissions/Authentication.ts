@@ -1,7 +1,8 @@
 import express from 'express';
 import DiscordClient from '../../DiscordClient';
 import { URLSearchParams } from 'url';
-import { request, RequestOptions } from 'https';
+import { requestWrapper as request } from '../../common';
+import { RequestOptions } from 'https';
 import { IncomingMessage, Server } from 'http';
 import fs from 'fs';
 import Common from '../../common';
@@ -23,13 +24,15 @@ export default class Authentication {
     console.log(
       `Warning: To update the command's permissions, please authenticate the application at https://discord.com/oauth2/authorize?client_id=${DiscordClient._client.application?.id}&scope=applications.commands.permissions.update&response_type=code&redirect_uri=<redirect_uri>`
     );
-    this.#app.get('/discord_callback', async (req, res): Promise<void> => {
-      Authentication.makeRequest(callback, {
+    this.#app.get('/discord_callback', (req, res): void => {
+      Authentication.makeRequest({
         code: req.query.code as string,
         redirect: `${req.protocol}://${
           req.headers.host as string
         }/discord_callback`,
-      });
+      })
+        .then(callback)
+        .catch(console.error);
       res.send('Successfully authorized');
 
       // Stop express app
@@ -44,14 +47,19 @@ export default class Authentication {
     else this.#server = this.#app.listen();
   }
 
-  static getAccessToken(callback: () => void) {
-    this.makeRequest(callback);
+  static getAccessToken(callback: () => void): void {
+    this.makeRequest()
+      .then(callback)
+      .catch((err: Error): void => {
+        if (err.message !== 'invalid_grant') throw new Error(err.message);
+        new Authentication(callback);
+      });
   }
 
-  private static makeRequest(
-    callback: () => void,
-    data?: { code: string; redirect: string }
-  ): void {
+  private static async makeRequest(data?: {
+    code: string;
+    redirect: string;
+  }): Promise<void> {
     const params = new URLSearchParams();
     params.append('client_id', DiscordClient._client.application!.id);
     params.append('client_secret', process.env.OAUTH_TOKEN!);
@@ -78,43 +86,34 @@ export default class Authentication {
         `${DiscordClient._client.application?.id}:${process.env.DISCORD_TOKEN}`
       ).toString('base64')}`;
 
-    request(reqObj, (res: IncomingMessage) => {
-      let data: string = '';
-      res.on('data', (chunk: Buffer): string => (data += chunk.toString()));
-      res.on('end', (): void => {
-        const json: TokenResponse | { error: string } = JSON.parse(data);
-        if ('error' in json) {
-          if (json.error === 'invalid_grant' && data === undefined) {
-            process.env.DISCORD_REFRESH_TOKEN = undefined;
-            // Delete line of .env that says DISCORD_REFRESH_TOKEN
-            fs.writeFileSync(
-              '.env',
-              fs
-                .readFileSync('.env', 'utf8')
-                .replace(/\n?DISCORD_REFRESH_TOKEN=.*/, '')
-            );
-            new Authentication(callback);
-            return;
-          }
-          throw new Error(`Authentication error: ${JSON.stringify(json)}`);
+    const req: string = await request(reqObj, params.toString());
+    const json: TokenResponse | { error: string } = JSON.parse(req);
+    if ('error' in json) {
+      if (json.error === 'invalid_grant' && data === undefined) {
+        process.env.DISCORD_REFRESH_TOKEN = undefined;
+        // Delete line of .env that says DISCORD_REFRESH_TOKEN
+        fs.writeFileSync(
+          '.env',
+          fs
+            .readFileSync('.env', 'utf8')
+            .replace(/\n?DISCORD_REFRESH_TOKEN=.*/, '')
+        );
+      }
+      return Promise.reject(new Error(json.error));
+    }
+    if (process.env.DISCORD_REFRESH_TOKEN === undefined) {
+      fs.appendFile(
+        './.env',
+        `\nDISCORD_REFRESH_TOKEN=${json.refresh_token}`,
+        (err: NodeJS.ErrnoException | null): void => {
+          if (err) console.error(err);
         }
-        if (process.env.DISCORD_REFRESH_TOKEN === undefined) {
-          fs.appendFile(
-            './.env',
-            `\nDISCORD_REFRESH_TOKEN=${json.refresh_token}`,
-            (err: NodeJS.ErrnoException | null): void => {
-              if (err) console.error(err);
-            }
-          );
-          process.env.DISCORD_REFRESH_TOKEN = json.refresh_token;
-        }
-        Common._discordAccessToken = {
-          access_token: json.access_token,
-          expires_at: Date.now() + json.expires_in * 1000,
-        };
-        callback();
-      });
-      res.on('error', console.error);
-    }).end(params.toString());
+      );
+      process.env.DISCORD_REFRESH_TOKEN = json.refresh_token;
+    }
+    Common._discordAccessToken = {
+      access_token: json.access_token,
+      expires_at: Date.now() + json.expires_in * 1000,
+    };
   }
 }
