@@ -27,7 +27,7 @@ export default class CommandPermissions {
     }
   }
 
-  private setPermissions() {
+  private setPermissions(): void {
     for (const command of this.#commands!.toJSON().filter(
       (command: ApplicationCommandType): boolean => !command.defaultPermission
     )) {
