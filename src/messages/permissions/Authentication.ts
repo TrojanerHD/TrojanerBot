@@ -16,6 +16,9 @@ interface TokenResponse {
   refresh_token: string;
 }
 
+/**
+ * Creates an express app for the user to authorize the bot to allow changing command permissions
+ */
 export default class Authentication {
   #app: Express = express();
   #server: Server;
@@ -45,15 +48,22 @@ export default class Authentication {
     else this.#server = this.#app.listen();
   }
 
-  static getAccessToken(callback: () => void): void {
-    this.makeRequest()
-      .then(callback)
-      .catch((err: Error): void => {
-        if (err.message !== 'invalid_grant') throw new Error(err.message);
-        new Authentication(callback);
-      });
+  /**
+   * Get a new access token if a refresh token exists
+   * @returns The access token request promise
+   */
+  static getAccessToken(): Promise<void> {
+    if (process.env.DISCORD_REFRESH_TOKEN === undefined)
+      throw new Error('No refresh token');
+    return this.makeRequest();
   }
 
+  /**
+   * Creates a request to get a new access token, either via a refresh token or a code
+   * @param data The code and redirect URI. The redirect uri must match the URI with which the code request was made. If undefined, the function will use the refresh token
+   * @returns A promise that resolves after the request is made
+   * @example Authentication.makeRequest({ code: '<code>', redirect: 'http://localhost:3000' })
+   */
   private static async makeRequest(data?: {
     code: string;
     redirect: string;
@@ -61,6 +71,7 @@ export default class Authentication {
     const params = new URLSearchParams();
     params.append('client_id', DiscordClient._client.application!.id);
     params.append('client_secret', process.env.OAUTH_TOKEN!);
+    // When data is set, the request is made with a code
     if (data !== undefined) {
       params.append('grant_type', 'authorization_code');
       params.append('code', data.code);
@@ -79,6 +90,7 @@ export default class Authentication {
       },
     };
 
+    // Authorization is not required for the request when using the refresh_token
     if (data !== undefined)
       reqObj.headers!.Authorization = `Basic ${Buffer.from(
         `${DiscordClient._client.application?.id}:${process.env.DISCORD_TOKEN}`
@@ -87,6 +99,7 @@ export default class Authentication {
     const req: string = await request(reqObj, params.toString());
     const json: TokenResponse | { error: string } = JSON.parse(req);
     if ('error' in json) {
+      // If the refresh token is invalid, delete it and reject the promise
       if (json.error === 'invalid_grant' && data === undefined) {
         process.env.DISCORD_REFRESH_TOKEN = undefined;
         // Delete line of .env that says DISCORD_REFRESH_TOKEN
@@ -99,6 +112,7 @@ export default class Authentication {
       }
       return Promise.reject(new Error(json.error));
     }
+    // If the refresh token is not set, add it to the .env file
     if (process.env.DISCORD_REFRESH_TOKEN === undefined) {
       fs.appendFile(
         './.env',
@@ -107,8 +121,10 @@ export default class Authentication {
           if (err) console.error(err);
         }
       );
+      // Also add the refresh token to the process.env for the current runtime
       process.env.DISCORD_REFRESH_TOKEN = json.refresh_token;
     }
+    // Set the access token
     Common._discordAccessToken = {
       access_token: json.access_token,
       expires_at: Date.now() + json.expires_in * 1000,

@@ -11,22 +11,36 @@ import Settings from '../../Settings';
 import { ApplicationCommandType } from '../MessageHandler';
 import Authentication from './Authentication';
 
+/**
+ * Set permissions for commands
+ */
 export default class CommandPermissions {
   #commands?: Collection<string, ApplicationCommandType>;
 
+  /**
+   * Is to be called after commands have been set
+   * @param commands The commands to set permissions for
+   */
   onCommandsSet(commands: Collection<Snowflake, ApplicationCommandType>): void {
     this.#commands = commands;
     if (process.env.DISCORD_REFRESH_TOKEN !== undefined) {
       if (!Common.accessTokenValid())
-        Authentication.getAccessToken(this.setPermissions.bind(this));
+        Authentication.getAccessToken()
+          .then(this.setPermissions.bind(this))
+          .catch((err: Error): void => {
+            if (err.message !== 'invalid_grant') throw new Error(err.message);
+            new Authentication(this.setPermissions.bind(this));
+          });
       else this.setPermissions();
       return;
     }
-    if (Settings.getSettings()['logging'] !== 'errors') {
+    if (Settings.getSettings()['logging'] !== 'errors')
       new Authentication(this.setPermissions.bind(this));
-    }
   }
 
+  /**
+   * Set permissions for commands, is used as callback for when the user has been authorized and an access token is available
+   */
   private setPermissions(): void {
     for (const command of this.#commands!.toJSON().filter(
       (command: ApplicationCommandType): boolean => !command.defaultPermission
