@@ -19,6 +19,7 @@ import Settings from '../Settings';
 export type ApplicationCommandType = ApplicationCommand<{
   guild: GuildResolvable;
 }>;
+
 export interface CommandHandler {
   command: string | string[];
   handler: Command;

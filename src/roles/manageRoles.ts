@@ -8,7 +8,6 @@ import {
 import DiscordClient from '../DiscordClient';
 import { GuildTextChannel } from '../messages/Command';
 
-
 export default async function manageRoles(
   rolesChannel: GuildTextChannel,
   newEmbed: MessageEmbed

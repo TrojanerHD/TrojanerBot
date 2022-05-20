@@ -66,6 +66,7 @@ export default class ReactionHandler {
       if (command.deploy.name === interaction.commandName)
         command.handleCommand(interaction.options.data, interaction);
   }
+
   private createComponent(member: GuildMember | null): MessageActionRow[] {
     const messageActionRows: MessageActionRow[] = [];
     let currentMessageActionRow: MessageActionRow;
