@@ -24,12 +24,10 @@ export default class Authentication {
     console.log(
       `Warning: To update the command's permissions, please authenticate the application at https://discord.com/oauth2/authorize?client_id=${DiscordClient._client.application?.id}&scope=applications.commands.permissions.update&response_type=code&redirect_uri=<redirect_uri>`
     );
-    this.#app.get('/discord_callback', (req, res): void => {
+    this.#app.get('/', (req, res): void => {
       Authentication.makeRequest({
         code: req.query.code as string,
-        redirect: `${req.protocol}://${
-          req.headers.host as string
-        }/discord_callback`,
+        redirect: `${req.protocol}://${req.headers.host as string}${req.path}`,
       })
         .then(callback)
         .catch(console.error);
