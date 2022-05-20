@@ -4,7 +4,6 @@ import {
   GuildChannel,
   MessageEmbed,
   ThreadChannel,
-  Snowflake,
   BaseGuildTextChannel,
   NewsChannel,
 } from 'discord.js';

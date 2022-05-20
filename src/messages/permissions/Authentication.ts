@@ -3,7 +3,7 @@ import DiscordClient from '../../DiscordClient';
 import { URLSearchParams } from 'url';
 import { requestWrapper as request } from '../../common';
 import { RequestOptions } from 'https';
-import { IncomingMessage, Server } from 'http';
+import { Server } from 'http';
 import fs from 'fs';
 import Common from '../../common';
 import Settings from '../../Settings';
