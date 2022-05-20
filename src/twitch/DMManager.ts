@@ -11,11 +11,6 @@ import Settings from '../Settings';
 import TwitchHelper, { Stream } from './TwitchHelper';
 import Common from '../common';
 
-interface ChannelWithIndex {
-  channel: Channel;
-  index: number;
-}
-
 interface StreamerMessage {
   message: Message;
   streamer: string;
@@ -47,20 +42,15 @@ export default class DMManager {
     const logins: string[] = streamers.map(
       (stream: Stream): string => stream.user_login
     );
-    const dmPendingChannels: ChannelWithIndex[] = Settings.getSettings()
-      ['streamer-subscriptions'].map(
-        (channel: Channel, index: number): ChannelWithIndex => ({
-          channel,
-          index,
-        })
-      )
-      .filter(
-        ({ channel }: ChannelWithIndex): boolean =>
-          logins.includes(channel.streamer) && !channel.sent
-      );
+    const dmPendingChannels: [number, Channel][] = [
+      ...Settings.getSettings()['streamer-subscriptions'].entries(),
+    ].filter(
+      ({ 1: channel }: [number, Channel]): boolean =>
+        logins.includes(channel.streamer) && !channel.sent
+    );
 
     for (let i: number = 0; i < dmPendingChannels.length; ++i) {
-      const channel = dmPendingChannels[i].channel;
+      const channel: Channel = dmPendingChannels[i][1];
 
       channel.sent = true;
       channel['started-at'] = streamers.find(
@@ -68,7 +58,7 @@ export default class DMManager {
       )!.started_at;
 
       Settings.getSettings()['streamer-subscriptions'][
-        dmPendingChannels[i].index
+        dmPendingChannels[i][0]
       ] = channel;
       Settings.saveSettings();
 
