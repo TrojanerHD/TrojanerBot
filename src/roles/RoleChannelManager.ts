@@ -32,10 +32,10 @@ export default class RoleManager {
 
   private generateEmbed(): MessageEmbed {
     const roles: RolesField[] = Settings.getSettings().roles;
-    const errorRole: RolesField | undefined = roles.find(
+    const errorRole: boolean = roles.some(
       (role: RolesField): boolean => !role.emoji || !role.name
     );
-    if (!!errorRole)
+    if (errorRole)
       return new MessageEmbed()
         .setTimestamp(new Date())
         .setTitle('Role Selector')

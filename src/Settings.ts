@@ -42,7 +42,7 @@ export default class Settings {
       else {
         let changed: boolean = false;
         if (
-          Object.keys(Settings._settings).find(
+          Object.keys(Settings._settings).some(
             (key: string): boolean => !(key in newSettings)
           )
         ) {
@@ -57,7 +57,7 @@ export default class Settings {
         }
         //TODO: This is a hard-coded checker to see if every streamer has a sent boolean because there was a version where it was not there. Very hacky
         if (
-          Settings._settings['streamer-subscriptions'].find(
+          Settings._settings['streamer-subscriptions'].some(
             (key: Channel): boolean => key.sent === undefined
           )
         ) {
@@ -71,7 +71,7 @@ export default class Settings {
         }
         // Backwards compatibility: If users added streamers with invalid characters in previous versions of the bot, they get deleted
         if (
-          Settings._settings['streamer-subscriptions'].find(
+          Settings._settings['streamer-subscriptions'].some(
             (channel: Channel) =>
               !channel.streamer.match(DMManager.validNameRegex)
           )

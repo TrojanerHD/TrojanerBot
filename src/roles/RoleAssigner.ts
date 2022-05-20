@@ -31,7 +31,7 @@ export default class RoleAssigner {
 
   private guildRoleEstablished(role: Role) {
     if (
-      !this.#member.roles.cache.find(
+      !this.#member.roles.cache.some(
         (memberRole: Role) => memberRole.id === role.id
       )
     )

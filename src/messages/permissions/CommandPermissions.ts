@@ -33,11 +33,10 @@ export default class CommandPermissions {
     )) {
       const body: { permissions: ApplicationCommandPermissionData[] } = {
         permissions: Settings.getSettings()
-          ['permission-roles'].filter(
-            (roleName: string): boolean =>
-              command.guild!.roles.cache.find(
-                (role: Role): boolean => role.name === roleName
-              ) !== undefined
+          ['permission-roles'].filter((roleName: string): boolean =>
+            command.guild!.roles.cache.some(
+              (role: Role): boolean => role.name === roleName
+            )
           )
           .map(
             (roleName: string): ApplicationCommandPermissionData => ({

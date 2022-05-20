@@ -73,7 +73,7 @@ export default class DiscordClient {
         guild.channels.cache.filter(
           (channel: GuildChannel | ThreadChannel) =>
             channel instanceof ThreadChannel &&
-            !channel.members.cache.find(
+            !channel.members.cache.some(
               (member: ThreadMember) =>
                 member.user!.id === DiscordClient._client.user!.id
             )

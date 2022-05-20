@@ -40,21 +40,13 @@ export default class ReactionHandler {
       }
       switch (interaction.customId) {
         case 'select':
-          if (
-            !this.#roleSelect.find(
-              (roleInteraction: ButtonInteraction, index: number): boolean => {
-                if (
-                  (roleInteraction.member as GuildMember).id ===
-                  (interaction.member as GuildMember).id
-                ) {
-                  this.#roleSelect[index] = interaction;
-                  return true;
-                }
-                return false;
-              }
-            )
-          )
-            this.#roleSelect.push(interaction);
+          const roleSelectIndex: number = this.#roleSelect.findIndex(
+            (roleInteraction: ButtonInteraction): boolean =>
+              (roleInteraction.member as GuildMember).id ===
+              (interaction.member as GuildMember).id
+          );
+          if (roleSelectIndex === -1) this.#roleSelect.push(interaction);
+          else this.#roleSelect[roleSelectIndex] = interaction;
           interaction
             .reply({
               //Create a reply
@@ -88,7 +80,7 @@ export default class ReactionHandler {
             (role: RolesField): MessageActionRowComponentResolvable => ({
               customId: role.name.toLowerCase(),
               label: role.name,
-              style: !(member?.roles as GuildMemberRoleManager).cache.find(
+              style: !(member?.roles as GuildMemberRoleManager).cache.some(
                 (memberRole: Role): boolean => memberRole.name === role.name
               )
                 ? 'SECONDARY' //If member does not have the role

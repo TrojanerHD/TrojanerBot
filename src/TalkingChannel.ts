@@ -86,11 +86,10 @@ export default class TalkingChannel {
     const current: number = this.channelNameParser(channel)!;
     if (current === 1) return;
     const guild: Guild = channel.guild;
-    const previousChannel: GuildChannel | ThreadChannel | undefined =
-      guild.channels.cache.find(
-        (channel: GuildChannel | ThreadChannel): boolean =>
-          channel.name === `Talking ${current - 1}`
-      );
+    const previousChannel: boolean = guild.channels.cache.some(
+      (channel: GuildChannel | ThreadChannel): boolean =>
+        channel.name === `Talking ${current - 1}`
+    );
     if (previousChannel) return;
     channel
       .setName(`Talking ${current - 1}`)
