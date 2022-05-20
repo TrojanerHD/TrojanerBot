@@ -129,7 +129,7 @@ export default class TalkingChannel {
   ): number | undefined {
     if (!channel.name.startsWith('Talking')) return;
     if (channel.name === 'Talking') return 0;
-    return +channel.name.split(' ')[1];
+    return Number(channel.name.split(' ')[1]);
   }
 
   /**
