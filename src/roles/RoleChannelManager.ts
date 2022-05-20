@@ -50,9 +50,7 @@ export default class RoleChannelManager {
         Settings.getSettings().roles.map(
           (role: RolesField): EmbedFieldData => ({
             name: role.name,
-            value: role.description
-              ? role.description
-              : '*No description provided*',
+            value: role.description || '*No description provided*',
           })
         )
       );

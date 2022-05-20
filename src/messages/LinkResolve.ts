@@ -47,10 +47,8 @@ export default class LinkResolve {
       .then((urlMessage: Message): void => {
         if (urlMessage.content.length > 1024)
           urlMessage.content = `${urlMessage.content.substring(0, 1023)}…`;
-        const content =
-          urlMessage.content !== ''
-            ? urlMessage.content
-            : 'Message content not available';
+        const content: string =
+          urlMessage.content || 'Message content not available';
         DiscordClient.send(
           channel,
           embed
