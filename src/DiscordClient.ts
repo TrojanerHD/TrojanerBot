@@ -55,15 +55,12 @@ export default class DiscordClient {
       });
   }
 
-  private onReady(): void {
+  private async onReady(): Promise<void> {
     this.joinAllThreads();
     new TalkingChannel();
     if (!DiscordClient._client.application?.owner)
-      DiscordClient._client.application
-        ?.fetch()
-        .then(MessageHandler.addCommands)
-        .catch(console.error);
-    else MessageHandler.addCommands();
+      await DiscordClient._client.application?.fetch().catch(console.error);
+    MessageHandler.addCommands();
     if (Settings.getSettings().roles.length !== 0) new RoleChannelManager();
   }
 

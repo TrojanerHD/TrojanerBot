@@ -8,10 +8,10 @@ import {
 } from 'discord.js';
 import Settings, { RolesField } from '../Settings';
 import DiscordClient from '../DiscordClient';
-import GuildRolesManager from './GuildRolesManager';
+import manageRoles from './manageRoles';
 import { GuildTextChannel } from '../messages/Command';
 
-export default class RoleManager {
+export default class RoleChannelManager {
   constructor() {
     for (const guild of DiscordClient._client.guilds.cache.toJSON()) {
       const rolesChannel: GuildTextChannel | undefined =
@@ -26,7 +26,7 @@ export default class RoleManager {
 
       const embed: MessageEmbed = this.generateEmbed();
 
-      new GuildRolesManager(rolesChannel, embed);
+      manageRoles(rolesChannel, embed);
     }
   }
 

@@ -8,7 +8,7 @@ import {
   Role,
 } from 'discord.js';
 import DiscordClient from './DiscordClient';
-import RoleAssigner from './roles/RoleAssigner';
+import assignRoles from './roles/assignRoles';
 import MessageHandler from './messages/MessageHandler';
 import Settings, { RolesField } from './Settings';
 
@@ -35,7 +35,7 @@ export default class ReactionHandler {
             (roleInteraction.member as GuildMember).id ===
             (interaction.member as GuildMember).id
         )!;
-        new RoleAssigner(roleSelect, settingsRole, this);
+        assignRoles(roleSelect, settingsRole, this);
         return;
       }
       switch (interaction.customId) {
