@@ -2,6 +2,7 @@ interface AccessToken {
   access_token: string;
   expires_at: number;
 }
+
 export default abstract class Common {
   public static _discordAccessToken?: AccessToken;
 
