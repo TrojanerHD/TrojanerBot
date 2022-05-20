@@ -1,4 +1,4 @@
-import { DMChannel, User } from 'discord.js';
+import { DMChannel, Message, MessageOptions, User } from 'discord.js';
 import DiscordClient from '../DiscordClient';
 import { Channel } from '../messages/StreamerCommand';
 import Settings from '../Settings';
@@ -10,10 +10,18 @@ interface ChannelWithIndex {
   index: number;
 }
 
+interface StreamerMessage {
+  message: Message;
+  streamer: string;
+  game: string;
+}
+
 export default class DMManager {
   #twitchHelper: TwitchHelper = new TwitchHelper(
     this.streamerFetched.bind(this)
   );
+  static #messages: StreamerMessage[] = [];
+
   static validNameRegex: RegExp = /^[a-zA-Z0-9_\-]+$/;
 
   constructor() {
@@ -76,13 +84,7 @@ export default class DMManager {
           dmChannel = tempDmChannel;
         }
         await dmChannel
-          .send({
-            content: `${Common.sanitize(
-              streamer.user_name
-            )} is now live at https://twitch.tv/${
-              streamer.user_name
-            } streaming **${Common.sanitize(streamer.game_name)}**`,
-          })
+          .send(DMManager.generateMessage(streamer))
           .catch(console.error);
       }
     }
@@ -98,7 +100,40 @@ export default class DMManager {
       channel.sent = false;
       delete channel['started-at'];
       Settings.saveSettings();
+      if (
+        DMManager.#messages.some(
+          (value: StreamerMessage): boolean =>
+            value.streamer === channel.streamer
+        )
+      )
+        DMManager.#messages = DMManager.#messages.filter(
+          (value: StreamerMessage): boolean =>
+            value.streamer !== channel.streamer
+        );
+    }
+    for (const streamer of streamers) {
+      const messageStream: StreamerMessage | undefined =
+        DMManager.#messages.find(
+          (value: StreamerMessage): boolean =>
+            value.streamer === streamer.user_login &&
+            value.game !== streamer.game_name
+        );
+      if (!messageStream) continue;
+      messageStream.game = streamer.game_name;
+      await messageStream.message
+        .edit(DMManager.generateMessage(streamer))
+        .catch(console.error);
     }
     return Promise.resolve();
+  }
+
+  private static generateMessage(streamer: Stream): MessageOptions {
+    return {
+      content: `${Common.sanitize(
+        streamer.user_name
+      )} is now live at https://twitch.tv/${
+        streamer.user_name
+      } streaming **${Common.sanitize(streamer.game_name)}**`,
+    };
   }
 }
