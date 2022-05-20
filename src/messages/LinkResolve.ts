@@ -57,6 +57,7 @@ export default class LinkResolve {
             .addField('Message Content', content, false)
             .addField('Message Author', `<@${urlMessage.author.id}>`, false)
         );
-      });
+      })
+      .catch(console.error);
   }
 }
