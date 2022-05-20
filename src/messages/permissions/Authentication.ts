@@ -24,7 +24,12 @@ export default class Authentication {
       `Warning: To update the command's permissions, please authenticate the application at https://discord.com/oauth2/authorize?client_id=${DiscordClient._client.application?.id}&scope=applications.commands.permissions.update&response_type=code&redirect_uri=<redirect_uri>`
     );
     this.#app.get('/discord_callback', async (req, res): Promise<void> => {
-      Authentication.makeRequest(callback, req.query.code as string);
+      Authentication.makeRequest(callback, {
+        code: req.query.code as string,
+        redirect: `${req.protocol}://${
+          req.headers.host as string
+        }/discord_callback`,
+      });
       res.send('Successfully authorized');
 
       // Stop express app
@@ -43,14 +48,17 @@ export default class Authentication {
     this.makeRequest(callback);
   }
 
-  private static makeRequest(callback: () => void, code?: string): void {
+  private static makeRequest(
+    callback: () => void,
+    data?: { code: string; redirect: string }
+  ): void {
     const params = new URLSearchParams();
     params.append('client_id', DiscordClient._client.application!.id);
     params.append('client_secret', process.env.OAUTH_TOKEN!);
-    if (code !== undefined) {
+    if (data !== undefined) {
       params.append('grant_type', 'authorization_code');
-      params.append('code', code);
-      params.append('redirect_uri', 'http://localhost:3000');
+      params.append('code', data.code);
+      params.append('redirect_uri', data.redirect);
     } else {
       params.append('grant_type', 'refresh_token');
       params.append('refresh_token', process.env.DISCORD_REFRESH_TOKEN!);
@@ -65,7 +73,7 @@ export default class Authentication {
       },
     };
 
-    if (code !== undefined)
+    if (data !== undefined)
       reqObj.headers!.Authorization = `Basic ${Buffer.from(
         `${DiscordClient._client.application?.id}:${process.env.DISCORD_TOKEN}`
       ).toString('base64')}`;
@@ -76,7 +84,7 @@ export default class Authentication {
       res.on('end', (): void => {
         const json: TokenResponse | { error: string } = JSON.parse(data);
         if ('error' in json) {
-          if (json.error === 'invalid_grant' && code === undefined) {
+          if (json.error === 'invalid_grant' && data === undefined) {
             process.env.DISCORD_REFRESH_TOKEN = undefined;
             // Delete line of .env that says DISCORD_REFRESH_TOKEN
             fs.writeFileSync(
