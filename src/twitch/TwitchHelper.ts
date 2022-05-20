@@ -1,6 +1,5 @@
 import Settings from '../Settings';
-import { request } from 'https';
-import { IncomingMessage } from 'http';
+import { requestWrapper as request } from '../common';
 
 export interface Category {
   name: string;
@@ -45,7 +44,7 @@ export default class TwitchHelper {
    * Fetches the current state of streams
    * @param streamerUpdate Function to execute to obtain the streamers to fetch
    */
-  update(streamerUpdate?: () => string[]): void {
+  async update(streamerUpdate?: () => string[]): Promise<void> {
     if (streamerUpdate !== undefined) this.#streamerUpdate = streamerUpdate;
     const streamers: string[] = this.#streamerUpdate();
     if (streamers.length === 0) {
@@ -56,8 +55,8 @@ export default class TwitchHelper {
     for (let i: number = 0; i < streamers.length; i += 100)
       this.#streamerUpdateSplit.push(streamers.slice(i, i + 100));
     if (!this.#accessToken)
-      this.accessTokenRequest(this.channelRequest.bind(this));
-    else this.channelRequest();
+      await this.accessTokenRequest().catch(console.error);
+    this.channelRequest();
   }
 
   /**
@@ -66,7 +65,19 @@ export default class TwitchHelper {
   private async channelRequest(): Promise<void> {
     const streams: Stream[] = [];
     for (const streamers of this.#streamerUpdateSplit) {
-      const stream: StreamData = await this.requestWrapper(streamers);
+      const stream: StreamData = JSON.parse(
+        await request(
+          {
+            host: 'api.twitch.tv',
+            path: `/helix/streams?${TwitchHelper.generateUrl(streamers)}`,
+            headers: {
+              'Client-ID': Settings.getSettings()['twitch-id'],
+              Authorization: `Bearer ${this.#accessToken}`,
+            },
+          },
+          TwitchHelper.generateUrl(streamers)
+        )
+      );
       streams.push.apply(streams, stream.data);
     }
 
@@ -86,32 +97,6 @@ export default class TwitchHelper {
       });
   }
 
-  private async requestWrapper(streamers: string[]): Promise<StreamData> {
-    return new Promise(
-      (
-        resolve: (data: StreamData) => void,
-        reject: (e: Error) => void
-      ): void => {
-        request(
-          {
-            host: 'api.twitch.tv',
-            path: `/helix/streams?${TwitchHelper.generateUrl(streamers)}`,
-            headers: {
-              'Client-ID': Settings.getSettings()['twitch-id'],
-              Authorization: `Bearer ${this.#accessToken}`,
-            },
-          },
-          (res: IncomingMessage): void => {
-            let data: string = '';
-            res.on('error', reject);
-            res.on('data', (chunk: Buffer): string => (data += chunk));
-            res.on('end', () => resolve(JSON.parse(data)));
-          }
-        ).end(TwitchHelper.generateUrl(streamers));
-      }
-    );
-  }
-
   /**
    * Sets the timeout for the update function
    */
@@ -121,28 +106,20 @@ export default class TwitchHelper {
 
   /**
    * Creates a request to get an access token and calls a function afterward
-   * @param callback The function to call after the access token was obtained
    */
-  private async accessTokenRequest(callback: () => void): Promise<void> {
+  private async accessTokenRequest(): Promise<void> {
     const params = new URLSearchParams();
     params.append('client_id', Settings.getSettings()['twitch-id']);
     params.append('client_secret', process.env.TWITCH_TOKEN!);
     params.append('grant_type', 'client_credentials');
-    request(
+    const req: string = await request(
       {
         host: 'id.twitch.tv',
         path: `/oauth2/token`,
         method: 'POST',
       },
-      (res: IncomingMessage) => {
-        let data: string = '';
-        res.on('error', console.error);
-        res.on('data', (chunk: Buffer): string => (data += chunk));
-        res.on('end', () => {
-          this.#accessToken = JSON.parse(data).access_token;
-          callback();
-        });
-      }
-    ).end(params.toString());
+      params.toString()
+    );
+    this.#accessToken = JSON.parse(req).access_token;
   }
 }
