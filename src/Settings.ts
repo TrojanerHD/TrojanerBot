@@ -61,12 +61,11 @@ export default class Settings {
             (key: Channel): boolean => key.sent === undefined
           )
         ) {
-          Settings._settings['streamer-subscriptions'].forEach(
-            (channel: Channel, i: number): void => {
-              if (channel.sent === undefined)
-                Settings._settings['streamer-subscriptions'][i].sent = false;
-            }
-          );
+          for (const [i, channel] of Settings._settings[
+            'streamer-subscriptions'
+          ].entries())
+            if (channel.sent === undefined)
+              Settings._settings['streamer-subscriptions'][i].sent = false;
           changed = true;
         }
         // Backwards compatibility: If users added streamers with invalid characters in previous versions of the bot, they get deleted

@@ -49,17 +49,16 @@ export default class DMManager {
         logins.includes(channel.streamer) && !channel.sent
     );
 
-    for (let i: number = 0; i < dmPendingChannels.length; ++i) {
-      const channel: Channel = dmPendingChannels[i][1];
+    for (const channelWithIndex of dmPendingChannels) {
+      const channel: Channel = channelWithIndex[1];
 
       channel.sent = true;
       channel['started-at'] = streamers.find(
         (login: Stream) => login.user_login === channel.streamer
       )!.started_at;
 
-      Settings.getSettings()['streamer-subscriptions'][
-        dmPendingChannels[i][0]
-      ] = channel;
+      Settings.getSettings()['streamer-subscriptions'][channelWithIndex[0]] =
+        channel;
       Settings.saveSettings();
 
       for (const subscriber of channel.subscribers) {
