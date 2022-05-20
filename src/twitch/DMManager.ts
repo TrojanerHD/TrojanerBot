@@ -25,7 +25,7 @@ export default class DMManager {
   static validNameRegex: RegExp = /^[a-zA-Z0-9_\-]+$/;
 
   constructor() {
-    this.#twitchHelper.update(() =>
+    this.#twitchHelper.update((): string[] =>
       Settings.getSettings()
         ['streamer-subscriptions'].map(
           (channel: Channel): string => channel.streamer

@@ -30,7 +30,7 @@ export async function requestWrapper(
           let data: string = '';
           res.on('error', reject);
           res.on('data', (chunk: Buffer): string => (data += chunk));
-          res.on('end', () => resolve(data));
+          res.on('end', (): void => resolve(data));
         }
       );
       if (data !== undefined) req.end(data);

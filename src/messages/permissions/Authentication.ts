@@ -17,7 +17,7 @@ interface TokenResponse {
 }
 
 export default class Authentication {
-  #app = express();
+  #app: Express = express();
   #server: Server;
 
   constructor(callback: () => void) {

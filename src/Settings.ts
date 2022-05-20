@@ -62,7 +62,7 @@ export default class Settings {
           )
         ) {
           Settings._settings['streamer-subscriptions'].forEach(
-            (channel: Channel, i: number) => {
+            (channel: Channel, i: number): void => {
               if (channel.sent === undefined)
                 Settings._settings['streamer-subscriptions'][i].sent = false;
             }
@@ -72,14 +72,14 @@ export default class Settings {
         // Backwards compatibility: If users added streamers with invalid characters in previous versions of the bot, they get deleted
         if (
           Settings._settings['streamer-subscriptions'].some(
-            (channel: Channel) =>
+            (channel: Channel): boolean =>
               !channel.streamer.match(DMManager.validNameRegex)
           )
         ) {
           Settings._settings['streamer-subscriptions'] = Settings._settings[
             'streamer-subscriptions'
           ].filter(
-            (channel: Channel) =>
+            (channel: Channel): boolean =>
               !!channel.streamer.match(DMManager.validNameRegex)
           );
           changed = true;

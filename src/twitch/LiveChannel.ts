@@ -8,7 +8,7 @@ export default class LiveChannel {
    */
   constructor() {
     new TwitchHelper(this.streamerFetch.bind(this)).update(
-      () => Settings.getSettings().streamers
+      (): string[] => Settings.getSettings().streamers
     );
   }
 

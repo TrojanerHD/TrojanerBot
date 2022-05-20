@@ -155,11 +155,11 @@ export default class StreamerCommand extends Command {
       )}`;
 
     streamChannel.subscribers = streamChannel.subscribers.filter(
-      (subscriber: string) => subscriber !== this.#interaction!.user.id
+      (subscriber: string): boolean => subscriber !== this.#interaction!.user.id
     );
     if (streamChannel.subscribers.length === 0)
       StreamerCommand._streamers = StreamerCommand._streamers.filter(
-        (channel: Channel) => channel.streamer !== streamChannel?.streamer
+        (channel: Channel): boolean => channel.streamer !== streamChannel?.streamer
       );
     this.saveStreamers();
     return `${Common.sanitize(

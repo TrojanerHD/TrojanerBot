@@ -45,7 +45,7 @@ export default class LinkResolve {
     }
     (guildChannel as BaseGuildTextChannel).messages
       .fetch(urlMessageString)
-      .then((urlMessage: Message) => {
+      .then((urlMessage: Message): void => {
         if (urlMessage.content.length > 1024)
           urlMessage.content = `${urlMessage.content.substring(0, 1023)}…`;
         const content =

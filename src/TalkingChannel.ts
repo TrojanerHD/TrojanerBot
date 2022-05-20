@@ -43,7 +43,7 @@ export default class TalkingChannel {
     }
 
     if (channel.members.toJSON().length === 0) {
-      channel.delete().then(() => {
+      channel.delete().then((): void => {
         this.#talkingChannelCount--;
         this.renameNextChannels(channel);
       });
@@ -74,7 +74,7 @@ export default class TalkingChannel {
     }
     nextChannel
       .setName(`Talking ${current}`)
-      .then(() => this.renameNextChannels(nextChannel))
+      .then((): void => this.renameNextChannels(nextChannel))
       .catch(console.error);
   }
 
@@ -93,7 +93,7 @@ export default class TalkingChannel {
     if (previousChannel) return;
     channel
       .setName(`Talking ${current - 1}`)
-      .then(() => this.renamePreviousChannel(channel));
+      .then((): void => this.renamePreviousChannel(channel));
   }
 
   /**

@@ -71,10 +71,10 @@ export default class DiscordClient {
     for (const guild of DiscordClient._client.guilds.cache.toJSON())
       for (const threadChannel of (
         guild.channels.cache.filter(
-          (channel: GuildChannel | ThreadChannel) =>
+          (channel: GuildChannel | ThreadChannel): boolean =>
             channel instanceof ThreadChannel &&
             !channel.members.cache.some(
-              (member: ThreadMember) =>
+              (member: ThreadMember): boolean =>
                 member.user!.id === DiscordClient._client.user!.id
             )
         ) as Collection<string, ThreadChannel>

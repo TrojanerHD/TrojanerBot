@@ -29,10 +29,10 @@ export default class RoleAssigner {
     this.guildRoleEstablished(guildRole);
   }
 
-  private guildRoleEstablished(role: Role) {
+  private guildRoleEstablished(role: Role): void {
     if (
       !this.#member.roles.cache.some(
-        (memberRole: Role) => memberRole.id === role.id
+        (memberRole: Role): boolean => memberRole.id === role.id
       )
     )
       this.#member.roles

@@ -31,7 +31,7 @@ export default class ReactionHandler {
           if (reason.code !== 50006) console.error(reason);
         });
         const roleSelect: ButtonInteraction = this.#roleSelect.find(
-          (roleInteraction: ButtonInteraction) =>
+          (roleInteraction: ButtonInteraction): boolean =>
             (roleInteraction.member as GuildMember).id ===
             (interaction.member as GuildMember).id
         )!;
