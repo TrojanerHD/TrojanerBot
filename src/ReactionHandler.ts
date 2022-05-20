@@ -26,7 +26,7 @@ export default class ReactionHandler {
           (role: RolesField): boolean =>
             role.name.toLowerCase() === interaction.customId
         );
-      if (!!settingsRole) {
+      if (settingsRole !== undefined) {
         interaction.reply({}).catch((reason: any): void => {
           if (reason.code !== 50006) console.error(reason);
         });
