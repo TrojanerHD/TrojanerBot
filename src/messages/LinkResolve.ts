@@ -21,7 +21,7 @@ export default class LinkResolve {
     const urlMessageString: string = properties[2].substring(0, 18);
     const embed: MessageEmbed = new MessageEmbed()
       .setTitle('Quote')
-      .setTimestamp(new Date())
+      .setTimestamp(Date.now())
       .setFooter({ text: message.author.tag });
     if (guild !== channel.guild.id) {
       DiscordClient.send(

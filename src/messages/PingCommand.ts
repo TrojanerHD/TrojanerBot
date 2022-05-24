@@ -18,7 +18,7 @@ export default class PingCommand extends Command {
     interaction
       .reply(
         `My ping is ${Math.floor(
-          new Date().getTime() - interaction.createdTimestamp
+          Date.now() - interaction.createdTimestamp
         )}ms`
       )
       .catch(console.error);

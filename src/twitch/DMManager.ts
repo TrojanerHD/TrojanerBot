@@ -89,7 +89,7 @@ export default class DMManager {
       (channel: Channel): boolean =>
         !!channel.sent &&
         !logins.includes(channel.streamer) &&
-        new Date().getTime() - new Date(channel['started-at']!).getTime() >=
+        Date.now() - new Date(channel['started-at']!).getTime() >=
           5 * 60 * 1000 // Check to see whether five minutes have passed after stream start
     )) {
       channel.sent = false;

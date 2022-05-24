@@ -83,7 +83,7 @@ export default class CreateEmbed {
 
       const embed: MessageEmbed = new MessageEmbed()
         .setTitle('Twitch')
-        .setTimestamp(new Date());
+        .setTimestamp(Date.now());
 
       for (const fieldArray of this.#embed)
         for (const field of fieldArray)

@@ -37,14 +37,14 @@ export default class RoleChannelManager {
     );
     if (errorRole)
       return new MessageEmbed()
-        .setTimestamp(new Date())
+        .setTimestamp(Date.now())
         .setTitle('Role Selector')
         .setDescription(
           'Error: All fields in `role` in `settings.json` must have a `name` and `emoji` tag'
         )
         .setColor('RED');
     return new MessageEmbed()
-      .setTimestamp(new Date())
+      .setTimestamp(Date.now())
       .setTitle('Role Selector')
       .setFields(
         Settings.getSettings().roles.map(

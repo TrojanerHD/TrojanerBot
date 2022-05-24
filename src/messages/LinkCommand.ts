@@ -62,7 +62,7 @@ export default class LinkCommand extends Command {
       .setDescription(
         `To ${this.channelName(newChannel)}\nRequested by <@${author}>`
       )
-      .setTimestamp(new Date())
+      .setTimestamp(Date.now())
       .setColor(4176616);
 
     const oldMessage: void | Message | GuildCacheMessage<'raw'> =
@@ -88,7 +88,7 @@ export default class LinkCommand extends Command {
                 oldMessage.url
               })\nRequested by <@${author}>`
             )
-            .setTimestamp(new Date())
+            .setTimestamp(Date.now())
             .setColor(16285727),
         ],
       })
