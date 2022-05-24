@@ -15,6 +15,10 @@ export interface SettingsJSON {
   logging: 'verbose' | 'errors' | 'warnings';
   'streamer-subscriptions': Channel[];
   'express-port'?: number;
+  proxy?: {
+    host: string;
+    port: number;
+  }
 }
 
 export default class Settings {
