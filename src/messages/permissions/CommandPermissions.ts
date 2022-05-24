@@ -10,6 +10,7 @@ import DiscordClient from '../../DiscordClient';
 import Settings from '../../Settings';
 import { ApplicationCommandType } from '../MessageHandler';
 import Authentication from './Authentication';
+import { RequestOptions } from 'https';
 
 export default class CommandPermissions {
   #commands?: Collection<string, ApplicationCommandType>;
@@ -49,18 +50,22 @@ export default class CommandPermissions {
             })
           ),
       };
-      request(
-        {
-          host: 'discord.com',
-          path: `/api/v10/applications/${DiscordClient._client.application?.id}/guilds/${command.guildId}/commands/${command.id}/permissions`,
-          method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${Common._discordAccessToken!.access_token}`,
-            'Content-Type': 'application/json',
-          },
+      const reqObj: RequestOptions = {
+        host: 'discord.com',
+        path: `/api/v10/applications/${DiscordClient._client.application?.id}/guilds/${command.guildId}/commands/${command.id}/permissions`,
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${Common._discordAccessToken!.access_token}`,
+          'Content-Type': 'application/json',
         },
-        JSON.stringify(body)
-      ).catch(console.error);
+      };
+      if (Settings.getSettings()['proxy'] !== undefined) {
+        reqObj.host = Settings.getSettings()['proxy']!.host;
+        reqObj.port = Settings.getSettings()['proxy']!.port;
+        reqObj.path = `https://discord.com${reqObj.path}`;
+        reqObj.headers!.Host = 'discord.com';
+      }
+      request(reqObj, JSON.stringify(body)).catch(console.error);
     }
   }
 }

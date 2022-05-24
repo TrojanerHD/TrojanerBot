@@ -37,6 +37,7 @@ Key | Type | Description | Default
 `streamer-subscriptions` | {streamer: string; subscribers: string[]} | The bot will store all subscriptions to Twitch streamers when somebody uses `/streamer` to subscribe to a streamer. Usually you want to leave it as it is | `[]`
 `logging` | "errors" \| "warnings" \| "verbose" | The log-level. "warnings" will inform if, for example, twitch id was set but a token was not provided | `"warnings"`
 `express-port` | number \| undefined | The port the express app will listen on | `undefined`
+`proxy` | {host: string; port: number} | If the express server is put behind a proxy (e. g. a reverse proxy), set the host and port of the proxy here | `undefined`
 
 ### Execution
 ```sh
