@@ -7,7 +7,7 @@ import {
 import { requestWrapper as request } from '../../common';
 import Common from '../../common';
 import DiscordClient from '../../DiscordClient';
-import Settings from '../../Settings';
+import Settings, { SettingsJSON } from '../../Settings';
 import { ApplicationCommandType } from '../MessageHandler';
 import Authentication from './Authentication';
 import { RequestOptions } from 'https';
@@ -63,6 +63,7 @@ export default class CommandPermissions {
             })
           ),
       };
+
       const reqObj: RequestOptions = {
         host: 'discord.com',
         path: `/api/v10/applications/${DiscordClient._client.application?.id}/guilds/${command.guildId}/commands/${command.id}/permissions`,
@@ -72,12 +73,16 @@ export default class CommandPermissions {
           'Content-Type': 'application/json',
         },
       };
-      if (Settings.getSettings()['proxy'] !== undefined) {
-        reqObj.host = Settings.getSettings()['proxy']!.host;
-        reqObj.port = Settings.getSettings()['proxy']!.port;
+
+      const tempSettings: SettingsJSON = Settings.getSettings();
+
+      if (tempSettings.proxy !== undefined) {
+        reqObj.host = tempSettings.proxy.host;
+        reqObj.port = tempSettings.proxy.port;
         reqObj.path = `https://discord.com${reqObj.path}`;
         reqObj.headers!.Host = 'discord.com';
       }
+
       request(reqObj, JSON.stringify(body)).catch(console.error);
     }
   }
