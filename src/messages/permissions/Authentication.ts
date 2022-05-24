@@ -6,7 +6,7 @@ import { RequestOptions } from 'https';
 import { Server } from 'http';
 import fs from 'fs';
 import Common from '../../common';
-import Settings from '../../Settings';
+import Settings, { SettingsJSON } from '../../Settings';
 
 interface TokenResponse {
   access_token: string;
@@ -90,9 +90,11 @@ export default class Authentication {
       },
     };
 
-    if (Settings.getSettings()['proxy'] !== undefined) {
-      reqObj.host = Settings.getSettings()['proxy']!.host;
-      reqObj.port = Settings.getSettings()['proxy']!.port;
+    const tempSettings: SettingsJSON = Settings.getSettings();
+
+    if (tempSettings.proxy !== undefined) {
+      reqObj.host = tempSettings.proxy.host;
+      reqObj.port = tempSettings.proxy.port;
       reqObj.path = `https://discord.com${reqObj.path}`;
       reqObj.headers!.Host = 'discord.com';
     }
