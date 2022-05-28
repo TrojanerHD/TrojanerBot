@@ -27,7 +27,8 @@ export async function requestWrapper(
     (resolve: (data: string) => void, reject: (e: Error) => void): void => {
       if (Settings.getSettings()['proxy'] !== undefined) {
         options.path = `https://${options.host}${options.path}`;
-        options.headers!.Host = options.host as string;
+        if (!options.headers) options.headers = {};
+        options.headers.Host = options.host as string;
         options.host = Settings.getSettings()['proxy']!.host;
         options.port = Settings.getSettings()['proxy']!.port;
       }
