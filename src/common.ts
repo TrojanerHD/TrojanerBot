@@ -25,7 +25,10 @@ export async function requestWrapper(
 ): Promise<string> {
   return new Promise(
     (resolve: (data: string) => void, reject: (e: Error) => void): void => {
-      if (Settings.getSettings()['proxy'] !== undefined) {
+      if (
+        Settings.getSettings()['proxy'] !== undefined &&
+        !options.host!.includes('twitch')
+      ) {
         options.path = `https://${options.host}${options.path}`;
         if (!options.headers) options.headers = {};
         options.headers.Host = options.host as string;
