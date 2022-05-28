@@ -79,13 +79,6 @@ export default class Authentication {
       },
     };
 
-    if (Settings.getSettings()['proxy'] !== undefined) {
-      reqObj.host = Settings.getSettings()['proxy']!.host;
-      reqObj.port = Settings.getSettings()['proxy']!.port;
-      reqObj.path = `https://discord.com${reqObj.path}`;
-      reqObj.headers!.Host = 'discord.com';
-    }
-
     if (data !== undefined)
       reqObj.headers!.Authorization = `Basic ${Buffer.from(
         `${DiscordClient._client.application?.id}:${process.env.DISCORD_TOKEN}`

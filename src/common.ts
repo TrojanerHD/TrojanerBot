@@ -1,5 +1,6 @@
 import { ClientRequest, IncomingMessage } from 'http';
 import { request, RequestOptions } from 'https';
+import Settings from './Settings';
 
 interface AccessToken {
   access_token: string;
@@ -24,6 +25,13 @@ export async function requestWrapper(
 ): Promise<string> {
   return new Promise(
     (resolve: (data: string) => void, reject: (e: Error) => void): void => {
+      if (Settings.getSettings()['proxy'] !== undefined) {
+        options.path = `https://${options.host}${options.path}`;
+        options.headers!.Host = options.host as string;
+        options.host = Settings.getSettings()['proxy']!.host;
+        options.port = Settings.getSettings()['proxy']!.port;
+      }
+
       const req: ClientRequest = request(
         options,
         (res: IncomingMessage): void => {

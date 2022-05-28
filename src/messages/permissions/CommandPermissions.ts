@@ -50,22 +50,18 @@ export default class CommandPermissions {
             })
           ),
       };
-      const reqObj: RequestOptions = {
-        host: 'discord.com',
-        path: `/api/v10/applications/${DiscordClient._client.application?.id}/guilds/${command.guildId}/commands/${command.id}/permissions`,
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${Common._discordAccessToken!.access_token}`,
-          'Content-Type': 'application/json',
+      request(
+        {
+          host: 'discord.com',
+          path: `/api/v10/applications/${DiscordClient._client.application?.id}/guilds/${command.guildId}/commands/${command.id}/permissions`,
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${Common._discordAccessToken!.access_token}`,
+            'Content-Type': 'application/json',
+          },
         },
-      };
-      if (Settings.getSettings()['proxy'] !== undefined) {
-        reqObj.host = Settings.getSettings()['proxy']!.host;
-        reqObj.port = Settings.getSettings()['proxy']!.port;
-        reqObj.path = `https://discord.com${reqObj.path}`;
-        reqObj.headers!.Host = 'discord.com';
-      }
-      request(reqObj, JSON.stringify(body)).catch(console.error);
+        JSON.stringify(body)
+      ).catch(console.error);
     }
   }
 }
