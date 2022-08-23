@@ -77,11 +77,18 @@ export default class Settings {
           changed = true;
         }
         // Backwards compatibility: This is a hard-coded checker to see if every streamer has a sent boolean because there was a version where it was not there
-        for (let i = 0; i < Settings._settings[
-          'streamer-subscriptions'
-        ].filter((channel) => channel.sent === undefined).length; ++i) {
-            Settings._settings['streamer-subscriptions'][i].sent = false;
-            changed = true;
+        for (const i of [
+          ...Settings._settings['streamer-subscriptions'].entries(),
+        ]
+          .filter(
+            (channelWithIndex: [number, Channel]): boolean =>
+              channelWithIndex[1].sent === undefined
+          )
+          .map(
+            (channelWithIndex: [number, Channel]): number => channelWithIndex[0]
+          )) {
+          Settings._settings['streamer-subscriptions'][i].sent = false;
+          changed = true;
         }
         // Backwards compatibility: If users added streamers with invalid characters in previous versions of the bot, they get deleted
         if (
