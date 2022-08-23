@@ -18,6 +18,9 @@ import Settings from './Settings';
 import DMManager from './twitch/DMManager';
 import FeatureChecker from './FeatureChecker';
 
+/**
+ * The discord client handler and initializer of the bot
+ */
 export default class DiscordClient {
   static _client: Client = new Client({
     intents: [
@@ -28,9 +31,6 @@ export default class DiscordClient {
     ],
   });
 
-  /**
-   * The discord client handler and initializer of the bot
-   */
   constructor() {
     new FeatureChecker();
     new MessageHandler();
@@ -47,34 +47,34 @@ export default class DiscordClient {
       .login(process.env.DISCORD_TOKEN)
       .catch(console.error)
       .then((): void => {
-        if (
-          Settings.getSettings()['twitch-id'] !== '' &&
-          process.env.TWITCH_TOKEN
-        )
+        if (Settings.settings['twitch-id'] !== '' && process.env.TWITCH_TOKEN)
           this.startTwitch();
       });
   }
 
-  private onReady(): void {
+  /**
+   * Fires when the Discord bot is ready
+   */
+  private async onReady(): Promise<void> {
     this.joinAllThreads();
     new TalkingChannel();
     if (!DiscordClient._client.application?.owner)
-      DiscordClient._client.application
-        ?.fetch()
-        .then(MessageHandler.addCommands)
-        .catch(console.error);
-    else MessageHandler.addCommands();
-    if (Settings.getSettings().roles.length !== 0) new RoleChannelManager();
+      await DiscordClient._client.application?.fetch().catch(console.error);
+    MessageHandler.addCommands();
+    if (Settings.settings.roles.length !== 0) new RoleChannelManager();
   }
 
+  /**
+   * Joins all threads to be available there
+   */
   private joinAllThreads(): void {
     for (const guild of DiscordClient._client.guilds.cache.toJSON())
       for (const threadChannel of (
         guild.channels.cache.filter(
-          (channel: GuildChannel | ThreadChannel) =>
+          (channel: GuildChannel | ThreadChannel): boolean =>
             channel instanceof ThreadChannel &&
-            !channel.members.cache.find(
-              (member: ThreadMember) =>
+            !channel.members.cache.some(
+              (member: ThreadMember): boolean =>
                 member.user!.id === DiscordClient._client.user!.id
             )
         ) as Collection<string, ThreadChannel>
@@ -83,17 +83,26 @@ export default class DiscordClient {
   }
 
   /**
-   * Starts doing stuff with Twitch for the #live channel
+   * Starts doing stuff with Twitch for the #live channel and DM notification handling
    */
   private startTwitch(): void {
     new LiveChannel();
     new DMManager();
   }
 
+  /**
+   * Joins newly created threads to be available there
+   * @param thread The thread to join
+   */
   private onThreadCreate(thread: ThreadChannel): void {
     thread.join().catch(console.error);
   }
 
+  /**
+   * A wrapper for the most basic message sending
+   * @param channel The channel to send the message in
+   * @param message The message or embed to send
+   */
   public static send(
     channel: TextBasedChannel | undefined,
     message: MessageEmbed | MessageOptions

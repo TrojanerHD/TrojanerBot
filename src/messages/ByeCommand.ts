@@ -14,20 +14,18 @@ export default class ByeCommand extends Command {
   };
   guildOnly: boolean = true;
 
-  handleCommand(
+  async handleCommand(
     _args: readonly CommandInteractionOption[],
     interaction: CommandInteraction
-  ): void {
-    interaction
-      .reply(
+  ): Promise<void> {
+    try {
+      await interaction.reply(
         '**JavaScript**\n:robot: Bleeb Bloob :robot:\n:robot: Bleeb Blooouuub…\n[Shutting down]'
-      )
-      .then(ByeCommand.destroyBot)
-      .catch(console.error);
-  }
-
-  private static destroyBot(): void {
-    DiscordClient._client.destroy();
-    process.exit(0);
+      );
+      DiscordClient._client.destroy();
+      process.exit(0);
+    } catch (err: any) {
+      console.error(err);
+    }
   }
 }

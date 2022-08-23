@@ -19,12 +19,16 @@ import Settings from '../Settings';
 export type ApplicationCommandType = ApplicationCommand<{
   guild: GuildResolvable;
 }>;
+
 export interface CommandHandler {
   command: string | string[];
   handler: Command;
 }
 
 export default class MessageHandler {
+  /**
+   * All active commands
+   */
   static _commands: Command[] = [
     new PingCommand(),
     new ByeCommand(),
@@ -37,6 +41,9 @@ export default class MessageHandler {
     DiscordClient._client.on('messageCreate', this.onMessage.bind(this));
   }
 
+  /**
+   * Deploys all commands on all servers and for DMs
+   */
   public static addCommands(): void {
     const guildCommands: ApplicationCommandData[] = MessageHandler._commands
       .filter((command: Command): boolean => command.guildOnly)
@@ -63,15 +70,20 @@ export default class MessageHandler {
     }
   }
 
-  onMessage(message: Message) {
+  /**
+   * Checks for `!deploy` message to deploy the commands
+   * Also checks for a message link in the message that could be processed as quote
+   * @param message The message to be processed
+   */
+  onMessage(message: Message): void {
     if (message.channel.type === 'DM' || message.author.bot) return;
     if (message.content.match(/https:\/\/discord(app)?\.(com|gg)\/channels/))
       new LinkResolve().handleCommand(message.channel, message);
 
     if (message.content === '!deploy') {
       if (
-        !message.member!.roles.cache.find((role: Role): boolean =>
-          Settings.getSettings()['permission-roles'].includes(role.name)
+        !message.member!.roles.cache.some((role: Role): boolean =>
+          Settings.settings['permission-roles'].includes(role.name)
         )
       ) {
         message

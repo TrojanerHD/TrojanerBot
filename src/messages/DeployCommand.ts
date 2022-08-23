@@ -75,7 +75,7 @@ export default class DeployCommand extends Command {
 
   private commandsFetched(
     commands: Collection<Snowflake, ApplicationCommandType>
-  ) {
+  ): void {
     for (const command of commands.toJSON())
       command.delete().catch(console.error);
   }

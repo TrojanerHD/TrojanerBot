@@ -8,10 +8,13 @@ import {
 } from 'discord.js';
 import Settings, { RolesField } from '../Settings';
 import DiscordClient from '../DiscordClient';
-import GuildRolesManager from './GuildRolesManager';
+import manageRoles from './manageRoles';
 import { GuildTextChannel } from '../messages/Command';
 
-export default class RoleManager {
+/**
+ * Manages the roles for each user with a message with button in a channel
+ */
+export default class RoleChannelManager {
   constructor() {
     for (const guild of DiscordClient._client.guilds.cache.toJSON()) {
       const rolesChannel: GuildTextChannel | undefined =
@@ -26,33 +29,31 @@ export default class RoleManager {
 
       const embed: MessageEmbed = this.generateEmbed();
 
-      new GuildRolesManager(rolesChannel, embed);
+      manageRoles(rolesChannel, embed);
     }
   }
 
   private generateEmbed(): MessageEmbed {
-    const roles: RolesField[] = Settings.getSettings().roles;
-    const errorRole: RolesField | undefined = roles.find(
+    const roles: RolesField[] = Settings.settings.roles;
+    const errorRole: boolean = roles.some(
       (role: RolesField): boolean => !role.emoji || !role.name
     );
-    if (!!errorRole)
+    if (errorRole)
       return new MessageEmbed()
-        .setTimestamp(new Date())
+        .setTimestamp(Date.now())
         .setTitle('Role Selector')
         .setDescription(
           'Error: All fields in `role` in `settings.json` must have a `name` and `emoji` tag'
         )
         .setColor('RED');
     return new MessageEmbed()
-      .setTimestamp(new Date())
+      .setTimestamp(Date.now())
       .setTitle('Role Selector')
       .setFields(
-        Settings.getSettings().roles.map(
+        Settings.settings.roles.map(
           (role: RolesField): EmbedFieldData => ({
             name: role.name,
-            value: role.description
-              ? role.description
-              : '*No description provided*',
+            value: role.description || '*No description provided*',
           })
         )
       );

@@ -19,8 +19,11 @@ export interface StreamData {
   data: Stream[];
 }
 
+/**
+ * A wrapper for Twitch API calls with update cycle
+ */
 export default class TwitchHelper {
-  /** The access token for the Twitch api */
+  /** The access token for the Twitch API */
   #accessToken?: string;
   #streamerUpdate: () => string[] = () => [];
   #streamerUpdateSplit: string[][] = [];
@@ -71,7 +74,7 @@ export default class TwitchHelper {
             host: 'api.twitch.tv',
             path: `/helix/streams?${TwitchHelper.generateUrl(streamers)}`,
             headers: {
-              'Client-ID': Settings.getSettings()['twitch-id'],
+              'Client-ID': Settings.settings['twitch-id'],
               Authorization: `Bearer ${this.#accessToken}`,
             },
           },
@@ -82,7 +85,7 @@ export default class TwitchHelper {
     }
 
     streams.sort((a: Stream, b: Stream): number => {
-      for (const streamer of Settings.getSettings().streamers) {
+      for (const streamer of Settings.settings.streamers) {
         if (a.user_name === streamer) return -1;
         if (b.user_name === streamer) return 1;
       }
@@ -105,11 +108,11 @@ export default class TwitchHelper {
   }
 
   /**
-   * Creates a request to get an access token and calls a function afterward
+   * Creates a request to get an access token and stores it
    */
   private async accessTokenRequest(): Promise<void> {
     const params = new URLSearchParams();
-    params.append('client_id', Settings.getSettings()['twitch-id']);
+    params.append('client_id', Settings.settings['twitch-id']);
     params.append('client_secret', process.env.TWITCH_TOKEN!);
     params.append('grant_type', 'client_credentials');
     const req: string = await request(

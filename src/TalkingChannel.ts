@@ -43,10 +43,13 @@ export default class TalkingChannel {
     }
 
     if (channel.members.toJSON().length === 0) {
-      channel.delete().then(() => {
-        this.#talkingChannelCount--;
-        this.renameNextChannels(channel);
-      });
+      channel
+        .delete()
+        .then((): void => {
+          this.#talkingChannelCount--;
+          this.renameNextChannels(channel);
+        })
+        .catch(console.error);
       return;
     }
     this.createChannelIfRequired();
@@ -74,7 +77,7 @@ export default class TalkingChannel {
     }
     nextChannel
       .setName(`Talking ${current}`)
-      .then(() => this.renameNextChannels(nextChannel))
+      .then((): void => this.renameNextChannels(nextChannel))
       .catch(console.error);
   }
 
@@ -86,15 +89,15 @@ export default class TalkingChannel {
     const current: number = this.channelNameParser(channel)!;
     if (current === 1) return;
     const guild: Guild = channel.guild;
-    const previousChannel: GuildChannel | ThreadChannel | undefined =
-      guild.channels.cache.find(
-        (channel: GuildChannel | ThreadChannel): boolean =>
-          channel.name === `Talking ${current - 1}`
-      );
+    const previousChannel: boolean = guild.channels.cache.some(
+      (channel: GuildChannel | ThreadChannel): boolean =>
+        channel.name === `Talking ${current - 1}`
+    );
     if (previousChannel) return;
     channel
       .setName(`Talking ${current - 1}`)
-      .then(() => this.renamePreviousChannel(channel));
+      .then((): void => this.renamePreviousChannel(channel))
+      .catch(console.error);
   }
 
   /**
@@ -126,7 +129,7 @@ export default class TalkingChannel {
   ): number | undefined {
     if (!channel.name.startsWith('Talking')) return;
     if (channel.name === 'Talking') return 0;
-    return +channel.name.split(' ')[1];
+    return Number(channel.name.split(' ')[1]);
   }
 
   /**

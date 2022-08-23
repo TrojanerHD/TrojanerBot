@@ -2,16 +2,20 @@ import TwitchHelper, { Stream } from './TwitchHelper';
 import CreateEmbed from './CreateEmbed';
 import Settings from '../Settings';
 
+/**
+ * Handles the #live channel
+ */
 export default class LiveChannel {
-  /**
-   * Handles the #live channel
-   */
   constructor() {
     new TwitchHelper(this.streamerFetch.bind(this)).update(
-      () => Settings.getSettings().streamers
+      (): string[] => Settings.settings.streamers
     );
   }
 
+  /**
+   * Creates a new embed for the #live channel whenever streamers are fetched
+   * @param streams Currently live streams
+   */
   private async streamerFetch(streams: Stream[]): Promise<void> {
     const createEmbed: CreateEmbed = new CreateEmbed();
     for (const stream of streams.slice(0, 5))

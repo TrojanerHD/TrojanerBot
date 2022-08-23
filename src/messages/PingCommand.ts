@@ -15,10 +15,12 @@ export default class PingCommand extends Command {
     _args: readonly CommandInteractionOption[],
     interaction: CommandInteraction
   ): void {
-    interaction.reply(
-      `My ping is ${Math.floor(
-        new Date().getTime() - interaction.createdTimestamp
-      )}ms`
-    ).catch(console.error);
+    interaction
+      .reply(
+        `My ping is ${Math.floor(
+          Date.now() - interaction.createdTimestamp
+        )}ms`
+      )
+      .catch(console.error);
   }
 }
