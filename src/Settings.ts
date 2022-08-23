@@ -21,8 +21,17 @@ export interface SettingsJSON {
   };
 }
 
+/**
+ * A settings wrapper
+ */
 export default class Settings {
+  /**
+   * The file where the settings are stored
+   */
   private static _settingsFile: string = './settings.json';
+  /**
+   * The actual settings to edit. Contains the default settings at the beginning
+   */
   private static _settings: SettingsJSON = {
     'twitch-id': '',
     'permission-roles': [],
@@ -32,10 +41,15 @@ export default class Settings {
     'streamer-subscriptions': [],
   };
 
+  /**
+   * Retrieves valid settings from file (with hot reload) and overwrites every non-valid setting in the file with the previous value
+   */
   static get settings(): SettingsJSON {
+    // If settings file does not exist, simply create and fill it
     if (!fs.existsSync(Settings._settingsFile)) {
       Settings.saveSettings();
     } else {
+      // Read the new settings from file and parse them to json
       const settingsFileContent: string = fs.readFileSync(
         Settings._settingsFile,
         'utf8'
@@ -45,32 +59,29 @@ export default class Settings {
       if (!newSettings) Settings.saveSettings();
       else {
         let changed: boolean = false;
+        // If some keys do not exist in the new settings read from file, set these settings back to the already stored value (before the read)
         if (
           Object.keys(Settings._settings).some(
             (key: string): boolean => !(key in newSettings)
           )
         ) {
+          // Every key that exists in the new settings is being iterated over
           for (const untypedSetting of Object.keys(newSettings)) {
+            // Type the setting key to be a valid key for the SettingsJSON array
             const setting: keyof SettingsJSON =
               untypedSetting as keyof SettingsJSON;
-            // TODO: Understand what is going on here and document code
+            // Store every found setting from the new settings into the local settings
             // @ts-ignore
             Settings._settings[setting] = newSettings[setting] as any;
           }
           changed = true;
         }
-        // TODO: This is a hard-coded checker to see if every streamer has a sent boolean because there was a version where it was not there. Very hacky
-        if (
-          Settings._settings['streamer-subscriptions'].some(
-            (key: Channel): boolean => key.sent === undefined
-          )
-        ) {
-          for (const [i, channel] of Settings._settings[
-            'streamer-subscriptions'
-          ].entries())
-            if (channel.sent === undefined)
-              Settings._settings['streamer-subscriptions'][i].sent = false;
-          changed = true;
+        // Backwards compatibility: This is a hard-coded checker to see if every streamer has a sent boolean because there was a version where it was not there
+        for (let i = 0; i < Settings._settings[
+          'streamer-subscriptions'
+        ].filter((channel) => channel.sent === undefined).length; ++i) {
+            Settings._settings['streamer-subscriptions'][i].sent = false;
+            changed = true;
         }
         // Backwards compatibility: If users added streamers with invalid characters in previous versions of the bot, they get deleted
         if (
@@ -94,6 +105,11 @@ export default class Settings {
     return Settings._settings;
   }
 
+  /**
+   * Returns given string as SettingsJSON if it is valid JSON
+   * @param str The string to check
+   * @returns The parsed JSON if it was valid, otherwise undefined
+   */
   private static getJsonString(str: string): undefined | SettingsJSON {
     try {
       return JSON.parse(str);
@@ -102,6 +118,9 @@ export default class Settings {
     }
   }
 
+  /**
+   * Saves the settings to the specified settings file
+   */
   static saveSettings(): void {
     fs.writeFileSync(
       Settings._settingsFile,

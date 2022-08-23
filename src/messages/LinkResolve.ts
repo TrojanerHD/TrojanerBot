@@ -10,8 +10,12 @@ import {
 import DiscordClient from '../DiscordClient';
 import { GuildTextChannel } from './Command';
 
+/**
+ * Adds a quote to discord links
+ */
 export default class LinkResolve {
   handleCommand(channel: GuildTextChannel, message: Message): void {
+    // Extract guild id, channel id and message id from message
     const splitMessage: string = message.content.split(
       /https:\/\/(?:canary\.|ptb\.)?discord(app)?\.(com|gg)\/channels\//
     )[3];
@@ -45,6 +49,7 @@ export default class LinkResolve {
     (guildChannel as BaseGuildTextChannel).messages
       .fetch(urlMessageString)
       .then((urlMessage: Message): void => {
+        // Embeds have a character limit of 1024 characters
         if (urlMessage.content.length > 1024)
           urlMessage.content = `${urlMessage.content.substring(0, 1023)}…`;
         const content: string =

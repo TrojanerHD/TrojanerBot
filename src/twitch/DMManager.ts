@@ -17,12 +17,21 @@ interface StreamerMessage {
   game: string;
 }
 
+/**
+ * Handles DMs for Twitch notifications
+ */
 export default class DMManager {
   #twitchHelper: TwitchHelper = new TwitchHelper(
     this.streamerFetched.bind(this)
   );
+  /**
+   * Actively updated stream messages for category changes
+   */
   static #messages: StreamerMessage[] = [];
 
+  /**
+   * Regex for valid twitch username
+   */
   static validNameRegex: RegExp = /^[a-zA-Z0-9_\-]+$/;
 
   constructor() {
@@ -36,10 +45,15 @@ export default class DMManager {
     );
   }
 
+  /**
+   * Callback function for when streamers that are currently live were fetched
+   * @param streamers The fetched streamers
+   */
   private async streamerFetched(streamers: Stream[]): Promise<void> {
     const logins: string[] = streamers.map(
       (stream: Stream): string => stream.user_login
     );
+    // Filter for channels that are currently live and a message has not yet been sent
     const dmPendingChannels: [number, Channel][] = [
       ...Settings.settings['streamer-subscriptions'].entries(),
     ].filter(
@@ -59,6 +73,7 @@ export default class DMManager {
         channel;
       Settings.saveSettings();
 
+      // Send notification to each subscriber
       for (const subscriber of channel.subscribers) {
         const user: void | User = await DiscordClient._client.users
           .fetch(subscriber)
@@ -81,6 +96,7 @@ export default class DMManager {
           .catch(console.error);
       }
     }
+    // Reset every streamer that is not live anymore and a message has been sent for
     for (const channel of Settings.settings['streamer-subscriptions'].filter(
       (channel: Channel): boolean =>
         !!channel.sent &&
@@ -90,6 +106,7 @@ export default class DMManager {
       channel.sent = false;
       delete channel['started-at'];
       Settings.saveSettings();
+      // Exclude streamer live message from actively maintained messages
       if (
         DMManager.#messages.some(
           (value: StreamerMessage): boolean =>
@@ -101,6 +118,7 @@ export default class DMManager {
             value.streamer !== channel.streamer
         );
     }
+    // Update category for each streamer
     for (const streamer of streamers) {
       const messageStream: StreamerMessage | undefined =
         DMManager.#messages.find(
@@ -117,6 +135,11 @@ export default class DMManager {
     return Promise.resolve();
   }
 
+  /**
+   * Generates a message to send into the DM channel
+   * @param streamer The streamer to generate the message for
+   * @returns The proper message options
+   */
   private static generateMessage(
     streamer: Stream
   ): MessageOptions & MessageEditOptions {

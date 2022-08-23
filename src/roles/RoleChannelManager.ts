@@ -11,6 +11,9 @@ import DiscordClient from '../DiscordClient';
 import manageRoles from './manageRoles';
 import { GuildTextChannel } from '../messages/Command';
 
+/**
+ * Manages the roles for each user with a message with button in a channel
+ */
 export default class RoleChannelManager {
   constructor() {
     for (const guild of DiscordClient._client.guilds.cache.toJSON()) {

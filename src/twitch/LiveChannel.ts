@@ -12,6 +12,10 @@ export default class LiveChannel {
     );
   }
 
+  /**
+   * Creates a new embed for the #live channel whenever streamers are fetched
+   * @param streams Currently live streams
+   */
   private async streamerFetch(streams: Stream[]): Promise<void> {
     const createEmbed: CreateEmbed = new CreateEmbed();
     for (const stream of streams.slice(0, 5))

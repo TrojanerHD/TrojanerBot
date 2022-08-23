@@ -19,8 +19,11 @@ export interface StreamData {
   data: Stream[];
 }
 
+/**
+ * A wrapper for Twitch API calls with update cycle
+ */
 export default class TwitchHelper {
-  /** The access token for the Twitch api */
+  /** The access token for the Twitch API */
   #accessToken?: string;
   #streamerUpdate: () => string[] = () => [];
   #streamerUpdateSplit: string[][] = [];
@@ -105,7 +108,7 @@ export default class TwitchHelper {
   }
 
   /**
-   * Creates a request to get an access token and calls a function afterward
+   * Creates a request to get an access token and stores it
    */
   private async accessTokenRequest(): Promise<void> {
     const params = new URLSearchParams();
