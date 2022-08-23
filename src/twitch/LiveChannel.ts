@@ -8,7 +8,7 @@ import Settings from '../Settings';
 export default class LiveChannel {
   constructor() {
     new TwitchHelper(this.streamerFetch.bind(this)).update(
-      (): string[] => Settings.getSettings().streamers
+      (): string[] => Settings.settings.streamers
     );
   }
 

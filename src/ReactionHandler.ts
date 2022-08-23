@@ -21,11 +21,10 @@ export default class ReactionHandler {
 
   private onReaction(interaction: Interaction): void {
     if (interaction.isButton()) {
-      const settingsRole: RolesField | undefined =
-        Settings.getSettings().roles.find(
-          (role: RolesField): boolean =>
-            role.name.toLowerCase() === interaction.customId
-        );
+      const settingsRole: RolesField | undefined = Settings.settings.roles.find(
+        (role: RolesField): boolean =>
+          role.name.toLowerCase() === interaction.customId
+      );
       if (settingsRole !== undefined) {
         interaction.reply({}).catch((reason: any): void => {
           if (reason.code !== 50006) console.error(reason);
@@ -70,26 +69,24 @@ export default class ReactionHandler {
   private createComponent(member: GuildMember | null): MessageActionRow[] {
     const messageActionRows: MessageActionRow[] = [];
     let currentMessageActionRow: MessageActionRow;
-    for (let i = 0; i < Settings.getSettings().roles.length / 5; i++) {
+    for (let i = 0; i < Settings.settings.roles.length / 5; i++) {
       currentMessageActionRow = new MessageActionRow();
       messageActionRows.push(currentMessageActionRow);
       currentMessageActionRow.addComponents(
-        Settings.getSettings()
-          .roles.slice(i * 5, i * 5 + 5)
-          .map(
-            // Map the roles stored in settings
-            (role: RolesField): MessageActionRowComponentResolvable => ({
-              customId: role.name.toLowerCase(),
-              label: role.name,
-              style: !(member?.roles as GuildMemberRoleManager).cache.some(
-                (memberRole: Role): boolean => memberRole.name === role.name
-              )
-                ? 'SECONDARY' //If member does not have the role
-                : 'PRIMARY', //If member has the role
-              type: 'BUTTON',
-              emoji: role.emoji,
-            })
-          )
+        Settings.settings.roles.slice(i * 5, i * 5 + 5).map(
+          // Map the roles stored in settings
+          (role: RolesField): MessageActionRowComponentResolvable => ({
+            customId: role.name.toLowerCase(),
+            label: role.name,
+            style: !(member?.roles as GuildMemberRoleManager).cache.some(
+              (memberRole: Role): boolean => memberRole.name === role.name
+            )
+              ? 'SECONDARY' //If member does not have the role
+              : 'PRIMARY', //If member has the role
+            type: 'BUTTON',
+            emoji: role.emoji,
+          })
+        )
       );
     }
     return messageActionRows;

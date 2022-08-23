@@ -72,7 +72,7 @@ export default class MessageHandler {
     if (message.content === '!deploy') {
       if (
         !message.member!.roles.cache.some((role: Role): boolean =>
-          Settings.getSettings()['permission-roles'].includes(role.name)
+          Settings.settings['permission-roles'].includes(role.name)
         )
       ) {
         message

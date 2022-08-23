@@ -31,7 +31,7 @@ export default class RoleChannelManager {
   }
 
   private generateEmbed(): MessageEmbed {
-    const roles: RolesField[] = Settings.getSettings().roles;
+    const roles: RolesField[] = Settings.settings.roles;
     const errorRole: boolean = roles.some(
       (role: RolesField): boolean => !role.emoji || !role.name
     );
@@ -47,7 +47,7 @@ export default class RoleChannelManager {
       .setTimestamp(Date.now())
       .setTitle('Role Selector')
       .setFields(
-        Settings.getSettings().roles.map(
+        Settings.settings.roles.map(
           (role: RolesField): EmbedFieldData => ({
             name: role.name,
             value: role.description || '*No description provided*',

@@ -40,11 +40,11 @@ export default class Authentication {
       this.#server.close();
     });
     if (
-      Settings.getSettings()['express-port'] !== undefined &&
-      Settings.getSettings()['express-port'] !== null &&
-      Settings.getSettings()['express-port']! > 0
+      Settings.settings['express-port'] !== undefined &&
+      Settings.settings['express-port'] !== null &&
+      Settings.settings['express-port']! > 0
     )
-      this.#server = this.#app.listen(Settings.getSettings()['express-port']);
+      this.#server = this.#app.listen(Settings.settings['express-port']);
     else this.#server = this.#app.listen();
   }
 
@@ -90,7 +90,7 @@ export default class Authentication {
       },
     };
 
-    const tempSettings: SettingsJSON = Settings.getSettings();
+    const tempSettings: SettingsJSON = Settings.settings;
 
     if (tempSettings.proxy !== undefined) {
       reqObj.host = tempSettings.proxy.host;

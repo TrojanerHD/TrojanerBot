@@ -35,7 +35,7 @@ export default class CommandPermissions {
       else this.setPermissions();
       return;
     }
-    if (Settings.getSettings()['logging'] !== 'errors')
+    if (Settings.settings['logging'] !== 'errors')
       new Authentication(this.setPermissions.bind(this));
   }
 
@@ -47,8 +47,8 @@ export default class CommandPermissions {
       (command: ApplicationCommandType): boolean => !command.defaultPermission
     )) {
       const body: { permissions: ApplicationCommandPermissionData[] } = {
-        permissions: Settings.getSettings()
-          ['permission-roles'].filter((roleName: string): boolean =>
+        permissions: Settings.settings['permission-roles']
+          .filter((roleName: string): boolean =>
             command.guild!.roles.cache.some(
               (role: Role): boolean => role.name === roleName
             )
@@ -74,7 +74,7 @@ export default class CommandPermissions {
         },
       };
 
-      const tempSettings: SettingsJSON = Settings.getSettings();
+      const tempSettings: SettingsJSON = Settings.settings;
 
       if (tempSettings.proxy !== undefined) {
         reqObj.host = tempSettings.proxy.host;

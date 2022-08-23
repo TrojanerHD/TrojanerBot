@@ -18,7 +18,7 @@ export interface SettingsJSON {
   proxy?: {
     host: string;
     port: number;
-  }
+  };
 }
 
 export default class Settings {
@@ -32,7 +32,7 @@ export default class Settings {
     'streamer-subscriptions': [],
   };
 
-  static getSettings(): SettingsJSON {
+  static get settings(): SettingsJSON {
     if (!fs.existsSync(Settings._settingsFile)) {
       Settings.saveSettings();
     } else {

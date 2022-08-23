@@ -47,10 +47,7 @@ export default class DiscordClient {
       .login(process.env.DISCORD_TOKEN)
       .catch(console.error)
       .then((): void => {
-        if (
-          Settings.getSettings()['twitch-id'] !== '' &&
-          process.env.TWITCH_TOKEN
-        )
+        if (Settings.settings['twitch-id'] !== '' && process.env.TWITCH_TOKEN)
           this.startTwitch();
       });
   }
@@ -61,7 +58,7 @@ export default class DiscordClient {
     if (!DiscordClient._client.application?.owner)
       await DiscordClient._client.application?.fetch().catch(console.error);
     MessageHandler.addCommands();
-    if (Settings.getSettings().roles.length !== 0) new RoleChannelManager();
+    if (Settings.settings.roles.length !== 0) new RoleChannelManager();
   }
 
   private joinAllThreads(): void {

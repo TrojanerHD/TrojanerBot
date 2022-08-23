@@ -72,8 +72,7 @@ export default class StreamerCommand extends Command {
     interaction: CommandInteraction
   ): void {
     this.#interaction = interaction;
-    StreamerCommand._streamers =
-      Settings.getSettings()['streamer-subscriptions'];
+    StreamerCommand._streamers = Settings.settings['streamer-subscriptions'];
     if (args[0].name === 'list') {
       const streamerList: Channel[] = StreamerCommand._streamers.filter(
         (streamer: Channel): boolean =>
@@ -174,8 +173,7 @@ export default class StreamerCommand extends Command {
   }
 
   private saveStreamers(): void {
-    Settings.getSettings()['streamer-subscriptions'] =
-      StreamerCommand._streamers;
+    Settings.settings['streamer-subscriptions'] = StreamerCommand._streamers;
     Settings.saveSettings();
   }
 }

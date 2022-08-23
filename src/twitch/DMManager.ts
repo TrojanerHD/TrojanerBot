@@ -27,10 +27,8 @@ export default class DMManager {
 
   constructor() {
     this.#twitchHelper.update((): string[] =>
-      Settings.getSettings()
-        ['streamer-subscriptions'].map(
-          (channel: Channel): string => channel.streamer
-        )
+      Settings.settings['streamer-subscriptions']
+        .map((channel: Channel): string => channel.streamer)
         .filter(
           (streamer: string): boolean =>
             !!streamer.match(DMManager.validNameRegex)
@@ -43,7 +41,7 @@ export default class DMManager {
       (stream: Stream): string => stream.user_login
     );
     const dmPendingChannels: [number, Channel][] = [
-      ...Settings.getSettings()['streamer-subscriptions'].entries(),
+      ...Settings.settings['streamer-subscriptions'].entries(),
     ].filter(
       ({ 1: channel }: [number, Channel]): boolean =>
         logins.includes(channel.streamer) && !channel.sent
@@ -57,7 +55,7 @@ export default class DMManager {
         (login: Stream) => login.user_login === channel.streamer
       )!.started_at;
 
-      Settings.getSettings()['streamer-subscriptions'][channelWithIndex[0]] =
+      Settings.settings['streamer-subscriptions'][channelWithIndex[0]] =
         channel;
       Settings.saveSettings();
 
@@ -83,14 +81,11 @@ export default class DMManager {
           .catch(console.error);
       }
     }
-    for (const channel of Settings.getSettings()[
-      'streamer-subscriptions'
-    ].filter(
+    for (const channel of Settings.settings['streamer-subscriptions'].filter(
       (channel: Channel): boolean =>
         !!channel.sent &&
         !logins.includes(channel.streamer) &&
-        Date.now() - new Date(channel['started-at']!).getTime() >=
-          5 * 60 * 1000 // Check to see whether five minutes have passed after stream start
+        Date.now() - new Date(channel['started-at']!).getTime() >= 5 * 60 * 1000 // Check to see whether five minutes have passed after stream start
     )) {
       channel.sent = false;
       delete channel['started-at'];
