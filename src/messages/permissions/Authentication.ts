@@ -105,7 +105,10 @@ export default class Authentication {
         `${DiscordClient._client.application?.id}:${process.env.DISCORD_TOKEN}`
       ).toString('base64')}`;
 
-    const req: string = await request(reqObj, params.toString());
+    let req: string | void = undefined;
+    while (req === undefined)
+      req = await request(reqObj, params.toString()).catch(console.error);
+
     const json: TokenResponse | { error: string } = JSON.parse(req);
     if ('error' in json) {
       // If the refresh token is invalid, delete it and reject the promise

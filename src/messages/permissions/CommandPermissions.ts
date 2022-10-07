@@ -42,7 +42,7 @@ export default class CommandPermissions {
   /**
    * Set permissions for commands, is used as callback for when the user has been authorized and an access token is available
    */
-  private setPermissions(): void {
+  private async setPermissions(): Promise<void> {
     for (const command of this.#commands!.toJSON().filter(
       (command: ApplicationCommandType): boolean => !command.defaultPermission
     )) {
@@ -83,7 +83,9 @@ export default class CommandPermissions {
         reqObj.headers!.Host = 'discord.com';
       }
 
-      request(reqObj, JSON.stringify(body)).catch(console.error);
+      let req: string | void = undefined;
+      while (req === undefined)
+        req = await request(reqObj, JSON.stringify(body)).catch(console.error);
     }
   }
 }
