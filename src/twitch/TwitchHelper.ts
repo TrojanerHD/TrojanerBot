@@ -68,9 +68,10 @@ export default class TwitchHelper {
   private async channelRequest(): Promise<void> {
     const streams: Stream[] = [];
     for (const streamers of this.#streamerUpdateSplit) {
-      let req: string | void = undefined;
-      while (req === undefined)
-        req = await request(
+      let parsed: boolean = false;
+
+      while (!parsed) {
+        const req: string | void = await request(
           {
             host: 'api.twitch.tv',
             path: `/helix/streams?${TwitchHelper.generateUrl(streamers)}`,
@@ -82,8 +83,16 @@ export default class TwitchHelper {
           TwitchHelper.generateUrl(streamers)
         ).catch(console.error);
 
-      const stream: StreamData = JSON.parse(req);
-      streams.push.apply(streams, stream.data);
+        if (req === undefined) continue;
+
+        try {
+          const stream: StreamData = JSON.parse(req);
+          streams.push.apply(streams, stream.data);
+          parsed = true;
+        } catch (e) {
+          console.error(e);
+        }
+      }
     }
 
     streams.sort((a: Stream, b: Stream): number => {
