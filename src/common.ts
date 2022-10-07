@@ -54,6 +54,9 @@ export async function requestWrapper(
           res.on('end', (): void => resolve(data));
         }
       );
+
+      req.on('error', reject);
+
       if (data !== undefined) req.end(data);
     }
   );

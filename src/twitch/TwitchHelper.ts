@@ -68,8 +68,9 @@ export default class TwitchHelper {
   private async channelRequest(): Promise<void> {
     const streams: Stream[] = [];
     for (const streamers of this.#streamerUpdateSplit) {
-      const stream: StreamData = JSON.parse(
-        await request(
+      let req: string | void = undefined;
+      while (req === undefined)
+        req = await request(
           {
             host: 'api.twitch.tv',
             path: `/helix/streams?${TwitchHelper.generateUrl(streamers)}`,
@@ -79,8 +80,9 @@ export default class TwitchHelper {
             },
           },
           TwitchHelper.generateUrl(streamers)
-        )
-      );
+        ).catch(console.error);
+
+      const stream: StreamData = JSON.parse(req);
       streams.push.apply(streams, stream.data);
     }
 
@@ -115,14 +117,17 @@ export default class TwitchHelper {
     params.append('client_id', Settings.settings['twitch-id']);
     params.append('client_secret', process.env.TWITCH_TOKEN!);
     params.append('grant_type', 'client_credentials');
-    const req: string = await request(
-      {
-        host: 'id.twitch.tv',
-        path: `/oauth2/token`,
-        method: 'POST',
-      },
-      params.toString()
-    );
+    let req: string | void = undefined;
+    while (req === undefined)
+      req = await request(
+        {
+          host: 'id.twitch.tv',
+          path: `/oauth2/token`,
+          method: 'POST',
+        },
+        params.toString()
+      ).catch(console.error);
+
     this.#accessToken = JSON.parse(req).access_token;
   }
 }
