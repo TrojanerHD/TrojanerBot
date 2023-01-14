@@ -1,40 +1,47 @@
 import {
   EmbedFieldData,
+  Guild,
   GuildChannel,
   MessageEmbed,
   NewsChannel,
   TextChannel,
   ThreadChannel,
 } from 'discord.js';
-import Settings, { RolesField } from '../Settings';
-import DiscordClient from '../DiscordClient';
 import manageRoles from './manageRoles';
 import { GuildTextChannel } from '../messages/Command';
+import { RolesField } from '../settings/SettingsDB';
+import GuildSettings from '../settings/GuildSettings';
 
 /**
  * Manages the roles for each user with a message with button in a channel
  */
 export default class RoleChannelManager {
-  constructor() {
-    for (const guild of DiscordClient._client.guilds.cache.toJSON()) {
-      const rolesChannel: GuildTextChannel | undefined =
-        guild.channels.cache.find(
-          (channel: GuildChannel | ThreadChannel): boolean =>
-            channel.name === 'roles' &&
-            (channel instanceof TextChannel ||
-              channel instanceof ThreadChannel ||
-              channel instanceof NewsChannel)
-        ) as GuildTextChannel | undefined;
-      if (!rolesChannel) continue;
+  #guild: Guild;
 
-      const embed: MessageEmbed = this.generateEmbed();
-
-      manageRoles(rolesChannel, embed);
-    }
+  constructor(guild: Guild) {
+    this.#guild = guild;
   }
 
-  private generateEmbed(): MessageEmbed {
-    const roles: RolesField[] = Settings.settings.roles;
+  public async run() {
+    const rolesChannel: GuildTextChannel | undefined =
+      this.#guild.channels.cache.find(
+        (channel: GuildChannel | ThreadChannel): boolean =>
+          channel.name === 'roles' &&
+          (channel instanceof TextChannel ||
+            channel instanceof ThreadChannel ||
+            channel instanceof NewsChannel)
+      ) as GuildTextChannel | undefined;
+    if (!rolesChannel) return;
+
+    const embed: MessageEmbed = await this.generateEmbed();
+
+    manageRoles(rolesChannel, embed);
+  }
+
+  private async generateEmbed(): Promise<MessageEmbed> {
+    const roles: RolesField[] = (await GuildSettings.settings(this.#guild.id))
+      .roles;
+
     const errorRole: boolean = roles.some(
       (role: RolesField): boolean => !role.emoji || !role.name
     );
@@ -50,7 +57,7 @@ export default class RoleChannelManager {
       .setTimestamp(Date.now())
       .setTitle('Role Selector')
       .setFields(
-        Settings.settings.roles.map(
+        roles.map(
           (role: RolesField): EmbedFieldData => ({
             name: role.name,
             value: role.description || '*No description provided*',

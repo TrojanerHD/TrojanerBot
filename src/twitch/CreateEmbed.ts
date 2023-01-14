@@ -61,7 +61,7 @@ export default class CreateEmbed {
    * Sends the embed into #live
    */
   async sendEmbed(): Promise<void> {
-    for (const guild of DiscordClient._client.guilds.cache.toJSON()) {
+    for (const guild of DiscordClient._safeGuilds) {
       const liveChannel: GuildTextChannel | undefined =
         guild.channels.cache.find(
           (channel: GuildBasedChannel): boolean =>

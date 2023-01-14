@@ -25,7 +25,7 @@ export interface StreamData {
 export default class TwitchHelper {
   /** The access token for the Twitch API */
   #accessToken?: string;
-  #streamerUpdate: () => string[] = () => [];
+  #streamerUpdate: () => Promise<string[]> = () => Promise.resolve([]);
   #streamerUpdateSplit: string[][] = [];
   #callback: (streams: Stream[]) => Promise<void>;
 
@@ -47,9 +47,9 @@ export default class TwitchHelper {
    * Fetches the current state of streams
    * @param streamerUpdate Function to execute to obtain the streamers to fetch
    */
-  async update(streamerUpdate?: () => string[]): Promise<void> {
+  async update(streamerUpdate?: () => Promise<string[]>): Promise<void> {
     if (streamerUpdate !== undefined) this.#streamerUpdate = streamerUpdate;
-    const streamers: string[] = this.#streamerUpdate();
+    const streamers: string[] = await this.#streamerUpdate();
     if (streamers.length === 0) {
       this.timeout();
       return;
@@ -94,14 +94,6 @@ export default class TwitchHelper {
         }
       }
     }
-
-    streams.sort((a: Stream, b: Stream): number => {
-      for (const streamer of Settings.settings.streamers) {
-        if (a.user_name === streamer) return -1;
-        if (b.user_name === streamer) return 1;
-      }
-      return 0;
-    });
 
     this.#callback(streams)
       .then(this.timeout.bind(this))

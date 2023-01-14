@@ -13,7 +13,7 @@ import StreamerCommand from './StreamerCommand';
 import LinkResolve from './LinkResolve';
 import Command from './Command';
 import CommandPermissions from './permissions/CommandPermissions';
-import Settings from '../Settings';
+import GuildSettings from '../settings/GuildSettings';
 
 export type ApplicationCommandType = ApplicationCommand<{
   guild: GuildResolvable;
@@ -59,7 +59,7 @@ export default class MessageHandler {
    * Checks for a message link in the message that could be processed as quote
    * @param message The message to be processed
    */
-  onMessage(message: Message): void {
+  async onMessage(message: Message): Promise<void> {
     if (message.channel.type === 'DM' || message.author.bot) return;
     if (message.content.match(/https:\/\/discord(app)?\.(com|gg)\/channels/))
       new LinkResolve().handleCommand(message.channel, message);

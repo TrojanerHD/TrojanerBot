@@ -2,16 +2,8 @@ import { Channel } from './messages/StreamerCommand';
 import fs from 'fs';
 import DMManager from './twitch/DMManager';
 
-export interface RolesField {
-  name: string;
-  emoji: string;
-  description?: string;
-}
 export interface SettingsJSON {
   'twitch-id': string;
-  'permission-roles': string[];
-  roles: RolesField[];
-  streamers: string[];
   logging: 'verbose' | 'errors' | 'warnings';
   'streamer-subscriptions': Channel[];
   'express-port'?: number;
@@ -34,9 +26,6 @@ export default class Settings {
    */
   private static _settings: SettingsJSON = {
     'twitch-id': '',
-    'permission-roles': [],
-    roles: [],
-    streamers: [],
     logging: 'warnings',
     'streamer-subscriptions': [],
   };

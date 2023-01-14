@@ -10,7 +10,8 @@ import {
 import DiscordClient from './DiscordClient';
 import assignRoles from './roles/assignRoles';
 import MessageHandler from './messages/MessageHandler';
-import Settings, { RolesField } from './Settings';
+import { RolesField } from './settings/SettingsDB';
+import GuildSettings from './settings/GuildSettings';
 
 /**
  * Handles reactions (button presses, slash-commands)
@@ -26,14 +27,16 @@ export default class ReactionHandler {
    * Fires whenever an interaction has been made
    * @param interaction The interaction that has happened
    */
-  private onReaction(interaction: Interaction): void {
+  private async onReaction(interaction: Interaction): Promise<void> {
     // Checks whether the interaction was a button
     if (interaction.isButton()) {
       // If the id of the button is a role name, the interaction's origin is from the role picker
-      const settingsRole: RolesField | undefined = Settings.settings.roles.find(
-        (role: RolesField): boolean =>
-          role.name.toLowerCase() === interaction.customId
-      );
+      const settingsRole: RolesField | undefined = interaction.guildId
+        ? (await GuildSettings.settings(interaction.guildId)).roles.find(
+            (role: RolesField): boolean =>
+              role.name.toLowerCase() === interaction.customId
+          )
+        : undefined;
       if (settingsRole !== undefined) {
         // Hack to not reply with anything
         interaction.reply({}).catch((reason: any): void => {
@@ -62,7 +65,8 @@ export default class ReactionHandler {
           interaction
             .reply({
               content: 'Select your roles',
-              components: this.generateRoleSelectorComponent(
+              components: await this.generateRoleSelectorComponent(
+                interaction.guildId,
                 interaction.member as GuildMember | null
               ),
               ephemeral: true,
@@ -84,16 +88,22 @@ export default class ReactionHandler {
    * @param member The guild member the selector is created for
    * @returns A message action row array containing all selectable roles
    */
-  private generateRoleSelectorComponent(member: GuildMember | null): MessageActionRow[] {
+  private async generateRoleSelectorComponent(
+    guild: string | null,
+    member: GuildMember | null
+  ): Promise<MessageActionRow[]> {
     const messageActionRows: MessageActionRow[] = [];
     let currentMessageActionRow: MessageActionRow;
+    if (guild === null) return [];
+
+    const roles = (await GuildSettings.settings(guild)).roles;
     // Every row can contain up to five roles
-    for (let i = 0; i < Settings.settings.roles.length / 5; i++) {
+    for (let i = 0; i < roles.length / 5; i++) {
       currentMessageActionRow = new MessageActionRow();
       messageActionRows.push(currentMessageActionRow);
       // Add the current five roles as component
       currentMessageActionRow.addComponents(
-        Settings.settings.roles.slice(i * 5, i * 5 + 5).map(
+        roles.slice(i * 5, i * 5 + 5).map(
           // Map the roles stored in settings
           (role: RolesField): MessageActionRowComponentResolvable => ({
             customId: role.name.toLowerCase(),
@@ -121,7 +131,8 @@ export default class ReactionHandler {
     interaction
       .editReply({
         content: 'Select your roles',
-        components: this.generateRoleSelectorComponent(
+        components: await this.generateRoleSelectorComponent(
+          interaction.guildId,
           interaction.member as GuildMember | null
         ),
       })

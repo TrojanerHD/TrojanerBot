@@ -12,6 +12,7 @@ import Settings, { SettingsJSON } from '../../Settings';
 import { ApplicationCommandType } from '../MessageHandler';
 import Authentication from './Authentication';
 import { RequestOptions } from 'https';
+import GuildSettings from '../../settings/GuildSettings';
 
 /**
  * Set permissions for commands
@@ -51,7 +52,9 @@ export default class CommandPermissions {
     )) {
       for (const guild of DiscordClient._client.guilds.cache.toJSON()) {
         const body: { permissions: ApplicationCommandPermissionData[] } = {
-          permissions: Settings.settings['permission-roles']
+          permissions: (
+            await GuildSettings.settings(guild.id)
+          ).permissionRoles
             .filter((roleName: string): boolean =>
               guild.roles.cache.some(
                 (role: Role): boolean => role.name === roleName

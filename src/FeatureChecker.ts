@@ -1,4 +1,8 @@
+import { Guild } from 'discord.js';
+import DiscordClient from './DiscordClient';
 import Settings from './Settings';
+import GuildSettings from './settings/GuildSettings';
+import { GuildInfo } from './settings/SettingsDB';
 
 /**
  * Checks what features are enabled in the settings
@@ -14,22 +18,17 @@ export default class FeatureChecker {
    */
   #crash: boolean = false;
 
-  constructor() {
+  public async check() {
     if (Settings.settings.logging === 'verbose')
       this.status('Logging set to verbose');
-    if (Settings.settings['permission-roles'].length === 0)
-      this.warning('No permitted roles set (field "permission-roles" empty)');
-    if (Settings.settings.roles.length === 0) this.status('Roles disabled');
-    else this.status('Roles enabled');
+    for (const guild of DiscordClient._client.guilds.cache.toJSON())
+      await this.checkGuild(guild);
+
     if (Settings.settings['twitch-id'])
       if (process.env.TWITCH_TOKEN) this.status('Twitch enabled');
       else this.warning('No Twitch token provided');
     else if (process.env.TWITCH_TOKEN) this.warning('No Twitch ID provided');
     else this.status('Twitch disabled');
-    if (Settings.settings.roles.length > 25)
-      this.error(
-        'Currently, only a maximum of 25 roles is allowed. If you need more, file an issue at https://github.com/TrojanerHD/TrojanerBot/issues/new'
-      );
     if (
       process.argv[
         process.argv.findIndex((value: string): boolean => value === '-r') + 1
@@ -40,6 +39,38 @@ export default class FeatureChecker {
       );
     console.log(this.#message.trim());
     if (this.#crash) process.exit(1);
+  }
+
+  public async checkGuild(guild: Guild): Promise<void> {
+    const guildInfo: string = `for guild ${guild.id} (${guild.name})`;
+    let error: boolean = false;
+    try {
+      const info: GuildInfo = await GuildSettings.settings(guild.id);
+      if (info.permissionRoles.length === 0)
+        this.warning(`No permitted roles set for ${guildInfo}`);
+      if (info.roles.length === 0) this.status(`Roles disabled ${guildInfo}`);
+      else this.status(`Roles enabled ${guildInfo}`);
+      if (info.roles.length > 25) {
+        error = true;
+        this.error(
+          `Currently, only a maximum of 25 roles is allowed. Guild ${guild.id} (${guild.name}) has more than 25 roles. If you need more, file an issue at https://github.com/TrojanerHD/TrojanerBot/issues/new`,
+          false
+        );
+      }
+    } catch (e: unknown) {
+      error = true;
+      this.error(
+        `Could not load information ${guildInfo} with reason ${e}`,
+        false
+      );
+    } finally {
+      if (error) {
+        DiscordClient._safeGuilds = DiscordClient._safeGuilds.filter(
+          (otherGuild: Guild) => otherGuild.id !== guild.id
+        );
+        this.warning(`Limited features due to problems ${guildInfo}`);
+      }
+    }
   }
 
   /**
@@ -64,8 +95,8 @@ export default class FeatureChecker {
    * Appends an error to the log output and will crash the bot
    * @param message The error message to append
    */
-  private error(message: string): void {
+  private error(message: string, crash: boolean = true): void {
     this.#message += `Error: ${message}\n`;
-    this.#crash = true;
+    if (!this.#crash) this.#crash = crash;
   }
 }
