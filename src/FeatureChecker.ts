@@ -47,7 +47,7 @@ export default class FeatureChecker {
     try {
       const info: GuildInfo = await GuildSettings.settings(guild.id);
       if (info.permissionRoles.length === 0)
-        this.warning(`No permitted roles set for ${guildInfo}`);
+        this.status(`No permitted roles set for ${guildInfo}`);
       if (info.roles.length === 0) this.status(`Roles disabled ${guildInfo}`);
       else this.status(`Roles enabled ${guildInfo}`);
       if (info.roles.length > 25) {
