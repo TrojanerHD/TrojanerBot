@@ -1,8 +1,6 @@
 import DatabaseHelper from './DatabaseHelper';
 
 export interface RolesField {
-  id: string;
-  server: string;
   name: string;
   emoji: string;
   description?: string;

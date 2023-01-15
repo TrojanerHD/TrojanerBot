@@ -10,10 +10,10 @@ import PingCommand from './PingCommand';
 import ByeCommand from './ByeCommand';
 import LinkCommand from './LinkCommand';
 import StreamerCommand from './StreamerCommand';
+import RolesCommand from './RolesCommand';
 import LinkResolve from './LinkResolve';
 import Command from './Command';
 import CommandPermissions from './permissions/CommandPermissions';
-import GuildSettings from '../settings/GuildSettings';
 
 export type ApplicationCommandType = ApplicationCommand<{
   guild: GuildResolvable;
@@ -33,6 +33,7 @@ export default class MessageHandler {
     new ByeCommand(),
     new LinkCommand(),
     new StreamerCommand(),
+    new RolesCommand(),
   ];
 
   constructor() {

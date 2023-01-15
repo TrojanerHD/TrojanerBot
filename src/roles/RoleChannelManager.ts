@@ -16,15 +16,17 @@ import GuildSettings from '../settings/GuildSettings';
  * Manages the roles for each user with a message with button in a channel
  */
 export default class RoleChannelManager {
-  #guild: Guild;
+  public _guild: Guild;
+  public static mgrs: RoleChannelManager[] = [];
 
   constructor(guild: Guild) {
-    this.#guild = guild;
+    this._guild = guild;
+    RoleChannelManager.mgrs.push(this);
   }
 
   public async run() {
     const rolesChannel: GuildTextChannel | undefined =
-      this.#guild.channels.cache.find(
+      this._guild.channels.cache.find(
         (channel: GuildChannel | ThreadChannel): boolean =>
           channel.name === 'roles' &&
           (channel instanceof TextChannel ||
@@ -39,7 +41,7 @@ export default class RoleChannelManager {
   }
 
   private async generateEmbed(): Promise<MessageEmbed> {
-    const roles: RolesField[] = (await GuildSettings.settings(this.#guild.id))
+    const roles: RolesField[] = (await GuildSettings.settings(this._guild.id))
       .roles;
 
     const errorRole: boolean = roles.some(

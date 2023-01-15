@@ -33,7 +33,11 @@ export default async function manageRoles(
       .setLabel('Select your roles')
       .setStyle('PRIMARY')
   );
-  // Edit the message if it already exists, otherwise create it
+  // Edit/delete the message if it already exists, otherwise create it
+  if (newEmbed.fields.length === 0) {
+    if (rolesMessage !== undefined) rolesMessage.delete();
+    return;
+  }
   if (rolesMessage === undefined) {
     DiscordClient.send(rolesChannel, {
       embeds: [newEmbed],

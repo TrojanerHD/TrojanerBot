@@ -74,8 +74,9 @@ export default class DiscordClient {
       await DiscordClient._client.application?.fetch().catch(console.error);
     MessageHandler.addCommands();
     for (const guild of DiscordClient._safeGuilds) {
+      const mgr: RoleChannelManager = new RoleChannelManager(guild);
       if ((await GuildSettings.settings(guild.id)).roles.length !== 0)
-        new RoleChannelManager(guild).run();
+        mgr.run();
     }
   }
 
