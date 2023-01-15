@@ -4,13 +4,13 @@ import {
   ApplicationCommandData,
   GuildResolvable,
   Message,
-  Role,
 } from 'discord.js';
 import PingCommand from './PingCommand';
 import ByeCommand from './ByeCommand';
 import LinkCommand from './LinkCommand';
 import StreamerCommand from './StreamerCommand';
 import RolesCommand from './RolesCommand';
+import PermitCommand from './PermitCommand';
 import LinkResolve from './LinkResolve';
 import Command from './Command';
 import CommandPermissions from './permissions/CommandPermissions';
@@ -34,6 +34,7 @@ export default class MessageHandler {
     new LinkCommand(),
     new StreamerCommand(),
     new RolesCommand(),
+    new PermitCommand(),
   ];
 
   constructor() {
