@@ -11,6 +11,7 @@ import LinkCommand from './LinkCommand';
 import StreamerCommand from './StreamerCommand';
 import RolesCommand from './RolesCommand';
 import PermitCommand from './PermitCommand';
+import StreamChannelCommand from './StreamChannelCommand';
 import LinkResolve from './LinkResolve';
 import Command from './Command';
 import CommandPermissions from './permissions/CommandPermissions';
@@ -35,6 +36,7 @@ export default class MessageHandler {
     new StreamerCommand(),
     new RolesCommand(),
     new PermitCommand(),
+    new StreamChannelCommand(),
   ];
 
   constructor() {
