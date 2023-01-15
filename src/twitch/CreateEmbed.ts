@@ -7,6 +7,7 @@ import {
   NewsChannel,
   GuildBasedChannel,
   EmbedFieldData,
+  Guild,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
 import { GuildTextChannel } from '../messages/Command';
@@ -23,6 +24,11 @@ interface StreamInformation {
  */
 export default class CreateEmbed {
   #embed: EmbedFieldData[][] = [];
+  readonly #guild: Guild;
+
+  constructor(guild: Guild) {
+    this.#guild = guild;
+  }
 
   /**
    * Adds a formatted field to the embed containing information about a stream
@@ -61,38 +67,36 @@ export default class CreateEmbed {
    * Sends the embed into #live
    */
   async sendEmbed(): Promise<void> {
-    for (const guild of DiscordClient._safeGuilds) {
-      const liveChannel: GuildTextChannel | undefined =
-        guild.channels.cache.find(
-          (channel: GuildBasedChannel): boolean =>
-            (channel instanceof TextChannel ||
-              channel instanceof NewsChannel ||
-              channel instanceof ThreadChannel) &&
-            channel.name === 'live'
-        ) as GuildTextChannel | undefined;
-      if (liveChannel === undefined) continue;
+    const liveChannel: GuildTextChannel | undefined =
+      this.#guild.channels.cache.find(
+        (channel: GuildBasedChannel): boolean =>
+          (channel instanceof TextChannel ||
+            channel instanceof NewsChannel ||
+            channel instanceof ThreadChannel) &&
+          channel.name === 'live'
+      ) as GuildTextChannel | undefined;
+    if (liveChannel === undefined) return;
 
-      const messages: Collection<string, Message> | void =
-        await liveChannel.messages.fetch().catch(console.error);
-      if (!messages) continue;
+    const messages: Collection<string, Message> | void =
+      await liveChannel.messages.fetch().catch(console.error);
+    if (!messages) return;
 
-      const embed: MessageEmbed = new MessageEmbed()
-        .setTitle('Twitch')
-        .setTimestamp(Date.now());
+    const embed: MessageEmbed = new MessageEmbed()
+      .setTitle('Twitch')
+      .setTimestamp(Date.now());
 
-      for (const fieldArray of this.#embed) embed.addFields(fieldArray);
+    for (const fieldArray of this.#embed) embed.addFields(fieldArray);
 
-      if (messages.toJSON().length === 0) {
-        await liveChannel.send({ embeds: [embed] }).catch(console.error);
-        return;
+    if (messages.toJSON().length === 0) {
+      await liveChannel.send({ embeds: [embed] }).catch(console.error);
+      return;
+    }
+    for (const message of messages.toJSON()) {
+      if (message.author.id !== DiscordClient._client.user!.id) {
+        await message.delete().catch(console.error);
+        continue;
       }
-      for (const message of messages.toJSON()) {
-        if (message.author.id !== DiscordClient._client.user!.id) {
-          await message.delete().catch(console.error);
-          continue;
-        }
-        await message.edit({ embeds: [embed] }).catch(console.error);
-      }
+      await message.edit({ embeds: [embed] }).catch(console.error);
     }
   }
 }

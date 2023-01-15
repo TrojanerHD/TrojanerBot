@@ -102,7 +102,7 @@ export default class DiscordClient {
    * Starts doing stuff with Twitch for the #live channel and DM notification handling
    */
   private startTwitch(): void {
-    for (const guild of DiscordClient._safeGuilds) new LiveChannel(guild.id);
+    for (const guild of DiscordClient._safeGuilds) new LiveChannel(guild);
     new DMManager();
   }
 
