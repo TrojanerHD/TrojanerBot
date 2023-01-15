@@ -6,15 +6,18 @@ import {
   ThreadChannel,
   BaseGuildTextChannel,
   NewsChannel,
+  VoiceChannel,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
-import { GuildTextChannel } from './Command';
 
 /**
  * Adds a quote to discord links
  */
 export default class LinkResolve {
-  handleCommand(channel: GuildTextChannel, message: Message): void {
+  handleCommand(
+    channel: NewsChannel | TextChannel | ThreadChannel | VoiceChannel,
+    message: Message
+  ): void {
     // Extract guild id, channel id and message id from message
     const splitMessage: string = message.content.split(
       /https:\/\/(?:canary\.|ptb\.)?discord(app)?\.(com|gg)\/channels\//
@@ -56,9 +59,14 @@ export default class LinkResolve {
           urlMessage.content || 'Message content not available';
         DiscordClient.send(
           channel,
-          embed
-            .addField('Message Content', content, false)
-            .addField('Message Author', `<@${urlMessage.author.id}>`, false)
+          embed.addFields([
+            { name: 'Message Content', value: content, inline: false },
+            {
+              name: 'Message Author',
+              value: `<@${urlMessage.author.id}>`,
+              inline: false,
+            },
+          ])
         );
       })
       .catch(console.error);

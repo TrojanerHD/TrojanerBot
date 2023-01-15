@@ -9,9 +9,8 @@ import {
   NewsChannel,
   ChatInputApplicationCommandData,
   CommandInteraction,
-  DMChannel,
-  PartialDMChannel,
   GuildCacheMessage,
+  TextBasedChannel,
 } from 'discord.js';
 
 export default class LinkCommand extends Command {
@@ -27,8 +26,8 @@ export default class LinkCommand extends Command {
         required: true,
       },
     ],
+    dmPermission: false,
   };
-  guildOnly = true;
 
   async handleCommand(
     args: readonly CommandInteractionOption[],
@@ -103,9 +102,7 @@ export default class LinkCommand extends Command {
     oldMessage.edit({ embeds: [embed] }).catch(console.error);
   }
 
-  private channelName(
-    channel?: GuildTextChannel | DMChannel | PartialDMChannel
-  ): string {
+  private channelName(channel?: TextBasedChannel): string {
     if (!channel) return 'Not available';
     return `${channel instanceof TextChannel ? '#' : ''}${
       (channel as GuildTextChannel).name

@@ -6,6 +6,7 @@ import {
   ThreadChannel,
   NewsChannel,
   GuildBasedChannel,
+  EmbedFieldData,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
 import { GuildTextChannel } from '../messages/Command';
@@ -17,17 +18,11 @@ interface StreamInformation {
   viewer_count: number;
 }
 
-interface Field {
-  name: string;
-  value: string;
-  inline?: boolean;
-}
-
 /**
  * Creates the embed for #live
  */
 export default class CreateEmbed {
-  #embed: Field[][] = [];
+  #embed: EmbedFieldData[][] = [];
 
   /**
    * Adds a formatted field to the embed containing information about a stream
@@ -44,7 +39,7 @@ export default class CreateEmbed {
         ? 'Large'
         : 'Very Large';
 
-    const fieldArray: Field[] = [
+    const fieldArray: EmbedFieldData[] = [
       {
         name: 'Streamer',
         value: `[${streamInformation.name}](https://twitch.tv/${streamInformation.name})`,
@@ -85,9 +80,7 @@ export default class CreateEmbed {
         .setTitle('Twitch')
         .setTimestamp(Date.now());
 
-      for (const fieldArray of this.#embed)
-        for (const field of fieldArray)
-          embed.addField(field.name, field.value, field.inline);
+      for (const fieldArray of this.#embed) embed.addFields(fieldArray);
 
       if (messages.toJSON().length === 0) {
         await liveChannel.send({ embeds: [embed] }).catch(console.error);

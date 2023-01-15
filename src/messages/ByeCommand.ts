@@ -3,6 +3,7 @@ import {
   ChatInputApplicationCommandData,
   CommandInteraction,
   CommandInteractionOption,
+  Permissions,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
 
@@ -10,9 +11,9 @@ export default class ByeCommand extends Command {
   deploy: ChatInputApplicationCommandData = {
     name: 'bye',
     description: 'Shuts the bot down',
-    defaultPermission: false,
+    defaultMemberPermissions: Permissions.FLAGS.MANAGE_GUILD,
+    dmPermission: false,
   };
-  guildOnly: boolean = true;
 
   async handleCommand(
     _args: readonly CommandInteractionOption[],

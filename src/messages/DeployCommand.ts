@@ -3,6 +3,7 @@ import {
   Collection,
   CommandInteraction,
   CommandInteractionOption,
+  Permissions,
   Snowflake,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
@@ -27,10 +28,9 @@ export default class DeployCommand extends Command {
         options: [],
       },
     ],
-    defaultPermission: false,
+    defaultMemberPermissions: Permissions.FLAGS.MANAGE_GUILD,
+    dmPermission: false,
   };
-
-  guildOnly: boolean = true;
 
   handleCommand(
     args: readonly CommandInteractionOption[],
