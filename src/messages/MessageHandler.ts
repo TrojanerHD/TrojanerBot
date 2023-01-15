@@ -45,29 +45,16 @@ export default class MessageHandler {
    * Deploys all commands on all servers and for DMs
    */
   public static addCommands(): void {
-    const guildCommands: ApplicationCommandData[] = MessageHandler._commands
-      .filter((command: Command): boolean => command.guildOnly)
-      .map((command: Command): ApplicationCommandData => command.deploy);
+    const commands: ApplicationCommandData[] = MessageHandler._commands.map(
+      (command: Command): ApplicationCommandData => command.deploy
+    );
 
-    const dmCommands: ApplicationCommandData[] = MessageHandler._commands
-      .filter((command: Command): boolean => !command.guildOnly)
-      .map((command: Command): ApplicationCommandData => command.deploy);
+    const commandPermissions: CommandPermissions = new CommandPermissions();
 
-    DiscordClient._client.application?.commands.set(dmCommands);
-
-    for (const guild of DiscordClient._client.guilds.cache.toJSON()) {
-      guild.commands
-        .fetch()
-        .then((): void => {
-          const commandPermissions: CommandPermissions =
-            new CommandPermissions();
-          guild.commands
-            .set(guildCommands)
-            .then(commandPermissions.onCommandsSet.bind(commandPermissions))
-            .catch(console.error);
-        })
-        .catch(console.error);
-    }
+    DiscordClient._client.application?.commands
+      .set(commands)
+      .then(commandPermissions.onCommandsSet.bind(commandPermissions))
+      .catch(console.error);
   }
 
   /**

@@ -20,10 +20,6 @@ export default abstract class Command {
    * The deploy data of the command
    */
   abstract deploy: ChatInputApplicationCommandData;
-  /**
-   * Whether the command should not be available in DMs
-   */
-  guildOnly: boolean = false;
 
   /**
    * Fires every time a user executes a registered command
