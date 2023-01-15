@@ -55,7 +55,7 @@ export default class PermitCommand extends Command {
     }
 
     const info: GuildInfo = await GuildSettings.settings(interaction.guildId);
-    const newRole: string = args[1].role!.name;
+    const newRole: string = args[1].value!.toString();
     const alreadyAdded: boolean = info.permissionRoles.some(
       (role: string): boolean => newRole === role
     );
@@ -64,17 +64,19 @@ export default class PermitCommand extends Command {
         if (alreadyAdded) {
           interaction
             .reply({
-              content: `Role ${newRole} is already a permitted role`,
+              content: `Role ${args[1].role!.name} is already a permitted role`,
               ephemeral: true,
             })
             .catch(console.error);
           return;
         }
 
-        info.permissionRoles.push(args[1].role!.name);
+        info.permissionRoles.push(newRole);
         interaction
           .reply({
-            content: `The role ${newRole} has been added as a permitted role`,
+            content: `The role ${
+              args[1].role!.name
+            } has been added as a permitted role`,
             ephemeral: true,
           })
           .catch(console.error);
@@ -83,7 +85,7 @@ export default class PermitCommand extends Command {
         if (!alreadyAdded) {
           interaction
             .reply({
-              content: `Role ${newRole} is not a permitted role`,
+              content: `Role ${args[1].role!.name} is not a permitted role`,
               ephemeral: true,
             })
             .catch(console.error);
@@ -95,7 +97,9 @@ export default class PermitCommand extends Command {
         );
         interaction
           .reply({
-            content: `Role ${newRole} has been removed from the permitted roles`,
+            content: `Role ${
+              args[1].role!.name
+            } has been removed from the permitted roles`,
             ephemeral: true,
           })
           .catch(console.error);
