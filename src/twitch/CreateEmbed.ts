@@ -52,7 +52,7 @@ export default class CreateEmbed {
       fieldArray.push({
         name: 'Category',
         value: streamInformation.category,
-        inline: true,
+        inline: false,
       });
     this.#embed.push(fieldArray);
   }
