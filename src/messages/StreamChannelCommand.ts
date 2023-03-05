@@ -97,7 +97,10 @@ export default class StreamChannelCommand extends Command {
           case 'remove':
             if (!alreadyAdded) {
               interaction
-                .reply({ content: `Streamer ${newStreamer} is not added` })
+                .reply({
+                  content: `Streamer ${newStreamer} is not added`,
+                  ephemeral: true,
+                })
                 .catch(console.error);
               return;
             }
