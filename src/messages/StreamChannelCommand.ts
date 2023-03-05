@@ -103,7 +103,7 @@ export default class StreamChannelCommand extends Command {
             }
 
             info.streamers = info.streamers.filter(
-              (streamer: string): boolean => newStreamer === streamer
+              (streamer: string): boolean => newStreamer !== streamer
             );
             interaction
               .reply({
