@@ -38,10 +38,7 @@ export default class DiscordClient {
   constructor() {
     DiscordClient._client.on('ready', this.onReady.bind(this));
     DiscordClient._client.on('threadCreate', this.onThreadCreate);
-    DiscordClient._client.on(
-      'guildCreate',
-      (guild: Guild): Promise<void> => new FeatureChecker().checkGuild(guild)
-    );
+    DiscordClient._client.on('guildCreate', this.onGuildJoin);
   }
 
   /**
@@ -55,19 +52,10 @@ export default class DiscordClient {
    * Fires when the Discord bot is ready
    */
   private async onReady(): Promise<void> {
-    DiscordClient._safeGuilds = DiscordClient._client.guilds.cache.toJSON();
-    for (const guild of DiscordClient._safeGuilds)
-      if (!GuildSettings.settings(guild.id))
-        GuildSettings.saveSettings(guild, {
-          permissionRoles: [],
-          roles: [],
-          streamers: [],
-        });
     await new FeatureChecker().check();
     new MessageHandler();
     new ReactionHandler();
-    if (Settings.settings['twitch-id'] !== '' && process.env.TWITCH_TOKEN)
-      this.startTwitch();
+    if (this.twitchEnabled()) this.startTwitch();
     this.joinAllThreads();
     new TalkingChannel();
     if (!DiscordClient._client.application?.owner)
@@ -78,6 +66,25 @@ export default class DiscordClient {
       if ((await GuildSettings.settings(guild.id)).roles.length !== 0)
         mgr.run();
     }
+  }
+
+  /**
+   * Sets the bot up to be ready for a guild
+   * @param guild The guild the bot joined
+   */
+  private async onGuildJoin(guild: Guild): Promise<void> {
+    new FeatureChecker().checkGuild(guild);
+    if (this.twitchEnabled()) new LiveChannel(guild);
+    const mgr: RoleChannelManager = new RoleChannelManager(guild);
+    if ((await GuildSettings.settings(guild.id)).roles.length !== 0) mgr.run()
+  }
+
+  /**
+   * Checks if the bot has been set up correctly to use Twitch
+   * @returns Whether Twitch is ready to be used
+   */
+  private twitchEnabled(): boolean {
+    return Settings.settings['twitch-id'] !== '' && !!process.env.TWITCH_TOKEN;
   }
 
   /**

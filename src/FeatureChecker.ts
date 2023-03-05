@@ -64,12 +64,15 @@ export default class FeatureChecker {
         false
       );
     } finally {
-      if (error) {
-        DiscordClient._safeGuilds = DiscordClient._safeGuilds.filter(
-          (otherGuild: Guild) => otherGuild.id !== guild.id
-        );
-        this.warning(`Limited features due to problems ${guildInfo}`);
-      }
+      if (!error) {
+        DiscordClient._safeGuilds.push(guild);
+        if (!GuildSettings.settings(guild.id))
+          GuildSettings.saveSettings(guild, {
+            permissionRoles: [],
+            roles: [],
+            streamers: [],
+          });
+      } else this.warning(`Limited features due to problems ${guildInfo}`);
     }
   }
 
