@@ -25,10 +25,18 @@ export interface StreamData {
 export default class TwitchHelper {
   /** The access token for the Twitch API */
   #accessToken?: string;
+  /**
+   * Determines the streamers that should be fetched
+   * @returns The streamers to fetch the live streams
+   */
   #streamerUpdate: () => Promise<string[]> = () => Promise.resolve([]);
   #streamerUpdateSplit: string[][] = [];
   #callback: (streams: Stream[]) => Promise<void>;
 
+  /**
+   * A wrapper for Twitch API calls with update cycle
+   * @param callback The callback to execute when a new update occurs
+   */
   constructor(callback: (streams: Stream[]) => Promise<void>) {
     this.#callback = callback;
   }
