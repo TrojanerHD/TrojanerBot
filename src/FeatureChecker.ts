@@ -94,6 +94,7 @@ export default class FeatureChecker {
   /**
    * Appends an error to the log output and will crash the bot
    * @param message The error message to append
+   * @param crash Whether to crash the bot
    */
   private error(message: string, crash: boolean = true): void {
     this.#message += `Error: ${message}\n`;
