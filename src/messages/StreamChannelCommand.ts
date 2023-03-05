@@ -4,10 +4,13 @@ import {
   CacheType,
   CommandInteraction,
   Permissions,
+  Collection,
+  Message,
 } from 'discord.js';
 import GuildSettings from '../settings/GuildSettings';
 import { GuildInfo } from '../settings/SettingsDB';
-import Command from './Command';
+import CreateEmbed from '../twitch/CreateEmbed';
+import Command, { GuildTextChannel } from './Command';
 
 export default class StreamChannelCommand extends Command {
   deploy: ChatInputApplicationCommandData = {
@@ -114,6 +117,16 @@ export default class StreamChannelCommand extends Command {
                 ephemeral: true,
               })
               .catch(console.error);
+            if (info.streamers.length === 0) {
+              const channel: GuildTextChannel | undefined =
+                CreateEmbed.determineLiveChannel(interaction.guild!);
+              if (!channel) break;
+              const messages: Collection<string, Message> | void =
+                await CreateEmbed.getMessages(channel);
+              if (!messages) break;
+              for (const message of messages.toJSON())
+                message.delete().catch(console.error);
+            }
             break;
         }
         GuildSettings.saveSettings(interaction.guild!, info);

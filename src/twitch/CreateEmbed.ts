@@ -68,17 +68,10 @@ export default class CreateEmbed {
    */
   async sendEmbed(): Promise<void> {
     const liveChannel: GuildTextChannel | undefined =
-      this.#guild.channels.cache.find(
-        (channel: GuildBasedChannel): boolean =>
-          (channel instanceof TextChannel ||
-            channel instanceof NewsChannel ||
-            channel instanceof ThreadChannel) &&
-          channel.name === 'live'
-      ) as GuildTextChannel | undefined;
+      CreateEmbed.determineLiveChannel(this.#guild);
     if (liveChannel === undefined) return;
 
-    const messages: Collection<string, Message> | void =
-      await liveChannel.messages.fetch().catch(console.error);
+    const messages: Collection<string, Message> | void = await CreateEmbed.getMessages(liveChannel);
     if (!messages) return;
 
     const embed: MessageEmbed = new MessageEmbed()
@@ -98,5 +91,21 @@ export default class CreateEmbed {
       }
       await message.edit({ embeds: [embed] }).catch(console.error);
     }
+  }
+
+  public static determineLiveChannel(
+    guild: Guild
+  ): GuildTextChannel | undefined {
+    return guild.channels.cache.find(
+      (channel: GuildBasedChannel): boolean =>
+        (channel instanceof TextChannel ||
+          channel instanceof NewsChannel ||
+          channel instanceof ThreadChannel) &&
+        channel.name === 'live'
+    ) as GuildTextChannel | undefined;
+  }
+
+  public static async getMessages(liveChannel: GuildTextChannel): Promise<Collection<string, Message> | void> {
+      return liveChannel.messages.fetch().catch(console.error);
   }
 }
