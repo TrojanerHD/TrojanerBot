@@ -2,7 +2,7 @@
 This is a [Discord](https://discord.com) bot currently only running on my [Discord server](https://discord.gg/NdsmmwV). To add this bot on your server, use the following link: 
 
 ## Adding the bot to your server
-1. Click the following link: https://discord.com/api/oauth2/authorize?client_id=632637013475983360&permissions=0&scope=bot%20applications.commands
+1. Click the following link: https://discord.com/api/oauth2/authorize?client_id=632637013475983360&permissions=8&scope=bot%20applications.commands
    - Note that the bot is added with admin privileges. You may alter the permissions value but keep in mind that some features might not work or lead to unexpected behavior
 2. (Optional) Set up the following text-channels
 	 - `#live` for a nice embed showing people selected by you who are currently live on Twitch
