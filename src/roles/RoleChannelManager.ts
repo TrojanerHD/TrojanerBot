@@ -17,6 +17,7 @@ import GuildSettings from '../settings/GuildSettings';
  */
 export default class RoleChannelManager {
   public _guild: Guild;
+  public _channel?: GuildTextChannel;
   public static mgrs: RoleChannelManager[] = [];
 
   constructor(guild: Guild) {
@@ -26,14 +27,17 @@ export default class RoleChannelManager {
 
   public async run() {
     const rolesChannel: GuildTextChannel | undefined =
-      this._guild.channels.cache.find(
+      this._channel ??
+      (this._guild.channels.cache.find(
         (channel: GuildChannel | ThreadChannel): boolean =>
           channel.name === 'roles' &&
           (channel instanceof TextChannel ||
             channel instanceof ThreadChannel ||
             channel instanceof NewsChannel)
-      ) as GuildTextChannel | undefined;
+      ) as GuildTextChannel | undefined);
     if (!rolesChannel) return;
+
+    this._channel = rolesChannel;
 
     const embed: MessageEmbed = await this.generateEmbed();
 
