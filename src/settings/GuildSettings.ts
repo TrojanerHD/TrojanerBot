@@ -10,7 +10,7 @@ export default class GuildSettings {
 	}
 
   public static async saveSettings(guild: Guild, settings: GuildInfo): Promise<void> {
-    GuildSettings.#db.updateGuild(guild.id, settings);
-		new FeatureChecker().checkGuild(guild);
+    await GuildSettings.#db.updateGuild(guild.id, settings).catch(console.error);
+		await new FeatureChecker().checkGuild(guild).catch(console.error);
   }
 }

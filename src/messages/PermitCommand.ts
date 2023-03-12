@@ -106,7 +106,9 @@ export default class PermitCommand extends Command {
         break;
     }
 
-    GuildSettings.saveSettings(interaction.guild!, info);
+    await GuildSettings.saveSettings(interaction.guild!, info).catch(
+      console.error
+    );
     MessageHandler.addCommands();
   }
 }

@@ -171,7 +171,9 @@ export default class RolesCommand extends Command {
           .catch(console.error);
         break;
     }
-    GuildSettings.saveSettings(interaction.guild!, info);
+    await GuildSettings.saveSettings(interaction.guild!, info).catch(
+      console.error
+    );
     Common.getRoleChannelManager(interaction.guild!).run();
   }
 

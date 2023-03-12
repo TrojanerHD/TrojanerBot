@@ -67,11 +67,11 @@ export default class FeatureChecker {
       if (!error) {
         DiscordClient._safeGuilds.push(guild);
         if (!GuildSettings.settings(guild.id))
-          GuildSettings.saveSettings(guild, {
+          await GuildSettings.saveSettings(guild, {
             permissionRoles: [],
             roles: [],
             streamers: [],
-          });
+          }).catch(console.error);
       } else this.warning(`Limited features due to problems ${guildInfo}`);
     }
   }

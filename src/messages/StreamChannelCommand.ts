@@ -129,7 +129,9 @@ export default class StreamChannelCommand extends Command {
             }
             break;
         }
-        GuildSettings.saveSettings(interaction.guild!, info);
+        await GuildSettings.saveSettings(interaction.guild!, info).catch(
+          console.error
+        );
         break;
       case 'list':
         interaction
