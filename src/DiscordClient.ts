@@ -38,7 +38,7 @@ export default class DiscordClient {
   constructor() {
     DiscordClient._client.on('ready', this.onReady.bind(this));
     DiscordClient._client.on('threadCreate', this.onThreadCreate);
-    DiscordClient._client.on('guildCreate', this.onGuildJoin);
+    DiscordClient._client.on('guildCreate', this.onGuildJoin.bind(this));
   }
 
   /**
