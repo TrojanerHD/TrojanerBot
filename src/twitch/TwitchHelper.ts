@@ -29,7 +29,7 @@ export default class TwitchHelper {
    * Determines the streamers that should be fetched
    * @returns The streamers to fetch the live streams
    */
-  #streamerUpdate: () => Promise<string[]> = () => Promise.resolve([]);
+  #streamerUpdate: () => Promise<string[]> = (): Promise<string[]> => Promise.resolve([]);
   #streamerUpdateSplit: string[][] = [];
   #callback: (streams: Stream[]) => Promise<void>;
 

@@ -22,7 +22,7 @@ export default class LiveChannel {
    * @param streams Currently live streams
    */
   private async streamerFetch(streams: Stream[]): Promise<void> {
-    const streamers = (await GuildSettings.settings(this.#guild.id)).streamers;
+    const streamers: string[] = (await GuildSettings.settings(this.#guild.id)).streamers;
     streams.sort((a: Stream, b: Stream): number => {
       for (const streamer of streamers) {
         if (a.user_name === streamer) return -1;

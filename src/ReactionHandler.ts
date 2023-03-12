@@ -96,7 +96,7 @@ export default class ReactionHandler {
     let currentMessageActionRow: MessageActionRow;
     if (guild === null) return [];
 
-    const roles = (await GuildSettings.settings(guild)).roles;
+    const roles: RolesField[] = (await GuildSettings.settings(guild)).roles;
     // Every row can contain up to five roles
     for (let i = 0; i < roles.length / 5; i++) {
       currentMessageActionRow = new MessageActionRow();
