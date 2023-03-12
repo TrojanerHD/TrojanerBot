@@ -9,7 +9,7 @@ This is a [Discord](https://discord.com) bot currently only running on my [Disco
 	 - `#roles` for a customizable role management
 3. (Optional) Set up the bot using the following admin commands:
    - `/permit <add|remove> <role>` adds/removes `<role>` as permitted. Every user with that role can execute privileged commands.
-	- `/stream-channel <add|remove|list> …` adds Twitch streamers to show in a `#live` channel. If a channel called `#live` does not exist, this does not work
+	- `/stream-channel <option|list> …` adds Twitch streamers to show in a `#live` channel. If a channel called `#live` does not exist, this does not work
 	- `/roles <add|remove> <role> …` adds/removes roles for the role manager (channel `#roles` is required)
 
 ## Deployment and contribution
