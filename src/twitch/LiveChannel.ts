@@ -1,6 +1,5 @@
 import TwitchHelper, { Stream } from './TwitchHelper';
 import CreateEmbed from './CreateEmbed';
-import Settings from '../Settings';
 import GuildSettings from '../settings/GuildSettings';
 import { Guild } from 'discord.js';
 
