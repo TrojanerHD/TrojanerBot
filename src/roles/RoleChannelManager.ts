@@ -1,9 +1,11 @@
 import {
+  DMChannel,
   EmbedFieldData,
   Guild,
   GuildChannel,
   MessageEmbed,
   NewsChannel,
+  NonThreadGuildBasedChannel,
   TextChannel,
   ThreadChannel,
 } from 'discord.js';
@@ -70,5 +72,34 @@ export default class RoleChannelManager {
           })
         )
       );
+  }
+
+  /**
+   * Removes the roles channel if it was deleted
+   * @param channel The deleted channel
+   */
+  public onChannelDelete(channel: NonThreadGuildBasedChannel): void {
+    if (this._channel !== undefined && this._channel.id === channel.id)
+      this._channel = undefined;
+    this.run();
+  }
+
+  /**
+   * Removes the roles channel if it has been renamed
+   *
+   * Retries the role channel manager (also implicitly checks if the new
+   * channel has been renamed to #roles if there was no roles channel
+   * before)
+   * @param oldChannel The old channel
+   * @param newChannel The new channel
+   */
+  public onChannelUpdate(
+    oldChannel: NonThreadGuildBasedChannel,
+    newChannel: NonThreadGuildBasedChannel
+  ): void {
+    if (oldChannel.name === newChannel.name) return;
+    if (this._channel !== undefined && this._channel.id === oldChannel.id)
+      this._channel = undefined;
+    this.run();
   }
 }

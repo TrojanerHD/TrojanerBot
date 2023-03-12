@@ -95,30 +95,26 @@ export default class DiscordClient {
       channel.name === 'roles' &&
       (await this.rolesEnabled(channel.guildId))
     ) {
-      const mgr: RoleChannelManager = Common.getRoleChannelManager(channel.guild);
+      const mgr: RoleChannelManager = Common.getRoleChannelManager(
+        channel.guild
+      );
       if (mgr._channel === undefined) mgr.run();
     }
   }
 
   /**
-   * Removes the roles channel from RoleChannelManager if the deleted channel was the roles channel
+   * Fires whenever a channel gets deleted
    * @param channel The deleted channel
    */
   private async onChannelDelete(
     channel: DMChannel | NonThreadGuildBasedChannel
   ): Promise<void> {
-    if (channel.type === 'DM') return;
-    const mgr: RoleChannelManager = Common.getRoleChannelManager(channel.guild);
-    if (mgr._channel !== undefined && mgr._channel.id === channel.id)
-      mgr._channel = undefined;
-      mgr.run();
+    if (channel.type !== 'DM')
+      Common.getRoleChannelManager(channel.guild).onChannelDelete(channel);
   }
 
   /**
-   * Removes the roles channel from the RoleChannelManager if it has been renamed
-   *
-   * Adds the roles channel to the RoleChannelManager if it didn't have one and the
-   * updated channel has been renamed to #roles
+   * Fires whenever there is a channel update (e. g. renaming)
    * @param oldChannel The old channel
    * @param newChannel The new channel
    */
@@ -126,14 +122,11 @@ export default class DiscordClient {
     oldChannel: DMChannel | NonThreadGuildBasedChannel,
     newChannel: DMChannel | NonThreadGuildBasedChannel
   ): Promise<void> {
-    if (oldChannel.type === 'DM' || newChannel.type === 'DM') return;
-    const mgr: RoleChannelManager = Common.getRoleChannelManager(
-      oldChannel.guild
-    );
-    if (oldChannel.name === newChannel.name) return;
-    if (mgr._channel !== undefined && mgr._channel.id === oldChannel.id)
-      mgr._channel = undefined;
-    mgr.run();
+    if (oldChannel.type !== 'DM' && newChannel.type !== 'DM')
+      Common.getRoleChannelManager(oldChannel.guild).onChannelUpdate(
+        oldChannel,
+        newChannel
+      );
   }
 
   /**
