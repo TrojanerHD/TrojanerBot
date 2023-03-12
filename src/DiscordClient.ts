@@ -21,6 +21,7 @@ import Settings from './Settings';
 import DMManager from './twitch/DMManager';
 import FeatureChecker from './FeatureChecker';
 import GuildSettings from './settings/GuildSettings';
+import Common from './common';
 
 /**
  * The discord client handler and initializer of the bot
@@ -67,7 +68,7 @@ export default class DiscordClient {
       await DiscordClient._client.application?.fetch().catch(console.error);
     MessageHandler.addCommands();
     for (const guild of DiscordClient._safeGuilds) {
-      const mgr: RoleChannelManager = this.getRoleChannelManager(guild);
+      const mgr: RoleChannelManager = Common.getRoleChannelManager(guild);
       if (await this.rolesEnabled(guild.id)) mgr.run();
     }
   }
@@ -79,7 +80,7 @@ export default class DiscordClient {
   private async onGuildJoin(guild: Guild): Promise<void> {
     new FeatureChecker().checkGuild(guild);
     if (this.twitchEnabled()) new LiveChannel(guild);
-    const mgr: RoleChannelManager = this.getRoleChannelManager(guild);
+    const mgr: RoleChannelManager = Common.getRoleChannelManager(guild);
     if (await this.rolesEnabled(guild.id)) mgr.run();
   }
 
@@ -94,7 +95,7 @@ export default class DiscordClient {
       channel.name === 'roles' &&
       (await this.rolesEnabled(channel.guildId))
     ) {
-      const mgr: RoleChannelManager = this.getRoleChannelManager(channel.guild);
+      const mgr: RoleChannelManager = Common.getRoleChannelManager(channel.guild);
       if (mgr._channel === undefined) mgr.run();
     }
   }
@@ -107,10 +108,10 @@ export default class DiscordClient {
     channel: DMChannel | NonThreadGuildBasedChannel
   ): Promise<void> {
     if (channel.type === 'DM') return;
-    const mgr: RoleChannelManager = this.getRoleChannelManager(channel.guild);
+    const mgr: RoleChannelManager = Common.getRoleChannelManager(channel.guild);
     if (mgr._channel !== undefined && mgr._channel.id === channel.id)
       mgr._channel = undefined;
-    mgr.run();
+      mgr.run();
   }
 
   /**
@@ -126,26 +127,13 @@ export default class DiscordClient {
     newChannel: DMChannel | NonThreadGuildBasedChannel
   ): Promise<void> {
     if (oldChannel.type === 'DM' || newChannel.type === 'DM') return;
-    const mgr: RoleChannelManager = this.getRoleChannelManager(
+    const mgr: RoleChannelManager = Common.getRoleChannelManager(
       oldChannel.guild
     );
     if (oldChannel.name === newChannel.name) return;
     if (mgr._channel !== undefined && mgr._channel.id === oldChannel.id)
       mgr._channel = undefined;
     mgr.run();
-  }
-
-  /**
-   * Retrieves the RoleChannelManager for specified guild, or creates a new one
-   * @param guild The guild
-   * @returns The role channel manager
-   */
-  private getRoleChannelManager(guild: Guild): RoleChannelManager {
-    return (
-      RoleChannelManager.mgrs.find(
-        (manager: RoleChannelManager): boolean => manager._guild.id === guild.id
-      ) ?? new RoleChannelManager(guild)
-    );
   }
 
   /**
@@ -156,6 +144,11 @@ export default class DiscordClient {
     return Settings.settings['twitch-id'] !== '' && !!process.env.TWITCH_TOKEN;
   }
 
+  /**
+   * Checks if specified guild has roles enabled
+   * @param guildId The guild id to check
+   * @returns Whether roles are enabled in the guild
+   */
   private async rolesEnabled(guildId: string): Promise<boolean> {
     return (await GuildSettings.settings(guildId)).roles.length !== 0;
   }

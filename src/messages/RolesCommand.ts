@@ -5,6 +5,7 @@ import {
   CommandInteraction,
   Permissions,
 } from 'discord.js';
+import Common from '../common';
 import RoleChannelManager from '../roles/RoleChannelManager';
 import GuildSettings from '../settings/GuildSettings';
 import { GuildInfo, RolesField } from '../settings/SettingsDB';
@@ -171,11 +172,7 @@ export default class RolesCommand extends Command {
         break;
     }
     GuildSettings.saveSettings(interaction.guild!, info);
-    RoleChannelManager.mgrs
-      .find(
-        (mgr: RoleChannelManager): boolean => mgr._guild === interaction.guild!
-      )
-      ?.run();
+    Common.getRoleChannelManager(interaction.guild!).run();
   }
 
   private getParam(

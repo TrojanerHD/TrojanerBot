@@ -1,5 +1,7 @@
+import { Guild } from 'discord.js';
 import { ClientRequest, IncomingMessage } from 'http';
 import { request, RequestOptions } from 'https';
+import RoleChannelManager from './roles/RoleChannelManager';
 
 interface AccessToken {
   access_token: string;
@@ -31,6 +33,21 @@ export default abstract class Common {
   public static accessTokenValid(): boolean {
     return (Common._discordAccessToken?.expires_at ?? 0) > Date.now();
   }
+
+  /**
+   * Retrieves the RoleChannelManager for specified guild, or creates a new one
+   * @param guild The guild
+   * @returns The role channel manager
+   */
+  public static getRoleChannelManager(guild: Guild): RoleChannelManager {
+    return (
+      RoleChannelManager.mgrs.find(
+        (manager: RoleChannelManager): boolean => manager._guild.id === guild.id
+      ) ?? new RoleChannelManager(guild)
+    );
+  }
+
+
 }
 
 /**
