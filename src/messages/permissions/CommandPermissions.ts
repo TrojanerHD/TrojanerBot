@@ -1,6 +1,7 @@
 import {
   ApplicationCommandPermissionData,
   Collection,
+  Guild,
   Permissions,
   Role,
   Snowflake,
@@ -10,7 +11,7 @@ import Common from '../../common';
 import DiscordClient from '../../DiscordClient';
 import Settings, { SettingsJSON } from '../../Settings';
 import { ApplicationCommandType } from '../MessageHandler';
-import Authentication from './Authentication';
+import Authentication, { MaybeTokenResponse } from './Authentication';
 import { RequestOptions } from 'https';
 import GuildSettings from '../../settings/GuildSettings';
 
@@ -19,83 +20,101 @@ import GuildSettings from '../../settings/GuildSettings';
  */
 export default class CommandPermissions {
   #commands?: Collection<string, ApplicationCommandType>;
+  #guild: Guild;
+
+  constructor(guild: Guild) {
+    this.#guild = guild;
+  }
 
   /**
    * Is to be called after commands have been set
    * @param commands The commands to set permissions for
    */
-  onCommandsSet(commands: Collection<Snowflake, ApplicationCommandType>): void {
+  async onCommandsSet(
+    commands: Collection<Snowflake, ApplicationCommandType>
+  ): Promise<void> {
     this.#commands = commands;
-    if (process.env.DISCORD_REFRESH_TOKEN !== undefined) {
-      if (!Common.accessTokenValid())
-        Authentication.getAccessToken()
+
+    const refreshToken = await Authentication.getRefreshToken(this.#guild.id);
+
+    if (refreshToken !== undefined) {
+      if (!Common.accessTokenValid(this.#guild.id))
+        Authentication.getAccessToken(this.#guild)
           .then(this.setPermissions.bind(this))
           .catch((err: Error): void => {
             if (err.message !== 'invalid_grant') throw new Error(err.message);
-            new Authentication(this.setPermissions.bind(this));
+
+            Authentication.startServer();
+            Authentication.addListener(
+              this.#guild.id,
+              this.setPermissions.bind(this)
+            );
           });
       else this.setPermissions();
       return;
     }
-    if (Settings.settings['logging'] !== 'errors')
-      new Authentication(this.setPermissions.bind(this));
+    Authentication.startServer();
+    Authentication.addListener(this.#guild.id, this.setPermissions.bind(this));
   }
 
   /**
    * Set permissions for commands, is used as callback for when the user has been authorized and an access token is available
    */
-  private async setPermissions(): Promise<void> {
+  private async setPermissions(json?: MaybeTokenResponse): Promise<void> {
+    Authentication.removeListener(this.#guild.id);
+    if (json !== undefined) await Authentication.storeToken(json, this.#guild);
+
     for (const command of this.#commands!.toJSON().filter(
       (command: ApplicationCommandType): boolean =>
         command.defaultMemberPermissions?.bitfield ===
         Permissions.FLAGS.MANAGE_GUILD
     )) {
-      for (const guild of DiscordClient._client.guilds.cache.toJSON()) {
-        const body: { permissions: ApplicationCommandPermissionData[] } = {
-          permissions: (
-            await GuildSettings.settings(guild.id)
-          ).permissionRoles
-            .filter((roleName: string): boolean =>
-              guild.roles.cache.some(
-                (role: Role): boolean => role.name === roleName
-              )
+      const body: { permissions: ApplicationCommandPermissionData[] } = {
+        permissions: (
+          await GuildSettings.settings(this.#guild.id)
+        ).permissionRoles
+          .filter((roleId: string): boolean =>
+            this.#guild!.roles.cache.some(
+              (role: Role): boolean => role.id === roleId
             )
-            .map(
-              (roleName: string): ApplicationCommandPermissionData => ({
-                id: guild.roles.cache.find(
-                  (role: Role): boolean => role.name === roleName
-                )!.id,
-                type: 1, // Role, see https://discord.com/developers/docs/interactions/application-commands#application-command-permissions-object-application-command-permissions-structure
-                permission: true,
-              })
-            ),
-        };
+          )
+          .map(
+            (roleId: string): ApplicationCommandPermissionData => ({
+              id: this.#guild.roles.cache.find(
+                (role: Role): boolean => role.id === roleId
+              )!.id,
+              type: 1, // Role, see https://discord.com/developers/docs/interactions/application-commands#application-command-permissions-object-application-command-permissions-structure
+              permission: true,
+            })
+          ),
+      };
 
-        const reqObj: RequestOptions = {
-          host: 'discord.com',
-          path: `/api/v10/applications/${DiscordClient._client.application?.id}/guilds/${guild.id}/commands/${command.id}/permissions`,
-          method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${Common._discordAccessToken!.access_token}`,
-            'Content-Type': 'application/json',
-          },
-        };
+      const reqObj: RequestOptions = {
+        host: 'discord.com',
+        path: `/api/v10/applications/${
+          DiscordClient._client.application?.id
+        }/guilds/${this.#guild.id}/commands/${command.id}/permissions`,
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${
+            Common._discordAccessTokens[this.#guild.id]!.access_token
+          }`,
+          'Content-Type': 'application/json',
+        },
+      };
 
-        const tempSettings: SettingsJSON = Settings.settings;
+      const tempSettings: SettingsJSON = Settings.settings;
 
-        if (tempSettings.proxy !== undefined) {
-          reqObj.host = tempSettings.proxy.host;
-          reqObj.port = tempSettings.proxy.port;
-          reqObj.path = `https://discord.com${reqObj.path}`;
-          reqObj.headers!.Host = 'discord.com';
-        }
-
-        let req: string | void = undefined;
-        while (req === undefined)
-          req = await request(reqObj, JSON.stringify(body)).catch(
-            console.error
-          );
+      if (tempSettings.proxy !== undefined) {
+        reqObj.host = tempSettings.proxy.host;
+        reqObj.port = tempSettings.proxy.port;
+        reqObj.path = `https://discord.com${reqObj.path}`;
+        reqObj.headers!.Host = 'discord.com';
       }
+
+      let req: string | void = undefined;
+      while (req === undefined)
+        req = await request(reqObj, JSON.stringify(body)).catch(console.error);
     }
   }
 }

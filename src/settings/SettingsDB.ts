@@ -10,6 +10,7 @@ export interface GuildInfo {
   permissionRoles: string[];
   roles: RolesField[];
   streamers: string[];
+  refreshToken: string;
 }
 
 export interface CachedGuildInfo {
@@ -22,6 +23,7 @@ export interface DatabaseGuildInfo {
   permissionRoles: string;
   roles: string;
   streamers: string;
+  refreshToken: string;
 }
 
 /**
@@ -64,12 +66,14 @@ export default class SettingsDB extends DatabaseHelper<DatabaseGuildInfo> {
             permissionRoles: '[]',
             roles: '[]',
             streamers: '[]',
+            refreshToken: '',
           };
         else row = rows[0];
         const serverInfo: GuildInfo = {
           permissionRoles: JSON.parse(row.permissionRoles),
           roles: JSON.parse(row.roles),
           streamers: JSON.parse(row.streamers),
+          refreshToken: row.refreshToken,
         };
         this.#cache.push({ id, info: serverInfo });
         resolve(serverInfo);
@@ -100,6 +104,7 @@ export default class SettingsDB extends DatabaseHelper<DatabaseGuildInfo> {
       permissionRoles: JSON.stringify(data.permissionRoles),
       roles: JSON.stringify(data.roles),
       streamers: JSON.stringify(data.streamers),
+      refreshToken: data.refreshToken,
     };
 
     return this.upsert('server', mappedData);
@@ -115,6 +120,7 @@ export default class SettingsDB extends DatabaseHelper<DatabaseGuildInfo> {
       'permissionRoles TEXT',
       'roles TEXT',
       'streamers TEXT',
+      'refreshToken TEXT',
     ]);
   }
 }

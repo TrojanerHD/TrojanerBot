@@ -1,14 +1,15 @@
 import express, { Express } from 'express';
 import DiscordClient from '../../DiscordClient';
 import { URLSearchParams } from 'url';
-import { requestWrapper as request } from '../../common';
+import Common, { requestWrapper as request } from '../../common';
 import { RequestOptions } from 'https';
 import { Server } from 'http';
-import fs from 'fs';
-import Common from '../../common';
 import Settings, { SettingsJSON } from '../../Settings';
+import { GuildInfo } from '../../settings/SettingsDB';
+import GuildSettings from '../../settings/GuildSettings';
+import { Guild } from 'discord.js';
 
-interface TokenResponse {
+export interface TokenResponse {
   access_token: string;
   expires_in: number;
   scope: string;
@@ -16,70 +17,117 @@ interface TokenResponse {
   refresh_token: string;
 }
 
+export type MaybeTokenResponse = TokenResponse | { error: string } | void;
+
 /**
  * Creates an express app for the user to authorize the bot to allow changing command permissions
  */
-export default class Authentication {
-  #app: Express = express();
-  #server: Server;
+export default abstract class Authentication {
+  static #app: Express = express();
+  static #server?: Server = undefined;
+  static #listeners: {
+    guildId: string;
+    listener: (json?: MaybeTokenResponse) => void;
+  }[] = [];
 
-  constructor(callback: () => void) {
-    console.log(
-      `Warning: To update the command's permissions, please authenticate the application at https://discord.com/oauth2/authorize?client_id=${DiscordClient._client.application?.id}&scope=applications.commands.permissions.update&response_type=code`
-    );
-    this.#app.get('/', (req, res): void => {
-      Authentication.makeRequest({
-        code: req.query.code as string,
-        redirect: `${req.protocol}://${req.headers.host as string}${req.path}`,
-      })
-        .then(callback)
-        .catch(console.error);
+  /**
+   * Adds a callback that gets executed whenever somebody authorizes
+   * @param listener The callback to be executed
+   */
+  public static addListener(
+    guildId: string,
+    listener: (json: MaybeTokenResponse) => void
+  ) {
+    Authentication.#listeners.push({ guildId, listener });
+  }
+
+  public static startServer(): void {
+    if (Authentication.#server !== undefined) {
+      if (!Authentication.#server.listening) Authentication.listen();
+      return;
+    }
+    if (Settings.settings.logging !== 'errors')
+      console.log('Start express server');
+    Authentication.#app.get('/', (req, res): void => {
+      const request = Authentication.makeRequest(
+        req.query.code as string,
+        `${req.protocol}://${req.headers.host as string}${req.path}`
+      ).catch(console.error);
+
+      request.then((response: MaybeTokenResponse): void =>
+        Authentication.#listeners
+          .find(
+            (listener: {
+              guildId: string;
+              listener: (json?: MaybeTokenResponse) => void;
+            }) => req.query.state === listener.guildId
+          )
+          ?.listener(response)
+      );
+
       res.send('Successfully authorized');
 
       // Stop express app
-      this.#server.close();
+      if (Authentication.#listeners.length - 1 <= 0)
+        Authentication.#server?.close();
     });
+    Authentication.listen();
+  }
+
+  private static listen(): void {
     if (
       Settings.settings['express-port'] !== undefined &&
       Settings.settings['express-port'] !== null &&
       Settings.settings['express-port']! > 0
     )
-      this.#server = this.#app.listen(Settings.settings['express-port']);
-    else this.#server = this.#app.listen();
+      Authentication.#server = Authentication.#app.listen(
+        Settings.settings['express-port']
+      );
+    else Authentication.#server = Authentication.#app.listen();
   }
 
   /**
    * Get a new access token if a refresh token exists
    * @returns The access token request promise
    */
-  static getAccessToken(): Promise<void> {
-    if (process.env.DISCORD_REFRESH_TOKEN === undefined)
-      throw new Error('No refresh token');
-    return this.makeRequest();
+  static async getAccessToken(guild: Guild): Promise<void> {
+    Authentication.startServer();
+
+    const refreshToken: string | undefined =
+      await Authentication.getRefreshToken(guild.id);
+    if (refreshToken === undefined) throw new Error('No refresh token');
+    let req: MaybeTokenResponse = undefined;
+    while (req === undefined)
+      req = await Authentication.makeRequest(refreshToken).catch(console.error);
+
+    return Authentication.storeToken(req, guild);
   }
 
   /**
    * Creates a request to get a new access token, either via a refresh token or a code
-   * @param data The code and redirect URI. The redirect uri must match the URI with which the code request was made. If undefined, the function will use the refresh token
-   * @returns A promise that resolves after the request is made
-   * @example Authentication.makeRequest({ code: '<code>', redirect: 'http://localhost:3000' })
+   * @param codeOrRefreshToken The code. If redirect is undefined, this acts as a refresh token instead
+   * @param redirect The redirect URI. Must match the URI with which the code request was made. If undefined, the function will use the first parameter as refresh token
+   * @returns A promise for the token response
+   * @example Authentication.makeRequest('<code>', 'http://localhost:3000');
+   * @example Authentication.makeRequest('<refresh_token>');
    */
-  private static async makeRequest(data?: {
-    code: string;
-    redirect: string;
-  }): Promise<void> {
+  private static async makeRequest(
+    codeOrRefreshToken: string,
+    redirect?: string
+  ): Promise<TokenResponse | { error: string }> {
     const params = new URLSearchParams();
     params.append('client_id', DiscordClient._client.application!.id);
     params.append('client_secret', process.env.OAUTH_TOKEN!);
-    // When data is set, the request is made with a code
-    if (data !== undefined) {
+    // Make request using code
+    if (redirect !== undefined) {
       params.append('grant_type', 'authorization_code');
-      params.append('code', data.code);
-      params.append('redirect_uri', data.redirect);
+      params.append('code', codeOrRefreshToken);
+      params.append('redirect_uri', redirect);
     } else {
       params.append('grant_type', 'refresh_token');
-      params.append('refresh_token', process.env.DISCORD_REFRESH_TOKEN!);
+      params.append('refresh_token', codeOrRefreshToken);
     }
+
     const reqObj: RequestOptions = {
       host: 'discord.com',
       path: '/api/v10/oauth2/token',
@@ -100,7 +148,7 @@ export default class Authentication {
     }
 
     // Authorization is not required for the request when using the refresh_token
-    if (data !== undefined)
+    if (redirect !== undefined)
       reqObj.headers!.Authorization = `Basic ${Buffer.from(
         `${DiscordClient._client.application?.id}:${process.env.DISCORD_TOKEN}`
       ).toString('base64')}`;
@@ -109,37 +157,54 @@ export default class Authentication {
     while (req === undefined)
       req = await request(reqObj, params.toString()).catch(console.error);
 
-    const json: TokenResponse | { error: string } = JSON.parse(req);
+    return JSON.parse(req);
+  }
+
+  public static async getRefreshToken(
+    guildId: string
+  ): Promise<string | undefined> {
+    Authentication.startServer();
+
+    const settings: GuildInfo = await GuildSettings.settings(guildId);
+    return settings.refreshToken !== '' ? settings.refreshToken : undefined;
+  }
+
+  public static async deleteRefreshToken(guild: Guild): Promise<void> {
+    const settings: GuildInfo = await GuildSettings.settings(guild.id);
+    settings.refreshToken = '';
+    await GuildSettings.saveSettings(guild, settings).catch(console.error);
+  }
+
+  public static async storeToken(
+    json: TokenResponse | { error: string },
+    guild: Guild
+  ): Promise<void> {
     if ('error' in json) {
       // If the refresh token is invalid, delete it and reject the promise
-      if (json.error === 'invalid_grant' && data === undefined) {
-        process.env.DISCORD_REFRESH_TOKEN = undefined;
-        // Delete line of .env that says DISCORD_REFRESH_TOKEN
-        fs.writeFileSync(
-          '.env',
-          fs
-            .readFileSync('.env', 'utf8')
-            .replace(/\n?DISCORD_REFRESH_TOKEN=.*/, '')
-        );
-      }
+      if (json.error === 'invalid_grant')
+        Authentication.deleteRefreshToken(guild);
       return Promise.reject(new Error(json.error));
     }
-    // If the refresh token is not set, add it to the .env file
-    if (process.env.DISCORD_REFRESH_TOKEN === undefined) {
-      fs.appendFile(
-        './.env',
-        `\nDISCORD_REFRESH_TOKEN=${json.refresh_token}`,
-        (err: NodeJS.ErrnoException | null): void => {
-          if (err) console.error(err);
-        }
-      );
-      // Also add the refresh token to the process.env for the current runtime
-      process.env.DISCORD_REFRESH_TOKEN = json.refresh_token;
-    }
-    // Set the access token
-    Common._discordAccessToken = {
+
+    const settings: GuildInfo = await GuildSettings.settings(guild.id);
+    settings.refreshToken = json.refresh_token;
+    await GuildSettings.saveSettings(guild, settings).catch(console.error);
+
+    Common._discordAccessTokens[guild.id] = {
       access_token: json.access_token,
       expires_at: Date.now() + json.expires_in * 1000,
     };
+  }
+  public static createURL(guildId: string): string {
+    return `https://discord.com/oauth2/authorize?client_id=${DiscordClient._client.application?.id}&scope=applications.commands.permissions.update&response_type=code&state=${guildId}`;
+  }
+
+  public static removeListener(guildId: string): void {
+    this.#listeners = this.#listeners.filter(
+      (listener: {
+        guildId: string;
+        listener: (json?: MaybeTokenResponse) => void;
+      }): boolean => listener.guildId !== guildId
+    );
   }
 }

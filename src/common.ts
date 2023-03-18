@@ -3,6 +3,10 @@ import { ClientRequest, IncomingMessage } from 'http';
 import { request, RequestOptions } from 'https';
 import RoleChannelManager from './roles/RoleChannelManager';
 
+interface AccessTokens {
+  [guildId: string]: AccessToken;
+}
+
 interface AccessToken {
   access_token: string;
   expires_at: number;
@@ -15,7 +19,7 @@ export default abstract class Common {
   /**
    * The access token for the Discord API
    */
-  public static _discordAccessToken?: AccessToken;
+  public static _discordAccessTokens: AccessTokens = {};
 
   /**
    * Sanitizes messages for safe use in message contents
@@ -30,8 +34,8 @@ export default abstract class Common {
    * Checks whether the Discord token is valid
    * @returns Whether the Discord token is valid
    */
-  public static accessTokenValid(): boolean {
-    return (Common._discordAccessToken?.expires_at ?? 0) > Date.now();
+  public static accessTokenValid(guildId: string): boolean {
+    return (Common._discordAccessTokens[guildId]?.expires_at ?? 0) > Date.now();
   }
 
   /**
@@ -46,8 +50,6 @@ export default abstract class Common {
       ) ?? new RoleChannelManager(guild)
     );
   }
-
-
 }
 
 /**

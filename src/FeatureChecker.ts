@@ -71,6 +71,7 @@ export default class FeatureChecker {
             permissionRoles: [],
             roles: [],
             streamers: [],
+            refreshToken: '',
           }).catch(console.error);
       } else this.warning(`Limited features due to problems ${guildInfo}`);
     }
