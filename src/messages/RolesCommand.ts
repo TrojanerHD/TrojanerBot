@@ -106,7 +106,7 @@ export default class RolesCommand extends Command {
           newRole.description = this.getParam(args, 2);
         info.roles.push(newRole);
         interaction.reply({
-          content: `The role ${newRole.name} has been added (note that the role will only be created when somebody assigns it to themself)`,
+          content: `The role ${newRole.name} has been added (note that the role will only be created when somebody assigns it to themselves)`,
           ephemeral: true,
         });
         break;
