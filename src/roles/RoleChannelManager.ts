@@ -18,8 +18,11 @@ import GuildSettings from '../settings/GuildSettings';
  * Manages the roles for each user with a message with button in a channel
  */
 export default class RoleChannelManager {
+  /** The guild this manager operates in */
   public _guild: Guild;
+  /** The set roles channel used for the guild */
   public _channel?: GuildTextChannel;
+  /** All role channel managers */
   public static mgrs: RoleChannelManager[] = [];
 
   constructor(guild: Guild) {
@@ -27,7 +30,13 @@ export default class RoleChannelManager {
     RoleChannelManager.mgrs.push(this);
   }
 
-  public async run() {
+  /**
+   * Uses the set roles channel if it exists or checks if a roles channel exists and
+   * sets that one as set roles channel
+   * 
+   * Sends/updates the roles embed
+   */
+  public async run(): Promise<void> {
     const rolesChannel: GuildTextChannel | undefined =
       this._channel ??
       (this._guild.channels.cache.find(
@@ -46,6 +55,10 @@ export default class RoleChannelManager {
     manageRoles(rolesChannel, embed);
   }
 
+  /**
+   * Generates an the roles embed
+   * @returns The message embed to be posted
+   */
   private async generateEmbed(): Promise<MessageEmbed> {
     const roles: RolesField[] = (await GuildSettings.settings(this._guild.id))
       .roles;
