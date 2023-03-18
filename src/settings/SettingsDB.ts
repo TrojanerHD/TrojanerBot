@@ -102,7 +102,7 @@ export default class SettingsDB extends DatabaseHelper<DatabaseGuildInfo> {
       streamers: JSON.stringify(data.streamers),
     };
 
-    return this.insertOrUpdate('server', mappedData);
+    return this.upsert('server', mappedData);
   }
 
   /**

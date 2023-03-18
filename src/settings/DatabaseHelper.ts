@@ -26,7 +26,7 @@ export default abstract class DatabaseHelper<T extends HasId> {
    * @param tableName The table to insert or update to
    * @param data The data to insert or update
    */
-  protected async insertOrUpdate(tableName: string, data: T): Promise<void> {
+  protected async upsert(tableName: string, data: T): Promise<void> {
     const id = data.id;
     const rows = await this.select(tableName, ['id'], `id = ${id}`);
     if (rows.length === 0) return this.insert(tableName, data);
