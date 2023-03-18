@@ -52,23 +52,16 @@ export default abstract class DatabaseHelper<T extends HasId> {
     return this.getAllRows(sql, []);
   }
 
-  private insert(tableName: string, data: T) {
-    let sql: string = `INSERT INTO ${tableName} (`;
-    const keys = Object.keys(data);
-    for (const [index, key] of keys.entries()) {
-      sql += key;
-      if (index !== keys.length - 1) sql += ', ';
-    }
+  private insert(tableName: string, data: T): Promise<void> {
+    const keys: string = Object.keys(data).join(', ');
+    const values: string = Object.keys(data)
+      .map((key: string): string => `'${data[key]}'`)
+      .join(', ');
 
-    sql += ') VALUES (';
-
-    for (const [index, key] of keys.entries()) {
-      sql += `'${data[key]}'`;
-      if (index !== keys.length - 1) sql += ', ';
-    }
-
-    sql += ')';
-    this.runQuery(sql, []);
+    return this.runQuery(
+      `INSERT INTO ${tableName} (${keys}) VALUES (${values})`,
+      []
+    );
   }
 
   private update(
@@ -76,15 +69,12 @@ export default abstract class DatabaseHelper<T extends HasId> {
     data: T,
     whereClause?: string
   ): Promise<void> {
-    let sql = `UPDATE ${tableName} SET `;
-    const keys = Object.keys(data);
-    for (const [index, key] of keys.entries()) {
-      sql += `${key} = '${data[key]}'`;
-      if (index !== keys.length - 1) sql += ', ';
-    }
+    const setClause: string = Object.keys(data)
+      .map((key: string): string => `${key} = '${data[key]}'`)
+      .join(', ');
+    const where: string = whereClause ? ` WHERE ${whereClause}` : '';
 
-    if (whereClause) sql += ` WHERE ${whereClause}`;
-    return this.runQuery(sql, []);
+    return this.runQuery(`UPDATE ${tableName} SET ${setClause}${where}`, []);
   }
 
   /**
