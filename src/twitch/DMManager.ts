@@ -12,7 +12,7 @@ import TwitchHelper, { Stream } from './TwitchHelper';
 import Common from '../common';
 
 interface StreamerMessage {
-  message: Message;
+  messages: Message[];
   streamer: string;
   game: string;
 }
@@ -54,24 +54,44 @@ export default class DMManager {
       (stream: Stream): string => stream.user_login
     );
     // Filter for channels that are currently live and a message has not yet been sent
-    const dmPendingChannels: [number, Channel][] = [
+    const dmPendingChannels: [number, Channel, Stream][] = [
       ...Settings.settings['streamer-subscriptions'].entries(),
-    ].filter(
-      ({ 1: channel }: [number, Channel]): boolean =>
-        logins.includes(channel.streamer) && !channel.sent
-    );
+    ]
+      .map(
+        (value: [number, Channel]): [number, Channel, Stream | undefined] => [
+          value[0],
+          value[1],
+          streamers.find(
+            (stream: Stream): boolean => stream.user_login === value[1].streamer
+          ),
+        ]
+      )
+      .filter(
+        (
+          value: [number, Channel, Stream | undefined]
+        ): value is [number, Channel, Stream] =>
+          value[2] !== undefined && !value[1].sent
+      );
 
     for (const channelWithIndex of dmPendingChannels) {
       const channel: Channel = channelWithIndex[1];
+      const stream: Stream = channelWithIndex[2];
 
       channel.sent = true;
-      channel['started-at'] = streamers.find(
-        (login: Stream) => login.user_login === channel.streamer
-      )!.started_at;
+      channel['started-at'] = stream.started_at;
 
       Settings.settings['streamer-subscriptions'][channelWithIndex[0]] =
         channel;
       Settings.saveSettings();
+
+      const newStream: StreamerMessage = {
+        messages: [],
+        game: stream.game_name,
+        streamer: channel.streamer,
+      };
+
+      const messageContent: MessageOptions & MessageEditOptions =
+        DMManager.generateMessage(stream);
 
       // Send notification to each subscriber
       for (const subscriber of channel.subscribers) {
@@ -79,10 +99,6 @@ export default class DMManager {
           .fetch(subscriber)
           .catch(console.error);
         if (!user) continue;
-        const streamer: Stream | undefined = streamers.find(
-          (stream: Stream): boolean => stream.user_login === channel.streamer
-        );
-        if (streamer === undefined) continue;
         let dmChannel: DMChannel | null = user.dmChannel;
         if (dmChannel === null) {
           const tempDmChannel: DMChannel | void = await user
@@ -91,10 +107,14 @@ export default class DMManager {
           if (!tempDmChannel) continue;
           dmChannel = tempDmChannel;
         }
-        await dmChannel
-          .send(DMManager.generateMessage(streamer))
+        const message: Message | void = await dmChannel
+          .send(messageContent)
           .catch(console.error);
+
+        if (message !== undefined) newStream.messages.push(message);
       }
+
+      DMManager.#messages.push(newStream);
     }
     // Reset every streamer that is not live anymore and a message has been sent for
     for (const channel of Settings.settings['streamer-subscriptions'].filter(
@@ -127,10 +147,14 @@ export default class DMManager {
             value.game !== streamer.game_name
         );
       if (!messageStream) continue;
+
       messageStream.game = streamer.game_name;
-      await messageStream.message
-        .edit(DMManager.generateMessage(streamer))
-        .catch(console.error);
+
+      const messageContent: MessageOptions & MessageEditOptions =
+        DMManager.generateMessage(streamer);
+
+      for (const message of messageStream.messages)
+        await message.edit(messageContent).catch(console.error);
     }
     return Promise.resolve();
   }
