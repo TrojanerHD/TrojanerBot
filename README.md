@@ -4,10 +4,10 @@ This is a [Discord](https://discord.com) bot currently only running on my [Disco
 ## Adding the bot to your server
 1. Click the following link: https://discord.com/api/oauth2/authorize?client_id=632637013475983360&permissions=8&scope=bot%20applications.commands
    - Note that the bot is added with admin privileges. You may alter the permissions value but keep in mind that some features might not work or lead to unexpected behavior
-2. (Optional) Set up the following text-channels
+2. (Optional, can be done later) Set up the following text-channels
 	 - `#live` for a nice embed showing people selected by you who are currently live on Twitch
 	 - `#roles` for a customizable role management
-3. (Optional) Set up the bot using the following admin commands:
+3. (Optional, can be done later) Set up the bot using the following admin commands:
    - `/permit <add|remove> <role>` adds/removes `<role>` as permitted. Every user with that role can execute privileged commands.
 	- `/stream-channel <option|list> …` adds Twitch streamers to show in a `#live` channel. If a channel called `#live` does not exist, this does not work
 	- `/roles <add|remove> <role> …` adds/removes roles for the role manager (channel `#roles` is required)
