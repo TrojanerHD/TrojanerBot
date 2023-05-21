@@ -153,8 +153,11 @@ export default class DMManager {
       const messageContent: MessageOptions & MessageEditOptions =
         DMManager.generateMessage(streamer);
 
-      for (const message of messageStream.messages)
-        await message.edit(messageContent).catch(console.error);
+      await Promise.all(
+        messageStream.messages.map(async (message) => {
+          await message.edit(messageContent).catch(console.error);
+        })
+      );
     }
     return Promise.resolve();
   }
