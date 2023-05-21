@@ -114,7 +114,12 @@ export default class DMManager {
         if (message !== undefined) newStream.messages.push(message);
       }
 
-      DMManager.#messages.push(newStream);
+      const index: number = DMManager.#messages.findIndex(
+        (message: StreamerMessage): boolean =>
+          message.streamer === channel.streamer
+      );
+      if (index === -1) DMManager.#messages.push(newStream);
+      else DMManager.#messages[index].messages.push(...newStream.messages);
     }
     // Reset every streamer that is not live anymore and a message has been sent for
     for (const channel of Settings.settings['streamer-subscriptions'].filter(
