@@ -1,4 +1,4 @@
-FROM node:lts-alpine as discord-bot
+FROM node:lts-alpine
 
 # create and set workdir
 WORKDIR /usr/src/trojaner
