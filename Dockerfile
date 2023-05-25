@@ -5,6 +5,7 @@ WORKDIR /usr/src/trojaner
 
 # install dependencies 
 COPY package.json ./
+COPY yarn.lock ./
 RUN yarn install --frozen-lockfile
 RUN yarn global add typescript
 
