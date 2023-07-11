@@ -15,4 +15,4 @@ COPY . ./
 RUN tsc
 
 # main command
-CMD ["node", "build/src/index.js"]
+ENTRYPOINT ["node", "build/src/index.js"]
