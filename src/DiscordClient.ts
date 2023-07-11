@@ -109,7 +109,7 @@ export default class DiscordClient {
   private async onChannelDelete(
     channel: DMChannel | NonThreadGuildBasedChannel
   ): Promise<void> {
-    if (channel.type !== 'DM')
+    if (!channel.isDMBased())
       Common.getRoleChannelManager(channel.guild).onChannelDelete(channel);
   }
 
@@ -122,7 +122,7 @@ export default class DiscordClient {
     oldChannel: DMChannel | NonThreadGuildBasedChannel,
     newChannel: DMChannel | NonThreadGuildBasedChannel
   ): Promise<void> {
-    if (oldChannel.type !== 'DM' && newChannel.type !== 'DM')
+    if (!oldChannel.isDMBased() && !newChannel.isDMBased())
       Common.getRoleChannelManager(oldChannel.guild).onChannelUpdate(
         oldChannel,
         newChannel

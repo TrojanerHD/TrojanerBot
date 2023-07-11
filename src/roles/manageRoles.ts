@@ -39,7 +39,7 @@ export default async function manageRoles(
     );
 
   // Edit the message if it already exists, otherwise create it
-  if (newEmbed.fields.length === 0) {
+  if (newEmbed.data.fields?.length === 0) {
     if (rolesMessage !== undefined) rolesMessage.delete();
     return;
   }

@@ -1,4 +1,5 @@
 import {
+  APIEmbedField,
   Guild,
   GuildChannel,
   GuildTextBasedChannel,
@@ -57,7 +58,7 @@ export default class RoleChannelManager {
    * Generates an the roles embed
    * @returns The message embed to be posted
    */
-  private async generateEmbed(): Promise<MessageEmbed> {
+  private async generateEmbed(): Promise<EmbedBuilder> {
     const roles: RolesField[] = (await GuildSettings.settings(this._guild.id))
       .roles;
 

@@ -3,10 +3,9 @@ import {
   CommandInteractionOption,
   CacheType,
   CommandInteraction,
-  Permissions,
+  PermissionFlagsBits,
 } from 'discord.js';
 import Common from '../common';
-import RoleChannelManager from '../roles/RoleChannelManager';
 import GuildSettings from '../settings/GuildSettings';
 import { GuildInfo, RolesField } from '../settings/SettingsDB';
 import Command from './Command';
@@ -78,7 +77,7 @@ export default class RolesCommand extends Command {
         ],
       },
     ],
-    defaultMemberPermissions: Permissions.FLAGS.MANAGE_GUILD,
+    defaultMemberPermissions: PermissionFlagsBits.ManageGuild,
     dmPermission: false,
   };
 

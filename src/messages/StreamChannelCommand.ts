@@ -3,14 +3,15 @@ import {
   CommandInteractionOption,
   CacheType,
   CommandInteraction,
-  Permissions,
   Collection,
   Message,
+  PermissionFlagsBits,
+  GuildTextBasedChannel,
 } from 'discord.js';
 import GuildSettings from '../settings/GuildSettings';
 import { GuildInfo } from '../settings/SettingsDB';
 import CreateEmbed from '../twitch/CreateEmbed';
-import Command, { GuildTextChannel } from './Command';
+import Command from './Command';
 
 export default class StreamChannelCommand extends Command {
   deploy: ChatInputApplicationCommandData = {
@@ -53,7 +54,7 @@ export default class StreamChannelCommand extends Command {
           "List all streamers that will be shown in the guild's live channel",
       },
     ],
-    defaultMemberPermissions: Permissions.FLAGS.MANAGE_GUILD,
+    defaultMemberPermissions: PermissionFlagsBits.ManageGuild,
     dmPermission: false,
   };
 
@@ -118,7 +119,7 @@ export default class StreamChannelCommand extends Command {
               })
               .catch(console.error);
             if (info.streamers.length === 0) {
-              const channel: GuildTextChannel | undefined =
+              const channel: GuildTextBasedChannel | undefined =
                 CreateEmbed.determineLiveChannel(interaction.guild!);
               if (!channel) break;
               const messages: Collection<string, Message> | void =

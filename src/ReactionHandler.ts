@@ -11,6 +11,7 @@ import assignRoles from './roles/assignRoles';
 import MessageHandler from './messages/MessageHandler';
 import { RolesField } from './settings/SettingsDB';
 import { ActionRowBuilder, ButtonBuilder } from '@discordjs/builders';
+import GuildSettings from './settings/GuildSettings';
 
 /**
  * Handles reactions (button presses, slash-commands)

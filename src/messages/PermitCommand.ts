@@ -3,7 +3,7 @@ import {
   CommandInteractionOption,
   CacheType,
   CommandInteraction,
-  Permissions,
+  PermissionFlagsBits,
 } from 'discord.js';
 import Command from './Command';
 import GuildSettings from '../settings/GuildSettings';
@@ -52,7 +52,7 @@ export default class PermitCommand extends Command {
         options: [],
       },
     ],
-    defaultMemberPermissions: Permissions.FLAGS.MANAGE_GUILD,
+    defaultMemberPermissions: PermissionFlagsBits.ManageGuild,
     dmPermission: false,
   };
 

@@ -95,17 +95,17 @@ export default class CreateEmbed {
 
   public static determineLiveChannel(
     guild: Guild
-  ): GuildTextChannel | undefined {
+  ): GuildTextBasedChannel | undefined {
     return guild.channels.cache.find(
       (channel: GuildBasedChannel): boolean =>
         (channel instanceof TextChannel ||
           channel instanceof NewsChannel ||
           channel instanceof ThreadChannel) &&
         channel.name === 'live'
-    ) as GuildTextChannel | undefined;
+    ) as GuildTextBasedChannel | undefined;
   }
 
-  public static async getMessages(liveChannel: GuildTextChannel): Promise<Collection<string, Message> | void> {
+  public static async getMessages(liveChannel: GuildTextBasedChannel): Promise<Collection<string, Message> | void> {
       return liveChannel.messages.fetch().catch(console.error);
   }
 }
