@@ -1,7 +1,7 @@
 import {
-  EmbedFieldData,
+  APIEmbedField,
   GuildChannel,
-  MessageEmbed,
+  GuildTextBasedChannel,
   NewsChannel,
   TextChannel,
   ThreadChannel,
@@ -9,7 +9,7 @@ import {
 import Settings, { RolesField } from '../Settings';
 import DiscordClient from '../DiscordClient';
 import manageRoles from './manageRoles';
-import { GuildTextChannel } from '../messages/Command';
+import { EmbedBuilder } from '@discordjs/builders';
 
 /**
  * Manages the roles for each user with a message with button in a channel
@@ -17,41 +17,41 @@ import { GuildTextChannel } from '../messages/Command';
 export default class RoleChannelManager {
   constructor() {
     for (const guild of DiscordClient._client.guilds.cache.toJSON()) {
-      const rolesChannel: GuildTextChannel | undefined =
+      const rolesChannel: GuildTextBasedChannel | undefined =
         guild.channels.cache.find(
           (channel: GuildChannel | ThreadChannel): boolean =>
             channel.name === 'roles' &&
             (channel instanceof TextChannel ||
               channel instanceof ThreadChannel ||
               channel instanceof NewsChannel)
-        ) as GuildTextChannel | undefined;
+        ) as GuildTextBasedChannel | undefined;
       if (!rolesChannel) continue;
 
-      const embed: MessageEmbed = this.generateEmbed();
+      const embed: EmbedBuilder = this.generateEmbed();
 
       manageRoles(rolesChannel, embed);
     }
   }
 
-  private generateEmbed(): MessageEmbed {
+  private generateEmbed(): EmbedBuilder {
     const roles: RolesField[] = Settings.settings.roles;
     const errorRole: boolean = roles.some(
       (role: RolesField): boolean => !role.emoji || !role.name
     );
     if (errorRole)
-      return new MessageEmbed()
+      return new EmbedBuilder()
         .setTimestamp(Date.now())
         .setTitle('Role Selector')
         .setDescription(
           'Error: All fields in `role` in `settings.json` must have a `name` and `emoji` tag'
         )
-        .setColor('RED');
-    return new MessageEmbed()
+        .setColor([255, 0, 0]);
+    return new EmbedBuilder()
       .setTimestamp(Date.now())
       .setTitle('Role Selector')
       .setFields(
         Settings.settings.roles.map(
-          (role: RolesField): EmbedFieldData => ({
+          (role: RolesField): APIEmbedField => ({
             name: role.name,
             value: role.description || '*No description provided*',
           })

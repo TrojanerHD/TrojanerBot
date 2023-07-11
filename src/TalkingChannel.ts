@@ -7,6 +7,7 @@ import {
   VoiceChannel,
   TextChannel,
   ThreadChannel,
+  ChannelType,
 } from 'discord.js';
 
 export default class TalkingChannel {
@@ -149,9 +150,10 @@ export default class TalkingChannel {
     )
       return;
     guild.channels
-      .create(`Talking ${++this.#talkingChannelCount}`, {
+      .create({
         parent: channel.parent!,
-        type: 'GUILD_VOICE',
+        type: ChannelType.GuildVoice,
+        name: `Talking ${++this.#talkingChannelCount}`,
       })
       .then(this.channelCreated.bind(this))
       .catch(console.error);

@@ -1,15 +1,15 @@
+import { EmbedBuilder } from '@discordjs/builders';
 import {
-  MessageEmbed,
   TextChannel,
   Message,
   Collection,
   ThreadChannel,
   NewsChannel,
   GuildBasedChannel,
-  EmbedFieldData,
+  APIEmbedField,
+  GuildTextBasedChannel,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
-import { GuildTextChannel } from '../messages/Command';
 
 interface StreamInformation {
   name: string;
@@ -22,7 +22,7 @@ interface StreamInformation {
  * Creates the embed for #live
  */
 export default class CreateEmbed {
-  #embed: EmbedFieldData[][] = [];
+  #embed: APIEmbedField[][] = [];
 
   /**
    * Adds a formatted field to the embed containing information about a stream
@@ -39,7 +39,7 @@ export default class CreateEmbed {
         ? 'Large'
         : 'Very Large';
 
-    const fieldArray: EmbedFieldData[] = [
+    const fieldArray: APIEmbedField[] = [
       {
         name: 'Streamer',
         value: `[${streamInformation.name}](https://twitch.tv/${streamInformation.name})`,
@@ -62,21 +62,21 @@ export default class CreateEmbed {
    */
   async sendEmbed(): Promise<void> {
     for (const guild of DiscordClient._client.guilds.cache.toJSON()) {
-      const liveChannel: GuildTextChannel | undefined =
+      const liveChannel: GuildTextBasedChannel | undefined =
         guild.channels.cache.find(
           (channel: GuildBasedChannel): boolean =>
             (channel instanceof TextChannel ||
               channel instanceof NewsChannel ||
               channel instanceof ThreadChannel) &&
             channel.name === 'live'
-        ) as GuildTextChannel | undefined;
+        ) as GuildTextBasedChannel | undefined;
       if (liveChannel === undefined) continue;
 
       const messages: Collection<string, Message> | void =
         await liveChannel.messages.fetch().catch(console.error);
       if (!messages) continue;
 
-      const embed: MessageEmbed = new MessageEmbed()
+      const embed: EmbedBuilder = new EmbedBuilder()
         .setTitle('Twitch')
         .setTimestamp(Date.now());
 
