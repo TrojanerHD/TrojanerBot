@@ -1,12 +1,15 @@
 import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  EmbedBuilder,
+} from '@discordjs/builders';
+import {
+  ButtonStyle,
   Collection,
+  GuildTextBasedChannel,
   Message,
-  MessageActionRow,
-  MessageButton,
-  MessageEmbed,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
-import { GuildTextChannel } from '../messages/Command';
 
 /**
  * Sends a roles embed into the specified roles channel
@@ -14,8 +17,8 @@ import { GuildTextChannel } from '../messages/Command';
  * @param newEmbed The embed to post
  */
 export default async function manageRoles(
-  rolesChannel: GuildTextChannel,
-  newEmbed: MessageEmbed
+  rolesChannel: GuildTextBasedChannel,
+  newEmbed: EmbedBuilder
 ): Promise<void> {
   // Get a previous role message from the bot, if it exists
   const messages: void | Collection<string, Message> =
@@ -27,12 +30,14 @@ export default async function manageRoles(
       (message: Message): boolean =>
         message.author.id === DiscordClient._client.user!.id
     );
-  const button: MessageActionRow = new MessageActionRow().addComponents(
-    new MessageButton()
-      .setCustomId('select')
-      .setLabel('Select your roles')
-      .setStyle('PRIMARY')
-  );
+  const button: ActionRowBuilder<ButtonBuilder> =
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder()
+        .setCustomId('select')
+        .setLabel('Select your roles')
+        .setStyle(ButtonStyle.Primary)
+    );
+
   // Edit the message if it already exists, otherwise create it
   if (rolesMessage === undefined) {
     DiscordClient.send(rolesChannel, {

@@ -2,12 +2,11 @@ import {
   Client,
   Collection,
   GuildChannel,
-  Intents,
-  MessageEmbed,
   ThreadChannel,
   ThreadMember,
-  MessageOptions,
   TextBasedChannel,
+  GatewayIntentBits,
+  BaseMessageOptions,
 } from 'discord.js';
 import MessageHandler from './messages/MessageHandler';
 import ReactionHandler from './ReactionHandler';
@@ -17,6 +16,7 @@ import RoleChannelManager from './roles/RoleChannelManager';
 import Settings from './Settings';
 import DMManager from './twitch/DMManager';
 import FeatureChecker from './FeatureChecker';
+import { EmbedBuilder } from '@discordjs/builders';
 
 /**
  * The discord client handler and initializer of the bot
@@ -24,10 +24,10 @@ import FeatureChecker from './FeatureChecker';
 export default class DiscordClient {
   static _client: Client = new Client({
     intents: [
-      Intents.FLAGS.GUILDS,
-      Intents.FLAGS.GUILD_MESSAGES,
-      Intents.FLAGS.GUILD_MEMBERS,
-      Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.GuildMembers,
+      GatewayIntentBits.GuildMessageReactions,
     ],
   });
 
@@ -105,11 +105,11 @@ export default class DiscordClient {
    */
   public static send(
     channel: TextBasedChannel | undefined,
-    message: MessageEmbed | MessageOptions
+    message: EmbedBuilder | BaseMessageOptions
   ): void {
     if (!channel) return;
-    let send: MessageOptions = {};
-    if (message instanceof MessageEmbed) send.embeds = [message];
+    let send: BaseMessageOptions = {};
+    if (message instanceof EmbedBuilder) send.embeds = [message];
     else send = message;
 
     channel.send(send).catch(console.error);

@@ -1,16 +1,16 @@
 import {
   ButtonInteraction,
+  ButtonStyle,
   GuildMember,
   GuildMemberRoleManager,
   Interaction,
-  MessageActionRow,
-  MessageActionRowComponentResolvable,
   Role,
 } from 'discord.js';
 import DiscordClient from './DiscordClient';
 import assignRoles from './roles/assignRoles';
 import MessageHandler from './messages/MessageHandler';
 import Settings, { RolesField } from './Settings';
+import { ActionRowBuilder, ButtonBuilder } from '@discordjs/builders';
 
 /**
  * Handles reactions (button presses, slash-commands)
@@ -84,28 +84,35 @@ export default class ReactionHandler {
    * @param member The guild member the selector is created for
    * @returns A message action row array containing all selectable roles
    */
-  private generateRoleSelectorComponent(member: GuildMember | null): MessageActionRow[] {
-    const messageActionRows: MessageActionRow[] = [];
-    let currentMessageActionRow: MessageActionRow;
+  private generateRoleSelectorComponent(
+    member: GuildMember | null
+  ): ActionRowBuilder<ButtonBuilder>[] {
+    const messageActionRows: ActionRowBuilder<ButtonBuilder>[] = [];
+    let currentMessageActionRow: ActionRowBuilder<ButtonBuilder>;
     // Every row can contain up to five roles
     for (let i = 0; i < Settings.settings.roles.length / 5; i++) {
-      currentMessageActionRow = new MessageActionRow();
+      currentMessageActionRow = new ActionRowBuilder<ButtonBuilder>();
       messageActionRows.push(currentMessageActionRow);
       // Add the current five roles as component
       currentMessageActionRow.addComponents(
         Settings.settings.roles.slice(i * 5, i * 5 + 5).map(
           // Map the roles stored in settings
-          (role: RolesField): MessageActionRowComponentResolvable => ({
-            customId: role.name.toLowerCase(),
-            label: role.name,
-            style: !(member?.roles as GuildMemberRoleManager).cache.some(
-              (memberRole: Role): boolean => memberRole.name === role.name
-            )
-              ? 'SECONDARY' //If member does not have the role
-              : 'PRIMARY', //If member has the role
-            type: 'BUTTON',
-            emoji: role.emoji,
-          })
+          (role: RolesField): ButtonBuilder =>
+            new ButtonBuilder()
+              .setCustomId(role.name.toLowerCase())
+              .setLabel(role.name)
+              .setStyle(
+                !(member?.roles as GuildMemberRoleManager).cache.some(
+                  (memberRole: Role): boolean => memberRole.name === role.name
+                )
+                  ? ButtonStyle.Secondary //If member does not have the role
+                  : ButtonStyle.Primary //If member has the role
+              )
+              .setEmoji(
+                ReactionHandler.containsEmoji(role.emoji)
+                  ? { name: role.emoji }
+                  : { id: role.emoji }
+              )
         )
       );
     }
@@ -126,5 +133,19 @@ export default class ReactionHandler {
         ),
       })
       .catch(console.error);
+  }
+
+  /**
+   * Checks given string if it contains an emoji
+   * @link https://stackoverflow.com/a/41164587
+   * @param emojiLike The string to check
+   * @returns Whether the string contains an emoji
+   */
+  static containsEmoji(emojiLike: string): Boolean {
+    return (
+      emojiLike.match(
+        /(?:[\u2700-\u27bf]|(?:\ud83c[\udde6-\uddff]){2}|[\ud800-\udbff][\udc00-\udfff]|[\u0023-\u0039]\ufe0f?\u20e3|\u3299|\u3297|\u303d|\u3030|\u24c2|\ud83c[\udd70-\udd71]|\ud83c[\udd7e-\udd7f]|\ud83c\udd8e|\ud83c[\udd91-\udd9a]|\ud83c[\udde6-\uddff]|\ud83c[\ude01-\ude02]|\ud83c\ude1a|\ud83c\ude2f|\ud83c[\ude32-\ude3a]|\ud83c[\ude50-\ude51]|\u203c|\u2049|[\u25aa-\u25ab]|\u25b6|\u25c0|[\u25fb-\u25fe]|\u00a9|\u00ae|\u2122|\u2139|\ud83c\udc04|[\u2600-\u26FF]|\u2b05|\u2b06|\u2b07|\u2b1b|\u2b1c|\u2b50|\u2b55|\u231a|\u231b|\u2328|\u23cf|[\u23e9-\u23f3]|[\u23f8-\u23fa]|\ud83c\udccf|\u2934|\u2935|[\u2190-\u21ff])/g
+      ) !== null
+    );
   }
 }

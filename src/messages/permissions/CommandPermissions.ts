@@ -1,7 +1,7 @@
 import {
-  ApplicationCommandPermissionData,
+  ApplicationCommandPermissions,
   Collection,
-  Permissions,
+  PermissionFlagsBits,
   Role,
   Snowflake,
 } from 'discord.js';
@@ -47,10 +47,10 @@ export default class CommandPermissions {
     for (const command of this.#commands!.toJSON().filter(
       (command: ApplicationCommandType): boolean =>
         command.defaultMemberPermissions?.bitfield ===
-        Permissions.FLAGS.MANAGE_GUILD
+        PermissionFlagsBits.ManageGuild
     )) {
       for (const guild of DiscordClient._client.guilds.cache.toJSON()) {
-        const body: { permissions: ApplicationCommandPermissionData[] } = {
+        const body: { permissions: ApplicationCommandPermissions[] } = {
           permissions: Settings.settings['permission-roles']
             .filter((roleName: string): boolean =>
               guild.roles.cache.some(
@@ -58,7 +58,7 @@ export default class CommandPermissions {
               )
             )
             .map(
-              (roleName: string): ApplicationCommandPermissionData => ({
+              (roleName: string): ApplicationCommandPermissions => ({
                 id: guild.roles.cache.find(
                   (role: Role): boolean => role.name === roleName
                 )!.id,

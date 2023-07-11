@@ -2,15 +2,7 @@ import {
   ChatInputApplicationCommandData,
   CommandInteraction,
   CommandInteractionOption,
-  NewsChannel,
-  TextChannel,
-  ThreadChannel,
 } from 'discord.js';
-
-/**
- * Any channel with text
- */
-export type GuildTextChannel = TextChannel | NewsChannel | ThreadChannel;
 
 /**
  * An abstract command handler class
