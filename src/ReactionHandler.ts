@@ -85,6 +85,7 @@ export default class ReactionHandler {
 
   /**
    * Generates a role selector component with all selectable roles
+   * @param guild The guild the role selector is being generated for
    * @param member The guild member the selector is created for
    * @returns A message action row array containing all selectable roles
    */

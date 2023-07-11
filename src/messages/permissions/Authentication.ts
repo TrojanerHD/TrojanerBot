@@ -32,6 +32,7 @@ export default abstract class Authentication {
 
   /**
    * Adds a callback that gets executed whenever somebody authorizes
+   * @param guildId The guild id that was authorized
    * @param listener The callback to be executed
    */
   public static addListener(
@@ -41,6 +42,10 @@ export default abstract class Authentication {
     Authentication.#listeners.push({ guildId, listener });
   }
 
+  /**
+   * Starts the express server if it has not been started.
+   * If no guilds are left that need authentication, the express server is stopped
+   */
   public static startServer(): void {
     if (Authentication.#server !== undefined) {
       if (!Authentication.#server.listening) Authentication.listen();
@@ -48,6 +53,7 @@ export default abstract class Authentication {
     }
     if (Settings.settings.logging !== 'errors')
       console.log('Start express server');
+
     Authentication.#app.get('/', (req, res): void => {
       const request = Authentication.makeRequest(
         req.query.code as string,
@@ -68,12 +74,18 @@ export default abstract class Authentication {
       res.send('Successfully authorized');
 
       // Stop express app
-      if (Authentication.#listeners.length - 1 <= 0)
+      if (Authentication.#listeners.length - 1 <= 0) {
         Authentication.#server?.close();
+        if (Settings.settings.logging !== 'errors')
+          console.log('Stop express server');
+      }
     });
     Authentication.listen();
   }
 
+  /**
+   * Updates internal server parameter to listen on the app
+   */
   private static listen(): void {
     if (
       Settings.settings['express-port'] !== undefined &&
@@ -88,6 +100,7 @@ export default abstract class Authentication {
 
   /**
    * Get a new access token if a refresh token exists
+   * @param guild The guild to update the access token for
    * @returns The access token request promise
    */
   static async getAccessToken(guild: Guild): Promise<void> {
@@ -160,6 +173,11 @@ export default abstract class Authentication {
     return JSON.parse(req);
   }
 
+  /**
+   * Obtains a refresh token for given guild
+   * @param guildId The guild id to obtain a refresh token from
+   * @returns The refresh token
+   */
   public static async getRefreshToken(
     guildId: string
   ): Promise<string | undefined> {
@@ -169,12 +187,22 @@ export default abstract class Authentication {
     return settings.refreshToken !== '' ? settings.refreshToken : undefined;
   }
 
+  /**
+   * Deletes the stored refresh token for given guild
+   * Might be used if the refresh token becomes invalid
+   * @param guild The guild to delete the refresh token from
+   */
   public static async deleteRefreshToken(guild: Guild): Promise<void> {
     const settings: GuildInfo = await GuildSettings.settings(guild.id);
     settings.refreshToken = '';
     await GuildSettings.saveSettings(guild, settings).catch(console.error);
   }
 
+  /**
+   * Stores a refresh token for given guild using given json after making a refresh token retrieval request
+   * @param json The response from the refresh token request
+   * @param guild The guild to store the refresh token for
+   */
   public static async storeToken(
     json: TokenResponse | { error: string },
     guild: Guild
@@ -195,10 +223,21 @@ export default abstract class Authentication {
       expires_at: Date.now() + json.expires_in * 1000,
     };
   }
+
+  /**
+   * Creates an authorization url for given guild
+   * @param guildId The guild id to create the authorization url for
+   * @returns The authorization url
+   */
   public static createURL(guildId: string): string {
     return `https://discord.com/oauth2/authorize?client_id=${DiscordClient._client.application?.id}&scope=applications.commands.permissions.update&response_type=code&state=${guildId}`;
   }
 
+  /**
+   * Removes a guild as listener for an authorization request
+   * Is to be called after a guild's refresh token has been successfully added
+   * @param guildId The guild to remove the listener for
+   */
   public static removeListener(guildId: string): void {
     this.#listeners = this.#listeners.filter(
       (listener: {
