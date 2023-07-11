@@ -4,6 +4,7 @@ import {
   CacheType,
   CommandInteraction,
   PermissionFlagsBits,
+  Guild,
 } from 'discord.js';
 import Command from './Command';
 import GuildSettings from '../settings/GuildSettings';
@@ -91,6 +92,7 @@ export default class PermitCommand extends Command {
             }
 
             info.permissionRoles.push(newRoleId);
+            await PermitCommand.saveAndAdd(interaction.guild!, info);
 
             reply += 'has been added as a permitted role';
             break;
@@ -103,6 +105,8 @@ export default class PermitCommand extends Command {
             info.permissionRoles = info.permissionRoles.filter(
               (role: string) => newRoleId !== role
             );
+
+            await PermitCommand.saveAndAdd(interaction.guild!, info)
 
             reply += 'has been removed from the permitted roles';
             break;
@@ -129,10 +133,17 @@ export default class PermitCommand extends Command {
     }
 
     interaction.reply({ content: reply, ephemeral: true });
+  }
 
-    await GuildSettings.saveSettings(interaction.guild!, info).catch(
+  /**
+   * Deploys the commands with the updated permissions
+   * @param guild The guild where the commands should be updated
+   * @param info The updated guild info
+   */
+  static async saveAndAdd(guild: Guild, info: GuildInfo): Promise<void> {
+    await GuildSettings.saveSettings(guild, info).catch(
       console.error
     );
-    MessageHandler.addCommands(interaction.guild!);
+    MessageHandler.addCommands(guild);
   }
 }
