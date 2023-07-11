@@ -46,7 +46,7 @@ export default class MessageHandler {
   }
 
   /**
-   * Deploys all commands on all servers and for DMs
+   * Deploys all commands on all servers and for DMs and applies the execution permissions
    */
   public static addCommands(guild?: Guild): void {
     const commands: ApplicationCommandData[] = MessageHandler._commands.map(
