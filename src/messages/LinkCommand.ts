@@ -1,9 +1,8 @@
-import Command, { GuildTextChannel } from './Command';
+import Command from './Command';
 import {
   TextChannel,
   Message,
   GuildChannel,
-  MessageEmbed,
   ThreadChannel,
   CommandInteractionOption,
   NewsChannel,
@@ -11,7 +10,9 @@ import {
   CommandInteraction,
   GuildCacheMessage,
   TextBasedChannel,
+  GuildTextBasedChannel,
 } from 'discord.js';
+import { EmbedBuilder } from '@discordjs/builders';
 
 export default class LinkCommand extends Command {
   deploy: ChatInputApplicationCommandData = {
@@ -33,14 +34,14 @@ export default class LinkCommand extends Command {
     args: readonly CommandInteractionOption[],
     interaction: CommandInteraction
   ): Promise<void> {
-    const newChannel: GuildTextChannel | undefined =
+    const newChannel: GuildTextBasedChannel | undefined =
       interaction.guild?.channels.cache.find(
         (channel: GuildChannel | ThreadChannel): boolean =>
           (channel instanceof TextChannel ||
             channel instanceof NewsChannel ||
             channel instanceof ThreadChannel) &&
           channel.id === args[0].value
-      ) as GuildTextChannel;
+      ) as GuildTextBasedChannel;
 
     const author: string = interaction.user.id;
     if (!newChannel || newChannel.id === interaction.channelId) {
@@ -52,7 +53,7 @@ export default class LinkCommand extends Command {
         .catch(console.error);
       return;
     }
-    const embed: MessageEmbed = new MessageEmbed()
+    const embed: EmbedBuilder = new EmbedBuilder()
       .setTitle(
         `${this.channelName(
           interaction.channel!
@@ -76,7 +77,7 @@ export default class LinkCommand extends Command {
     const message: void | Message = await newChannel
       .send({
         embeds: [
-          new MessageEmbed()
+          new EmbedBuilder()
             .setTitle(
               `<:portal_orange:631237087022022656> -> ${this.channelName(
                 newChannel
@@ -97,7 +98,7 @@ export default class LinkCommand extends Command {
       return;
     }
     embed.setDescription(
-      embed.description!.replace(/(To.*$)/m, `[$1](${message.url})`)
+      embed.data.description!.replace(/(To.*$)/m, `[$1](${message.url})`)
     );
     oldMessage.edit({ embeds: [embed] }).catch(console.error);
   }
@@ -105,7 +106,7 @@ export default class LinkCommand extends Command {
   private channelName(channel?: TextBasedChannel): string {
     if (!channel) return 'Not available';
     return `${channel instanceof TextChannel ? '#' : ''}${
-      (channel as GuildTextChannel).name
+      (channel as GuildTextBasedChannel).name
     }`;
   }
 }

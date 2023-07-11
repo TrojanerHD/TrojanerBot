@@ -1,16 +1,14 @@
 import {
-  DMChannel,
-  EmbedFieldData,
   Guild,
   GuildChannel,
-  MessageEmbed,
+  GuildTextBasedChannel,
   NewsChannel,
   NonThreadGuildBasedChannel,
   TextChannel,
   ThreadChannel,
 } from 'discord.js';
 import manageRoles from './manageRoles';
-import { GuildTextChannel } from '../messages/Command';
+import { EmbedBuilder } from '@discordjs/builders';
 import { RolesField } from '../settings/SettingsDB';
 import GuildSettings from '../settings/GuildSettings';
 
@@ -21,7 +19,7 @@ export default class RoleChannelManager {
   /** The guild this manager operates in */
   public _guild: Guild;
   /** The set roles channel used for the guild */
-  public _channel?: GuildTextChannel;
+  public _channel?: GuildTextBasedChannel;
   /** All role channel managers */
   public static mgrs: RoleChannelManager[] = [];
 
@@ -37,7 +35,7 @@ export default class RoleChannelManager {
    * Sends/updates the roles embed
    */
   public async run(): Promise<void> {
-    const rolesChannel: GuildTextChannel | undefined =
+    const rolesChannel: GuildTextBasedChannel | undefined =
       this._channel ??
       (this._guild.channels.cache.find(
         (channel: GuildChannel | ThreadChannel): boolean =>
@@ -45,12 +43,12 @@ export default class RoleChannelManager {
           (channel instanceof TextChannel ||
             channel instanceof ThreadChannel ||
             channel instanceof NewsChannel)
-      ) as GuildTextChannel | undefined);
+      ) as GuildTextBasedChannel | undefined);
     if (!rolesChannel) return;
 
     this._channel = rolesChannel;
 
-    const embed: MessageEmbed = await this.generateEmbed();
+    const embed: EmbedBuilder = await this.generateEmbed();
 
     manageRoles(rolesChannel, embed);
   }
@@ -67,19 +65,19 @@ export default class RoleChannelManager {
       (role: RolesField): boolean => !role.emoji || !role.name
     );
     if (errorRole)
-      return new MessageEmbed()
+      return new EmbedBuilder()
         .setTimestamp(Date.now())
         .setTitle('Role Selector')
         .setDescription(
           'Error: All fields in `role` in `settings.json` must have a `name` and `emoji` tag'
         )
-        .setColor('RED');
-    return new MessageEmbed()
+        .setColor([255, 0, 0]);
+    return new EmbedBuilder()
       .setTimestamp(Date.now())
       .setTitle('Role Selector')
       .setFields(
         roles.map(
-          (role: RolesField): EmbedFieldData => ({
+          (role: RolesField): APIEmbedField => ({
             name: role.name,
             value: role.description || '*No description provided*',
           })

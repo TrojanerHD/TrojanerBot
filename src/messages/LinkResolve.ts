@@ -1,12 +1,12 @@
+import { EmbedBuilder } from '@discordjs/builders';
 import {
   TextChannel,
   Message,
   GuildChannel,
-  MessageEmbed,
   ThreadChannel,
   BaseGuildTextChannel,
   NewsChannel,
-  VoiceChannel,
+  GuildTextBasedChannel,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
 
@@ -14,10 +14,7 @@ import DiscordClient from '../DiscordClient';
  * Adds a quote to discord links
  */
 export default class LinkResolve {
-  handleCommand(
-    channel: NewsChannel | TextChannel | ThreadChannel | VoiceChannel,
-    message: Message
-  ): void {
+  handleCommand(channel: GuildTextBasedChannel, message: Message): void {
     // Extract guild id, channel id and message id from message
     const splitMessage: string = message.content.split(
       /https:\/\/(?:canary\.|ptb\.)?discord(app)?\.(com|gg)\/channels\//
@@ -26,7 +23,7 @@ export default class LinkResolve {
     const guild: string = properties[0];
     const urlChannel: string = properties[1];
     const urlMessageString: string = properties[2].substring(0, 18);
-    const embed: MessageEmbed = new MessageEmbed()
+    const embed: EmbedBuilder = new EmbedBuilder()
       .setTitle('Quote')
       .setTimestamp(Date.now())
       .setFooter({ text: message.author.tag });

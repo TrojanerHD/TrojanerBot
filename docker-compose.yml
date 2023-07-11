@@ -1,0 +1,12 @@
+version: "3.8"
+services:
+  trojaner-bot:
+    image: ghcr.io/trojanerhd/trojaner-bot:latest
+    env_file: .env
+    volumes:
+      - trojaner-bot:/usr/src/trojaner
+    ports:
+      - "3334:80"
+
+volumes:
+  trojaner-bot:

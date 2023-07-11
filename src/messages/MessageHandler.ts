@@ -76,7 +76,7 @@ export default class MessageHandler {
    * @param message The message to be processed
    */
   onMessage(message: Message): void {
-    if (message.channel.type === 'DM' || message.author.bot) return;
+    if (message.channel.isDMBased() || message.author.bot) return;
     if (message.content.match(/https:\/\/discord(app)?\.(com|gg)\/channels/))
       new LinkResolve().handleCommand(message.channel, message);
   }

@@ -1,10 +1,4 @@
-import {
-  DMChannel,
-  Message,
-  MessageEditOptions,
-  MessageOptions,
-  User,
-} from 'discord.js';
+import { BaseMessageOptions, DMChannel, Message, User } from 'discord.js';
 import DiscordClient from '../DiscordClient';
 import { Channel } from '../messages/StreamerCommand';
 import Settings from '../Settings';
@@ -93,7 +87,7 @@ export default class DMManager {
         streamer: channel.streamer,
       };
 
-      const messageContent: MessageOptions & MessageEditOptions =
+      const messageContent: BaseMessageOptions =
         DMManager.generateMessage(stream);
 
       // Send notification to each subscriber
@@ -158,7 +152,7 @@ export default class DMManager {
 
       messageStream.game = streamer.game_name;
 
-      const messageContent: MessageOptions & MessageEditOptions =
+      const messageContent: BaseMessageOptions =
         DMManager.generateMessage(streamer);
 
       await Promise.all(
@@ -175,9 +169,7 @@ export default class DMManager {
    * @param streamer The streamer to generate the message for
    * @returns The proper message options
    */
-  private static generateMessage(
-    streamer: Stream
-  ): MessageOptions & MessageEditOptions {
+  private static generateMessage(streamer: Stream): BaseMessageOptions {
     return {
       content: `${Common.sanitize(
         streamer.user_name

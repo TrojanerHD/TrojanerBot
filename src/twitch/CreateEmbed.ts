@@ -1,16 +1,16 @@
+import { EmbedBuilder } from '@discordjs/builders';
 import {
-  MessageEmbed,
   TextChannel,
   Message,
   Collection,
   ThreadChannel,
   NewsChannel,
   GuildBasedChannel,
-  EmbedFieldData,
+  APIEmbedField,
+  GuildTextBasedChannel,
   Guild,
 } from 'discord.js';
 import DiscordClient from '../DiscordClient';
-import { GuildTextChannel } from '../messages/Command';
 
 interface StreamInformation {
   name: string;
@@ -23,7 +23,7 @@ interface StreamInformation {
  * Creates the embed for #live
  */
 export default class CreateEmbed {
-  #embed: EmbedFieldData[][] = [];
+  #embed: APIEmbedField[][] = [];
   readonly #guild: Guild;
 
   constructor(guild: Guild) {
@@ -45,7 +45,7 @@ export default class CreateEmbed {
         ? 'Large'
         : 'Very Large';
 
-    const fieldArray: EmbedFieldData[] = [
+    const fieldArray: APIEmbedField[] = [
       {
         name: 'Streamer',
         value: `[${streamInformation.name}](https://twitch.tv/${streamInformation.name})`,
@@ -67,14 +67,14 @@ export default class CreateEmbed {
    * Sends the embed into #live
    */
   async sendEmbed(): Promise<void> {
-    const liveChannel: GuildTextChannel | undefined =
+    const liveChannel: GuildTextBasedChannel | undefined =
       CreateEmbed.determineLiveChannel(this.#guild);
     if (liveChannel === undefined) return;
 
     const messages: Collection<string, Message> | void = await CreateEmbed.getMessages(liveChannel);
     if (!messages) return;
 
-    const embed: MessageEmbed = new MessageEmbed()
+    const embed: EmbedBuilder = new EmbedBuilder()
       .setTitle('Twitch')
       .setTimestamp(Date.now());
 
