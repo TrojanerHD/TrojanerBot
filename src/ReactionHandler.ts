@@ -88,33 +88,32 @@ export default class ReactionHandler {
     member: GuildMember | null
   ): ActionRowBuilder<ButtonBuilder>[] {
     const messageActionRows: ActionRowBuilder<ButtonBuilder>[] = [];
-    let currentMessageActionRow: ActionRowBuilder<ButtonBuilder>;
     // Every row can contain up to five roles
     for (let i = 0; i < Settings.settings.roles.length / 5; i++) {
-      currentMessageActionRow = new ActionRowBuilder<ButtonBuilder>();
-      messageActionRows.push(currentMessageActionRow);
-      // Add the current five roles as component
-      currentMessageActionRow.addComponents(
-        Settings.settings.roles.slice(i * 5, i * 5 + 5).map(
-          // Map the roles stored in settings
-          (role: RolesField): ButtonBuilder =>
-            new ButtonBuilder()
-              .setCustomId(role.name.toLowerCase())
-              .setLabel(role.name)
-              .setStyle(
-                !(member?.roles as GuildMemberRoleManager).cache.some(
-                  (memberRole: Role): boolean => memberRole.name === role.name
+      const currentMessageActionRow: ActionRowBuilder<ButtonBuilder> =
+        new ActionRowBuilder<ButtonBuilder>().addComponents(
+          // Add the current five roles as component
+          Settings.settings.roles.slice(i * 5, i * 5 + 5).map(
+            // Map the roles stored in settings
+            (role: RolesField): ButtonBuilder =>
+              new ButtonBuilder()
+                .setCustomId(role.name.toLowerCase())
+                .setLabel(role.name)
+                .setStyle(
+                  !(member?.roles as GuildMemberRoleManager).cache.some(
+                    (memberRole: Role): boolean => memberRole.name === role.name
+                  )
+                    ? ButtonStyle.Secondary //If member does not have the role
+                    : ButtonStyle.Primary //If member has the role
                 )
-                  ? ButtonStyle.Secondary //If member does not have the role
-                  : ButtonStyle.Primary //If member has the role
-              )
-              .setEmoji(
-                ReactionHandler.containsEmoji(role.emoji)
-                  ? { name: role.emoji }
-                  : { id: role.emoji }
-              )
-        )
-      );
+                .setEmoji(
+                  ReactionHandler.containsEmoji(role.emoji)
+                    ? { name: role.emoji }
+                    : { id: role.emoji }
+                )
+          )
+        );
+      messageActionRows.push(currentMessageActionRow);
     }
     return messageActionRows;
   }
