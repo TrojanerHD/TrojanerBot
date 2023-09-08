@@ -1,13 +1,11 @@
-import express, { Express } from 'express';
 import DiscordClient from '../../DiscordClient';
 import { URLSearchParams } from 'url';
-import Common, { requestWrapper as request } from '../../common';
+import { requestWrapper as request } from '../../common';
 import { RequestOptions } from 'https';
-import { Server } from 'http';
 import Settings, { SettingsJSON } from '../../Settings';
-import { GuildInfo } from '../../settings/SettingsDB';
-import GuildSettings from '../../settings/GuildSettings';
-import { Guild } from 'discord.js';
+import AuthenticationServer from './AuthenticationServer';
+import { Request, Response } from 'express-serve-static-core';
+import { ParsedQs } from 'qs';
 
 export interface TokenResponse {
   access_token: string;
@@ -19,32 +17,18 @@ export interface TokenResponse {
 
 export type MaybeTokenResponse = TokenResponse | { error: string } | void;
 
-interface Listener {
+export interface Listener {
   guildId: string;
   listener: (json?: MaybeTokenResponse) => void;
 }
 
 /**
- * Creates an express app for the user to authorize the bot to allow changing command permissions
+ * Handles authentication for command permission updating
  */
 export default abstract class Authentication {
-  static #app: Express = express();
-  static #server?: Server = undefined;
   static #listeners: Listener[] = [];
 
-  /**
-   * Starts the express server if it has not been started.
-   * If no guilds are left that need authentication, the express server is stopped
-   */
-  public static startServer(): void {
-    if (Authentication.#server !== undefined) {
-      if (!Authentication.#server.listening) Authentication.listen();
-      return;
-    }
-    if (Settings.settings.logging !== 'errors')
-      console.log('Start express server');
-
-    Authentication.#app.get('/', (req, res): void => {
+  static authenticationCallback(req: Request<{}, any, any, ParsedQs, Record<string, any>>, res: Response<any, Record<string, any>, number>): void {
       const request = Authentication.makeRequest(
         req.query.code as string,
         `${req.protocol}://${req.headers.host as string}${req.path}`
@@ -60,27 +44,10 @@ export default abstract class Authentication {
 
       // Stop express app
       if (Authentication.#listeners.length - 1 <= 0) {
-        Authentication.#server?.close();
+        AuthenticationServer.closeServer();
         if (Settings.settings.logging !== 'errors')
           console.log('Stop express server');
       }
-    });
-    Authentication.listen();
-  }
-
-  /**
-   * Updates internal server parameter to listen on the app
-   */
-  private static listen(): void {
-    if (
-      Settings.settings['express-port'] !== undefined &&
-      Settings.settings['express-port'] !== null &&
-      Settings.settings['express-port']! > 0
-    )
-      Authentication.#server = Authentication.#app.listen(
-        Settings.settings['express-port']
-      );
-    else Authentication.#server = Authentication.#app.listen();
   }
 
   /**

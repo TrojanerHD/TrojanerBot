@@ -15,6 +15,7 @@ import Authentication, { MaybeTokenResponse } from './Authentication';
 import TokenHelper from './TokenHelper';
 import { RequestOptions } from 'https';
 import GuildSettings from '../../settings/GuildSettings';
+import AuthenticationServer from './AuthenticationServer';
 
 /**
  * Set permissions for commands
@@ -45,7 +46,7 @@ export default class CommandPermissions {
           .catch((err: Error): void => {
             if (err.message !== 'invalid_grant') throw new Error(err.message);
 
-            Authentication.startServer();
+            AuthenticationServer.startServer();
             Authentication.addListener(
               this.#guild.id,
               this.accessTokenReceived.bind(this)
@@ -54,7 +55,7 @@ export default class CommandPermissions {
       else this.accessTokenReceived();
       return;
     }
-    Authentication.startServer();
+    AuthenticationServer.startServer();
     Authentication.addListener(
       this.#guild.id,
       this.accessTokenReceived.bind(this)

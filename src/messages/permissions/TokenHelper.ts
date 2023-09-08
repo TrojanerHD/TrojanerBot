@@ -3,6 +3,7 @@ import Authentication, { MaybeTokenResponse, TokenResponse } from './Authenticat
 import { GuildInfo } from '../../settings/SettingsDB';
 import GuildSettings from '../../settings/GuildSettings';
 import Common from '../../common';
+import AuthenticationServer from './AuthenticationServer';
 
 /**
  * Util functions to handle a Discord user token
@@ -14,7 +15,7 @@ export default abstract class TokenHelper {
    * @returns The access token request promise
    */
   static async getAccessToken(guild: Guild): Promise<void> {
-    Authentication.startServer();
+    AuthenticationServer.startServer();
 
     const refreshToken: string | undefined =
       await TokenHelper.getRefreshToken(guild.id);
@@ -35,7 +36,7 @@ export default abstract class TokenHelper {
   public static async getRefreshToken(
     guildId: string
   ): Promise<string | undefined> {
-    Authentication.startServer();
+    AuthenticationServer.startServer();
 
     const settings: GuildInfo = await GuildSettings.settings(guildId);
     return settings.refreshToken !== '' ? settings.refreshToken : undefined;
