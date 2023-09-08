@@ -11,6 +11,7 @@ import GuildSettings from '../settings/GuildSettings';
 import { GuildInfo } from '../settings/SettingsDB';
 import CommandPermissions from './permissions/CommandPermissions';
 import Authentication from './permissions/Authentication';
+import TokenHelper from './permissions/TokenHelper';
 
 export default class PermitCommand extends Command {
   deploy: ChatInputApplicationCommandData = {
@@ -125,7 +126,7 @@ export default class PermitCommand extends Command {
     }
 
     if (
-      (await Authentication.getRefreshToken(interaction.guildId)) === undefined
+      (await TokenHelper.getRefreshToken(interaction.guildId)) === undefined
     ) {
       reply += `\nFor this feature to work, please click the following link:\n${Authentication.createURL(
         interaction.guildId

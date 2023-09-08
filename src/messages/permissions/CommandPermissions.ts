@@ -12,6 +12,7 @@ import DiscordClient from '../../DiscordClient';
 import Settings, { SettingsJSON } from '../../Settings';
 import { ApplicationCommandType } from '../MessageHandler';
 import Authentication, { MaybeTokenResponse } from './Authentication';
+import TokenHelper from './TokenHelper';
 import { RequestOptions } from 'https';
 import GuildSettings from '../../settings/GuildSettings';
 
@@ -35,11 +36,11 @@ export default class CommandPermissions {
   ): Promise<void> {
     this.#commands = commands;
 
-    const refreshToken = await Authentication.getRefreshToken(this.#guild.id);
+    const refreshToken = await TokenHelper.getRefreshToken(this.#guild.id);
 
     if (refreshToken !== undefined) {
       if (!Common.accessTokenValid(this.#guild.id))
-        Authentication.getAccessToken(this.#guild)
+        TokenHelper.getAccessToken(this.#guild)
           .then(this.accessTokenReceived.bind(this))
           .catch((err: Error): void => {
             if (err.message !== 'invalid_grant') throw new Error(err.message);
@@ -70,7 +71,7 @@ export default class CommandPermissions {
     if (Authentication.hasListener(this.#guild.id))
       Authentication.removeListener(this.#guild.id);
 
-    if (json !== undefined) await Authentication.storeToken(json, this.#guild);
+    if (json !== undefined) await TokenHelper.storeToken(json, this.#guild);
     await this.setPermissions();
   }
 
