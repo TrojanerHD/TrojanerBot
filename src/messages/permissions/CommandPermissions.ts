@@ -67,7 +67,9 @@ export default class CommandPermissions {
    * - Sets command permissions for the guild
    */
   private async accessTokenReceived(json?: MaybeTokenResponse): Promise<void> {
-    Authentication.removeListener(this.#guild.id);
+    if (Authentication.hasListener(this.#guild.id))
+      Authentication.removeListener(this.#guild.id);
+
     if (json !== undefined) await Authentication.storeToken(json, this.#guild);
     await this.setPermissions();
   }

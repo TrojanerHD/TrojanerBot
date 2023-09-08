@@ -240,4 +240,15 @@ export default abstract class Authentication {
       (listener: Listener): boolean => listener.guildId !== guildId
     );
   }
+
+  /**
+   * Checks whether a listener exists for a guild
+   * @param guildId The guild to check whether a listener exists for
+   * @returns Whether a listener exists for given guild
+   */
+  public static hasListener(guildId: string): boolean {
+    return this.#listeners.some(
+      (listener: Listener): boolean => listener.guildId === guildId
+    );
+  }
 }
