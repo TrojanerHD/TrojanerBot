@@ -33,18 +33,6 @@ export default abstract class Authentication {
   static #listeners: Listener[] = [];
 
   /**
-   * Adds a callback that gets executed whenever somebody authorizes
-   * @param guildId The guild id that was authorized
-   * @param listener The callback to be executed
-   */
-  public static addListener(
-    guildId: string,
-    listener: (json: MaybeTokenResponse) => void
-  ) {
-    Authentication.#listeners.push({ guildId, listener });
-  }
-
-  /**
    * Starts the express server if it has not been started.
    * If no guilds are left that need authentication, the express server is stopped
    */
@@ -113,6 +101,58 @@ export default abstract class Authentication {
     return Authentication.storeToken(req, guild);
   }
 
+
+  /**
+   * Obtains a refresh token for given guild
+   * @param guildId The guild id to obtain a refresh token from
+   * @returns The refresh token
+   */
+  public static async getRefreshToken(
+    guildId: string
+  ): Promise<string | undefined> {
+    Authentication.startServer();
+
+    const settings: GuildInfo = await GuildSettings.settings(guildId);
+    return settings.refreshToken !== '' ? settings.refreshToken : undefined;
+  }
+
+  /**
+   * Deletes the stored refresh token for given guild
+   * Might be used if the refresh token becomes invalid
+   * @param guild The guild to delete the refresh token from
+   */
+  public static async deleteRefreshToken(guild: Guild): Promise<void> {
+    const settings: GuildInfo = await GuildSettings.settings(guild.id);
+    settings.refreshToken = '';
+    await GuildSettings.saveSettings(guild, settings).catch(console.error);
+  }
+
+  /**
+   * Stores a refresh token for given guild using given json after making a refresh token retrieval request
+   * @param json The response from the refresh token request
+   * @param guild The guild to store the refresh token for
+   */
+  public static async storeToken(
+    json: TokenResponse | { error: string },
+    guild: Guild
+  ): Promise<void> {
+    if ('error' in json) {
+      // If the refresh token is invalid, delete it and reject the promise
+      if (json.error === 'invalid_grant')
+        Authentication.deleteRefreshToken(guild);
+      return Promise.reject(new Error(json.error));
+    }
+
+    const settings: GuildInfo = await GuildSettings.settings(guild.id);
+    settings.refreshToken = json.refresh_token;
+    await GuildSettings.saveSettings(guild, settings).catch(console.error);
+
+    Common._discordAccessTokens[guild.id] = {
+      access_token: json.access_token,
+      expires_at: Date.now() + json.expires_in * 1000,
+    };
+  }
+
   /**
    * Creates a request to get a new access token, either via a refresh token or a code
    * @param codeOrRefreshToken The code. If redirect is undefined, this acts as a refresh token instead
@@ -171,63 +211,24 @@ export default abstract class Authentication {
   }
 
   /**
-   * Obtains a refresh token for given guild
-   * @param guildId The guild id to obtain a refresh token from
-   * @returns The refresh token
-   */
-  public static async getRefreshToken(
-    guildId: string
-  ): Promise<string | undefined> {
-    Authentication.startServer();
-
-    const settings: GuildInfo = await GuildSettings.settings(guildId);
-    return settings.refreshToken !== '' ? settings.refreshToken : undefined;
-  }
-
-  /**
-   * Deletes the stored refresh token for given guild
-   * Might be used if the refresh token becomes invalid
-   * @param guild The guild to delete the refresh token from
-   */
-  public static async deleteRefreshToken(guild: Guild): Promise<void> {
-    const settings: GuildInfo = await GuildSettings.settings(guild.id);
-    settings.refreshToken = '';
-    await GuildSettings.saveSettings(guild, settings).catch(console.error);
-  }
-
-  /**
-   * Stores a refresh token for given guild using given json after making a refresh token retrieval request
-   * @param json The response from the refresh token request
-   * @param guild The guild to store the refresh token for
-   */
-  public static async storeToken(
-    json: TokenResponse | { error: string },
-    guild: Guild
-  ): Promise<void> {
-    if ('error' in json) {
-      // If the refresh token is invalid, delete it and reject the promise
-      if (json.error === 'invalid_grant')
-        Authentication.deleteRefreshToken(guild);
-      return Promise.reject(new Error(json.error));
-    }
-
-    const settings: GuildInfo = await GuildSettings.settings(guild.id);
-    settings.refreshToken = json.refresh_token;
-    await GuildSettings.saveSettings(guild, settings).catch(console.error);
-
-    Common._discordAccessTokens[guild.id] = {
-      access_token: json.access_token,
-      expires_at: Date.now() + json.expires_in * 1000,
-    };
-  }
-
-  /**
    * Creates an authorization url for given guild
    * @param guildId The guild id to create the authorization url for
    * @returns The authorization url
    */
   public static createURL(guildId: string): string {
     return `https://discord.com/oauth2/authorize?client_id=${DiscordClient._client.application?.id}&scope=applications.commands.permissions.update&response_type=code&state=${guildId}`;
+  }
+
+  /**
+   * Adds a callback that gets executed whenever somebody authorizes
+   * @param guildId The guild id that was authorized
+   * @param listener The callback to be executed
+   */
+  public static addListener(
+    guildId: string,
+    listener: (json: MaybeTokenResponse) => void
+  ) {
+    Authentication.#listeners.push({ guildId, listener });
   }
 
   /**
