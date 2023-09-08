@@ -40,30 +40,42 @@ export default class CommandPermissions {
     if (refreshToken !== undefined) {
       if (!Common.accessTokenValid(this.#guild.id))
         Authentication.getAccessToken(this.#guild)
-          .then(this.setPermissions.bind(this))
+          .then(this.accessTokenReceived.bind(this))
           .catch((err: Error): void => {
             if (err.message !== 'invalid_grant') throw new Error(err.message);
 
             Authentication.startServer();
             Authentication.addListener(
               this.#guild.id,
-              this.setPermissions.bind(this)
+              this.accessTokenReceived.bind(this)
             );
           });
-      else this.setPermissions();
+      else this.accessTokenReceived();
       return;
     }
     Authentication.startServer();
-    Authentication.addListener(this.#guild.id, this.setPermissions.bind(this));
+    Authentication.addListener(
+      this.#guild.id,
+      this.accessTokenReceived.bind(this)
+    );
   }
 
   /**
-   * Set permissions for commands, is used as callback for when the user has been authorized and an access token is available
+   * Is used as callback for when the user has been authorized and an access token is available
+   *
+   * - Stores the access token for the guild
+   * - Sets command permissions for the guild
    */
-  private async setPermissions(json?: MaybeTokenResponse): Promise<void> {
+  private async accessTokenReceived(json?: MaybeTokenResponse): Promise<void> {
     Authentication.removeListener(this.#guild.id);
     if (json !== undefined) await Authentication.storeToken(json, this.#guild);
+    await this.setPermissions();
+  }
 
+  /**
+   * Set permissions for commands
+   */
+  private async setPermissions(): Promise<void> {
     for (const command of this.#commands!.toJSON().filter(
       (command: ApplicationCommandType): boolean =>
         command.defaultMemberPermissions?.bitfield ===
