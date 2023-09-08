@@ -2,6 +2,8 @@ import DiscordClient from '../DiscordClient';
 import {
   ApplicationCommand,
   ApplicationCommandData,
+  Collection,
+  Guild,
   GuildResolvable,
   Message,
 } from 'discord.js';
@@ -9,6 +11,9 @@ import PingCommand from './PingCommand';
 import ByeCommand from './ByeCommand';
 import LinkCommand from './LinkCommand';
 import StreamerCommand from './StreamerCommand';
+import RolesCommand from './RolesCommand';
+import PermitCommand from './PermitCommand';
+import StreamChannelCommand from './StreamChannelCommand';
 import LinkResolve from './LinkResolve';
 import Command from './Command';
 import CommandPermissions from './permissions/CommandPermissions';
@@ -31,6 +36,9 @@ export default class MessageHandler {
     new ByeCommand(),
     new LinkCommand(),
     new StreamerCommand(),
+    new RolesCommand(),
+    new PermitCommand(),
+    new StreamChannelCommand(),
   ];
 
   constructor() {
@@ -38,19 +46,29 @@ export default class MessageHandler {
   }
 
   /**
-   * Deploys all commands on all servers and for DMs
+   * Deploys all commands on all servers and for DMs and applies the execution permissions
    */
-  public static addCommands(): void {
+  public static addCommands(guild?: Guild): void {
     const commands: ApplicationCommandData[] = MessageHandler._commands.map(
       (command: Command): ApplicationCommandData => command.deploy
     );
 
-    const commandPermissions: CommandPermissions = new CommandPermissions();
+    if (DiscordClient._client.application === undefined) return;
 
-    DiscordClient._client.application?.commands
-      .set(commands)
-      .then(commandPermissions.onCommandsSet.bind(commandPermissions))
-      .catch(console.error);
+    const setCommands: Promise<
+      Collection<string, ApplicationCommand<{ guild: GuildResolvable }>>
+    > = DiscordClient._client.application!.commands.set(commands);
+
+    if (guild !== undefined) {
+      const commandPermissions: CommandPermissions = new CommandPermissions(
+        guild
+      );
+      setCommands.then(
+        commandPermissions.onCommandsSet.bind(commandPermissions)
+      );
+    }
+
+    setCommands.catch(console.error);
   }
 
   /**

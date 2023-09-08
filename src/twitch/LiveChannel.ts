@@ -1,14 +1,19 @@
 import TwitchHelper, { Stream } from './TwitchHelper';
 import CreateEmbed from './CreateEmbed';
-import Settings from '../Settings';
+import GuildSettings from '../settings/GuildSettings';
+import { Guild } from 'discord.js';
 
 /**
  * Handles the #live channel
  */
 export default class LiveChannel {
-  constructor() {
+  #guild: Guild;
+
+  constructor(guild: Guild) {
+    this.#guild = guild;
     new TwitchHelper(this.streamerFetch.bind(this)).update(
-      (): string[] => Settings.settings.streamers
+      async (): Promise<string[]> =>
+        (await GuildSettings.settings(guild.id)).streamers
     );
   }
 
@@ -17,7 +22,15 @@ export default class LiveChannel {
    * @param streams Currently live streams
    */
   private async streamerFetch(streams: Stream[]): Promise<void> {
-    const createEmbed: CreateEmbed = new CreateEmbed();
+    const streamers: string[] = (await GuildSettings.settings(this.#guild.id)).streamers;
+    streams.sort((a: Stream, b: Stream): number => {
+      for (const streamer of streamers) {
+        if (a.user_name === streamer) return -1;
+        if (b.user_name === streamer) return 1;
+      }
+      return 0;
+    });
+    const createEmbed: CreateEmbed = new CreateEmbed(this.#guild);
     for (const stream of streams.slice(0, 5))
       createEmbed.addField({
         category: stream.game_name,

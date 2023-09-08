@@ -1,6 +1,6 @@
 import { ButtonInteraction, GuildMember, Role } from 'discord.js';
 import ReactionHandler from '../ReactionHandler';
-import { RolesField } from '../Settings';
+import { RolesField } from '../settings/SettingsDB';
 
 /**
  * The handler for when a user clicks on a role button in the role selection message

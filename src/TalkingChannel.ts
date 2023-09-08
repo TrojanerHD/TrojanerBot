@@ -23,7 +23,7 @@ export default class TalkingChannel {
       'voiceStateUpdate',
       this.onVoiceStateUpdate.bind(this)
     );
-    for (const guild of DiscordClient._client.guilds.cache.toJSON())
+    for (const guild of DiscordClient._safeGuilds)
       for (const channel of guild.channels.cache.toJSON())
         if (channel.name.startsWith('Talking '))
           channel.delete().catch(console.error);

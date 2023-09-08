@@ -39,6 +39,10 @@ export default async function manageRoles(
     );
 
   // Edit the message if it already exists, otherwise create it
+  if (newEmbed.data.fields?.length === 0) {
+    if (rolesMessage !== undefined) rolesMessage.delete();
+    return;
+  }
   if (rolesMessage === undefined) {
     DiscordClient.send(rolesChannel, {
       embeds: [newEmbed],
