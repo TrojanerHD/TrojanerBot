@@ -71,17 +71,14 @@ export default class TwitchHelper {
       let parsed: boolean = false;
 
       while (!parsed) {
-        const req: string | void = await request(
-          {
-            host: 'api.twitch.tv',
-            path: `/helix/streams?${TwitchHelper.generateUrl(streamers)}`,
-            headers: {
-              'Client-ID': Settings.settings['twitch-id'],
-              Authorization: `Bearer ${this.#accessToken}`,
-            },
+        const req: string | void = await request({
+          host: 'api.twitch.tv',
+          path: `/helix/streams?${TwitchHelper.generateUrl(streamers)}`,
+          headers: {
+            'Client-ID': Settings.settings['twitch-id'],
+            Authorization: `Bearer ${this.#accessToken}`,
           },
-          TwitchHelper.generateUrl(streamers)
-        ).catch(console.error);
+        }).catch(console.error);
 
         if (req === undefined) continue;
 
