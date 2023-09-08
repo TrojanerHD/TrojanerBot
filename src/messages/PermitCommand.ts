@@ -9,7 +9,7 @@ import {
 import Command from './Command';
 import GuildSettings from '../settings/GuildSettings';
 import { GuildInfo } from '../settings/SettingsDB';
-import MessageHandler from './MessageHandler';
+import CommandPermissions from './permissions/CommandPermissions';
 import Authentication from './permissions/Authentication';
 
 export default class PermitCommand extends Command {
@@ -144,6 +144,8 @@ export default class PermitCommand extends Command {
     await GuildSettings.saveSettings(guild, info).catch(
       console.error
     );
-    MessageHandler.addCommands(guild);
+
+    const commandPermissions: CommandPermissions = new CommandPermissions(guild);
+    commandPermissions.onCommandsSet(guild.commands.cache);
   }
 }
