@@ -19,16 +19,18 @@ export interface TokenResponse {
 
 export type MaybeTokenResponse = TokenResponse | { error: string } | void;
 
+interface Listener {
+  guildId: string;
+  listener: (json?: MaybeTokenResponse) => void;
+}
+
 /**
  * Creates an express app for the user to authorize the bot to allow changing command permissions
  */
 export default abstract class Authentication {
   static #app: Express = express();
   static #server?: Server = undefined;
-  static #listeners: {
-    guildId: string;
-    listener: (json?: MaybeTokenResponse) => void;
-  }[] = [];
+  static #listeners: Listener[] = [];
 
   /**
    * Adds a callback that gets executed whenever somebody authorizes
@@ -62,12 +64,7 @@ export default abstract class Authentication {
 
       request.then((response: MaybeTokenResponse): void =>
         Authentication.#listeners
-          .find(
-            (listener: {
-              guildId: string;
-              listener: (json?: MaybeTokenResponse) => void;
-            }) => req.query.state === listener.guildId
-          )
+          .find((listener: Listener) => req.query.state === listener.guildId)
           ?.listener(response)
       );
 
@@ -240,10 +237,7 @@ export default abstract class Authentication {
    */
   public static removeListener(guildId: string): void {
     this.#listeners = this.#listeners.filter(
-      (listener: {
-        guildId: string;
-        listener: (json?: MaybeTokenResponse) => void;
-      }): boolean => listener.guildId !== guildId
+      (listener: Listener): boolean => listener.guildId !== guildId
     );
   }
 }
