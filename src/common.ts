@@ -58,6 +58,7 @@ export async function requestWrapper(
       req.on('error', reject);
 
       if (data !== undefined) req.end(data);
+      else req.end();
     }
   );
 }
