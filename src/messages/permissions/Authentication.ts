@@ -28,6 +28,12 @@ export interface Listener {
 export default abstract class Authentication {
   static #listeners: Listener[] = [];
 
+  /**
+   * Callback when a request to the authentication website was made
+   * If no guilds are left that need authentication, the authentication server is stopped
+   * @param req The request with which the authentication was made
+   * @param res The response that was returned with the authentication request
+   */
   static authenticationCallback(req: Request<{}, any, any, ParsedQs, Record<string, any>>, res: Response<any, Record<string, any>, number>): void {
       const request = Authentication.makeRequest(
         req.query.code as string,
